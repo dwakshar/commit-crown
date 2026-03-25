@@ -56,8 +56,15 @@ async function syncGitHubKingdom() {
     await admin.from('github_stats').upsert({
         user_id: user.id,
         followers: ghStats.followers,
+        total_commits: 0,
         total_repos: ghStats.total_repos,
         total_stars: ghStats.total_stars,
+        total_prs: 0,
+        current_streak: 0,
+        longest_streak: 0,
+        night_commits: ghStats.night_commits,
+        monthly_peak: ghStats.monthly_peak,
+        starred_repo_count: ghStats.starred_repo_count,
         languages: ghStats.languages,
         synced_at: new Date().toISOString(),
     })

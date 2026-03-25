@@ -5,6 +5,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { formatDistanceToNowStrict } from 'date-fns'
 import Image from 'next/image'
 
+import { AchievementToast } from '@/src/components/ui/AchievementToast'
+import { NotificationBell } from '@/src/components/ui/NotificationBell'
 import { getSyncCooldownRemaining } from '@/src/lib/kingdom'
 import { useKingdomStore } from '@/src/store/kingdomStore'
 
@@ -44,7 +46,7 @@ function ResourceCard({
 }) {
   return (
     <div className="flex min-w-[84px] flex-col items-center rounded-2xl border border-white/10 bg-black/25 px-3 py-2 text-center md:min-w-[132px] md:flex-row md:justify-start md:gap-3 md:px-4">
-      <span className="text-lg text-[#C9A84C]">{icon}</span>
+      <span className="text-sm font-semibold uppercase tracking-[0.18em] text-[#C9A84C]">{icon}</span>
       <div>
         <p className="hidden text-[11px] uppercase tracking-[0.24em] text-white/45 md:block">{label}</p>
         <p className="mt-1 text-sm font-semibold text-[#C9A84C] md:text-base">
@@ -110,10 +112,10 @@ export function HUD() {
           </div>
 
           <div className="grid grid-cols-4 gap-2 md:flex md:flex-wrap md:justify-end">
-            <ResourceCard icon="◉" label="Gold" value={kingdom.gold} />
-            <ResourceCard icon="✦" label="Prestige" value={kingdom.prestige} />
-            <ResourceCard icon="◌" label="Population" value={kingdom.population} />
-            <ResourceCard icon="⛨" label="Defense" value={kingdom.defense_rating} />
+            <ResourceCard icon="Gold" label="Gold" value={kingdom.gold} />
+            <ResourceCard icon="Star" label="Prestige" value={kingdom.prestige} />
+            <ResourceCard icon="Pop" label="Population" value={kingdom.population} />
+            <ResourceCard icon="Def" label="Defense" value={kingdom.defense_rating} />
           </div>
         </div>
       </div>
@@ -148,12 +150,14 @@ export function HUD() {
               <p>{cooldownRemaining > 0 ? `Ready in ${cooldownRemaining}m` : 'Sync available now'}</p>
             </div>
 
+            <NotificationBell userId={kingdom.userId} />
+
             <button
               type="button"
-              className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-white/80 transition hover:bg-white/10"
+              className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-xs font-semibold uppercase tracking-[0.18em] text-white/80 transition hover:bg-white/10"
               aria-label="Kingdom settings"
             >
-              ⚙
+              Set
             </button>
           </div>
 
@@ -163,6 +167,8 @@ export function HUD() {
           </div>
         </div>
       </div>
+
+      <AchievementToast />
     </div>
   )
 }

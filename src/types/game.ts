@@ -26,6 +26,9 @@ export interface GitHubStatsData {
   followers: number
   current_streak: number
   longest_streak: number
+  night_commits?: number
+  monthly_peak?: number
+  starred_repo_count?: number
   languages: Record<string, number>
   synced_at: string | null
 }
@@ -40,9 +43,29 @@ export interface KingdomData {
   defense_rating: number
   attack_rating: number
   building_slots: number
+  raid_opt_in?: boolean
+  raids_enabled?: boolean
   last_synced_at: string | null
   ownerName: string
   ownerAvatarUrl: string | null
+  ownerGithubUsername?: string | null
+  ownerCreatedAt?: string | null
   buildings: BuildingData[]
   githubStats: GitHubStatsData | null
+}
+
+export type NotificationType =
+  | 'achievement_unlocked'
+  | 'raid_received'
+  | 'kingdom_visited'
+  | 'building_complete'
+
+export interface NotificationData {
+  id: string
+  user_id: string
+  type: NotificationType
+  message: string
+  data: Record<string, unknown> | null
+  read_at: string | null
+  created_at: string
 }
