@@ -16,10 +16,8 @@ const TOAST_STYLES = {
 } as const
 
 export function AchievementToast() {
-  const { activeToast, dismissToast } = useNotificationStore((state) => ({
-    activeToast: state.activeToast,
-    dismissToast: state.dismissToast,
-  }))
+  const activeToast = useNotificationStore((state) => state.activeToast)
+  const dismissToast = useNotificationStore((state) => state.dismissToast)
 
   useEffect(() => {
     if (!activeToast) {

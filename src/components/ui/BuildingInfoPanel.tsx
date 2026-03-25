@@ -23,15 +23,11 @@ function LevelPips({ level }: { level: number }) {
 }
 
 export function BuildingInfoPanel() {
-  const { kingdom, selectedBuilding, selectBuilding, setBuildings, updateGold } = useKingdomStore(
-    (state) => ({
-      kingdom: state.kingdom,
-      selectedBuilding: state.selectedBuilding,
-      selectBuilding: state.selectBuilding,
-      setBuildings: state.setBuildings,
-      updateGold: state.updateGold,
-    }),
-  )
+  const kingdom = useKingdomStore((state) => state.kingdom)
+  const selectedBuilding = useKingdomStore((state) => state.selectedBuilding)
+  const selectBuilding = useKingdomStore((state) => state.selectBuilding)
+  const setBuildings = useKingdomStore((state) => state.setBuildings)
+  const updateGold = useKingdomStore((state) => state.updateGold)
   const [isUpgrading, setIsUpgrading] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 

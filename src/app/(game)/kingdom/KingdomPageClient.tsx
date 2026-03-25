@@ -21,11 +21,9 @@ export function KingdomPageClient({
 }: {
   kingdomData: KingdomData
 }) {
-  const { setKingdom, selectBuilding, kingdom } = useKingdomStore((state) => ({
-    setKingdom: state.setKingdom,
-    selectBuilding: state.selectBuilding,
-    kingdom: state.kingdom,
-  }))
+  const setKingdom = useKingdomStore((state) => state.setKingdom)
+  const selectBuilding = useKingdomStore((state) => state.selectBuilding)
+  const kingdom = useKingdomStore((state) => state.kingdom)
 
   useEffect(() => {
     setKingdom(kingdomData)

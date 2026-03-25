@@ -31,7 +31,7 @@ async function syncGitHubKingdom() {
     // Get GitHub token from Supabase session
     const { data: { session } } = await supabase.auth.getSession()
     const githubToken = session?.provider_token
-    if (!githubToken) return NextResponse.json({ error: 'No GitHub token' }, { status: 400 })
+    if (!githubToken) return NextResponse.json({ error: 'No GitHub token', code: 'no_github_token' }, { status: 400 })
 
     const { data: profile } = await supabase
         .from('profiles')
@@ -40,7 +40,7 @@ async function syncGitHubKingdom() {
         .single()
 
     if (!profile?.github_username) {
-        return NextResponse.json({ error: 'No GitHub username found' }, { status: 400 })
+        return NextResponse.json({ error: 'No GitHub username found', code: 'no_github_username' }, { status: 400 })
     }
 
     // Fetch from GitHub
@@ -53,7 +53,7 @@ async function syncGitHubKingdom() {
     )
 
     // Upsert github_stats
-    await admin.from('github_stats').upsert({
+    const { error: githubStatsError } = await admin.from('github_stats').upsert({
         user_id: user.id,
         followers: ghStats.followers,
         total_commits: 0,
@@ -69,6 +69,10 @@ async function syncGitHubKingdom() {
         synced_at: new Date().toISOString(),
     })
 
+    if (githubStatsError) {
+        return NextResponse.json({ error: githubStatsError.message, code: 'sync_failed' }, { status: 500 })
+    }
+
     // Map to kingdom stats and upsert
     const kingdomStats = mapGitHubToKingdom({
         total_commits: 0,
@@ -80,11 +84,15 @@ async function syncGitHubKingdom() {
         languages: ghStats.languages,
     })
 
-    await admin.from('kingdoms').upsert({
+    const { error: kingdomError } = await admin.from('kingdoms').upsert({
         user_id: user.id,
         ...kingdomStats,
         last_synced_at: new Date().toISOString(),
     }, { onConflict: 'user_id' })
+
+    if (kingdomError) {
+        return NextResponse.json({ error: kingdomError.message, code: 'sync_failed' }, { status: 500 })
+    }
 
     return NextResponse.json({
         success: true,
@@ -103,8 +111,10 @@ export async function GET() {
     const response = await syncGitHubKingdom()
 
     if (!response.ok) {
-        return response
+        const payload = await response.json().catch(() => ({ code: 'sync_failed' }))
+        const code = typeof payload.code === 'string' ? payload.code : 'sync_failed'
+        redirect(`/kingdom?sync=1&error=${code}`)
     }
 
-    redirect('/kingdom')
+    redirect('/kingdom?sync=1')
 }

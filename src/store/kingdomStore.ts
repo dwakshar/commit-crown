@@ -1,24 +1,24 @@
-'use client'
+"use client";
 
-import { create } from 'zustand'
+import { create } from "zustand";
 
-import type { BuildingData, KingdomData } from '@/src/types/game'
+import type { BuildingData, KingdomData } from "@/src/types/game";
 
 type SyncResponse = {
-  success: boolean
-  stats: Partial<KingdomData>
-}
+  success: boolean;
+  stats: Partial<KingdomData>;
+};
 
 interface KingdomStore {
-  kingdom: KingdomData | null
-  buildings: BuildingData[]
-  selectedBuilding: BuildingData | null
-  isSyncing: boolean
-  setKingdom: (kingdom: KingdomData) => void
-  setBuildings: (buildings: BuildingData[]) => void
-  selectBuilding: (building: BuildingData | null) => void
-  updateGold: (gold: number) => void
-  syncKingdom: () => Promise<void>
+  kingdom: KingdomData | null;
+  buildings: BuildingData[];
+  selectedBuilding: BuildingData | null;
+  isSyncing: boolean;
+  setKingdom: (kingdom: KingdomData) => void;
+  setBuildings: (buildings: BuildingData[]) => void;
+  selectBuilding: (building: BuildingData | null) => void;
+  updateGold: (gold: number) => void;
+  syncKingdom: () => Promise<void>;
 }
 
 export const useKingdomStore = create<KingdomStore>((set, get) => ({
@@ -43,20 +43,22 @@ export const useKingdomStore = create<KingdomStore>((set, get) => ({
     })),
   syncKingdom: async () => {
     if (get().isSyncing) {
-      return
+      return;
     }
 
-    set({ isSyncing: true })
+    set({ isSyncing: true });
 
     try {
-      const response = await fetch('/api/github/sync', {
-        method: 'POST',
-      })
+      const response = await fetch("/api/github/sync", {
+        method: "POST",
+      });
 
-      const payload = (await response.json()) as SyncResponse & { error?: string }
+      const payload = (await response.json()) as SyncResponse & {
+        error?: string;
+      };
 
       if (!response.ok) {
-        throw new Error(payload.error ?? 'Unable to sync kingdom')
+        throw new Error(payload.error ?? "Unable to sync kingdom");
       }
 
       set((state) => ({
@@ -67,9 +69,9 @@ export const useKingdomStore = create<KingdomStore>((set, get) => ({
               last_synced_at: new Date().toISOString(),
             }
           : state.kingdom,
-      }))
+      }));
     } finally {
-      set({ isSyncing: false })
+      set({ isSyncing: false });
     }
   },
-}))
+}));

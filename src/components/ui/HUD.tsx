@@ -58,11 +58,9 @@ function ResourceCard({
 }
 
 export function HUD() {
-  const { kingdom, isSyncing, syncKingdom } = useKingdomStore((state) => ({
-    kingdom: state.kingdom,
-    isSyncing: state.isSyncing,
-    syncKingdom: state.syncKingdom,
-  }))
+  const kingdom = useKingdomStore((state) => state.kingdom)
+  const isSyncing = useKingdomStore((state) => state.isSyncing)
+  const syncKingdom = useKingdomStore((state) => state.syncKingdom)
   const [syncError, setSyncError] = useState<string | null>(null)
   const cooldownRemaining = useMemo(
     () => getSyncCooldownRemaining(kingdom?.last_synced_at ?? null),

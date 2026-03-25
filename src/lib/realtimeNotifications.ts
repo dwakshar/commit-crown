@@ -7,14 +7,11 @@ import { useNotificationStore } from '@/src/store/notificationStore'
 import type { NotificationData } from '@/src/types/game'
 
 export function useRealtimeNotifications(userId: string) {
-  const { notifications, unreadCount, setNotifications, addNotification, markAllReadLocal } =
-    useNotificationStore((state) => ({
-      notifications: state.notifications,
-      unreadCount: state.unreadCount,
-      setNotifications: state.setNotifications,
-      addNotification: state.addNotification,
-      markAllReadLocal: state.markAllReadLocal,
-    }))
+  const notifications = useNotificationStore((state) => state.notifications)
+  const unreadCount = useNotificationStore((state) => state.unreadCount)
+  const setNotifications = useNotificationStore((state) => state.setNotifications)
+  const addNotification = useNotificationStore((state) => state.addNotification)
+  const markAllReadLocal = useNotificationStore((state) => state.markAllReadLocal)
 
   useEffect(() => {
     if (!userId) {
