@@ -13,6 +13,8 @@ const TOAST_STYLES = {
     'border-[#4b79b5]/40 bg-[#121d2a] text-[#b7d5ff] shadow-[0_0_30px_rgba(75,121,181,0.3)]',
   building_complete:
     'border-[#4b9b67]/40 bg-[#122318] text-[#b8efc8] shadow-[0_0_30px_rgba(75,155,103,0.3)]',
+  purchase_complete:
+    'border-[#5d8fdb]/40 bg-[#101c2f] text-[#c9ddff] shadow-[0_0_30px_rgba(93,143,219,0.3)]',
 } as const
 
 export function AchievementToast() {

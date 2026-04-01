@@ -8,6 +8,7 @@ import Image from 'next/image'
 import { AchievementToast } from '@/src/components/ui/AchievementToast'
 import { NotificationBell } from '@/src/components/ui/NotificationBell'
 import { getSyncCooldownRemaining } from '@/src/lib/kingdom'
+import { hasStarterKingdomState } from '@/src/lib/onboarding'
 import { useKingdomStore } from '@/src/store/kingdomStore'
 
 function CountUpValue({ value }: { value: number }) {
@@ -74,6 +75,7 @@ export function HUD() {
   const lastSyncedLabel = kingdom.last_synced_at
     ? formatDistanceToNowStrict(new Date(kingdom.last_synced_at), { addSuffix: true })
     : 'Never synced'
+  const showStarterMessage = hasStarterKingdomState(kingdom)
 
   const handleSync = async () => {
     setSyncError(null)
@@ -120,6 +122,11 @@ export function HUD() {
 
       <div className="pointer-events-none flex items-end justify-between gap-4">
         <div className="pointer-events-auto max-w-sm">
+          {showStarterMessage ? (
+            <div className="mb-3 rounded-2xl border border-[#C9A84C]/25 bg-[#1d1620]/88 px-4 py-3 text-sm text-[#f3dfae] backdrop-blur-md">
+              Start committing to grow your kingdom
+            </div>
+          ) : null}
           {syncError ? (
             <div className="rounded-2xl border border-[#a84d4d] bg-[#2a1111]/90 px-4 py-3 text-sm text-[#ffc5c5] backdrop-blur-md">
               {syncError}

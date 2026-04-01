@@ -11,6 +11,7 @@ const NOTIFICATION_STYLES = {
   kingdom_visited: 'border-l-[#4b79b5] bg-[#131c25]',
   achievement_unlocked: 'border-l-[#C9A84C] bg-[#251f10]',
   building_complete: 'border-l-[#4b9b67] bg-[#132017]',
+  purchase_complete: 'border-l-[#5d8fdb] bg-[#111c2c]',
 } as const
 
 export function NotificationBell({ userId }: { userId: string }) {

@@ -182,9 +182,9 @@ export async function generateMetadata(
     }
   }
 
-  const { kingdomData } = visitData
+  const { kingdomData, topLanguage } = visitData
   const title = `${kingdomData.ownerName}'s Kingdom`
-  const description = `Prestige: ${kingdomData.prestige} | Gold: ${kingdomData.gold} | ${kingdomData.buildings.length} buildings`
+  const description = `Prestige: ${kingdomData.prestige} | ${kingdomData.buildings.length} buildings | Top language: ${topLanguage}`
 
   return {
     title,
@@ -192,7 +192,13 @@ export async function generateMetadata(
     openGraph: {
       title,
       description,
-      images: [`/api/og/${username}`],
+      images: [
+        {
+          url: `/api/og/${username}`,
+          width: 1200,
+          height: 630,
+        },
+      ],
     },
     twitter: {
       card: 'summary_large_image',

@@ -16,6 +16,8 @@ export interface BuildingData {
   y: number
   level: 1 | 2 | 3 | 4 | 5
   name?: string
+  isPlaceholder?: boolean
+  placeholderLabel?: string
 }
 
 export interface GitHubStatsData {
@@ -59,6 +61,7 @@ export type NotificationType =
   | 'raid_received'
   | 'kingdom_visited'
   | 'building_complete'
+  | 'purchase_complete'
 
 export interface NotificationData {
   id: string

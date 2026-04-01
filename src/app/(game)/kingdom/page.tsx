@@ -3,9 +3,10 @@ import { redirect } from 'next/navigation'
 
 import { KingdomPageClient } from '@/src/app/(game)/kingdom/KingdomPageClient'
 import { getBuildingMetadata } from '@/src/lib/kingdom'
+import { withStarterKingdomState } from '@/src/lib/onboarding'
 import { createClient } from '@/utils/supabase/server'
 
-import type { BuildingData, GitHubStatsData, KingdomData } from '@/src/types/game'
+import type { BuildingData, GitHubStatsData } from '@/src/types/game'
 
 type KingdomRow = {
   id: string
@@ -34,7 +35,7 @@ export default async function KingdomPage({
 }: {
   searchParams: Promise<{ sync?: string; error?: string }>
 }) {
-  const params = await searchParams
+  await searchParams
   const supabase = await createClient()
   const {
     data: { user },
@@ -45,7 +46,7 @@ export default async function KingdomPage({
   }
 
   const [{ data: profile }, { data: kingdom }, { data: githubStats }] = await Promise.all([
-    supabase.from('profiles').select('username, avatar_url').eq('id', user.id).maybeSingle(),
+    supabase.from('profiles').select('username, avatar_url, onboarding_done').eq('id', user.id).maybeSingle(),
     supabase
       .from('kingdoms')
       .select(
@@ -62,33 +63,26 @@ export default async function KingdomPage({
       .maybeSingle(),
   ])
 
+  if (!profile?.onboarding_done) {
+    redirect('/onboarding')
+  }
+
   if (!kingdom) {
-    if (params.sync !== '1') {
-      redirect('/api/github/sync')
-    }
-
-    const errorMessage =
-      params.error === 'sync_failed'
-        ? 'GitHub sync completed with an error, so the kingdom record was not created.'
-        : params.error === 'no_github_token'
-          ? 'Your GitHub session token is missing. Sign in again with GitHub to create your kingdom.'
-          : params.error === 'no_github_username'
-            ? 'Your GitHub username is missing from your profile.'
-            : 'Your kingdom has not been created yet.'
-
     return (
       <main className="min-h-screen bg-[linear-gradient(180deg,#120f1d_0%,#09070e_100%)] px-4 py-10 text-[#f7f1e4]">
         <div className="mx-auto max-w-2xl rounded-[32px] border border-[#C9A84C]/25 bg-[linear-gradient(180deg,rgba(20,15,30,0.96),rgba(10,7,16,0.95))] p-8 shadow-[0_24px_90px_rgba(0,0,0,0.45)]">
           <p className="text-xs uppercase tracking-[0.28em] text-[#C9A84C]/75">CodeKingdom</p>
           <h1 className="mt-3 text-3xl font-semibold">Kingdom Setup Needed</h1>
-          <p className="mt-4 text-base leading-7 text-white/75">{errorMessage}</p>
+          <p className="mt-4 text-base leading-7 text-white/75">
+            Your onboarding is not finished yet. Return to the forge and complete your kingdom setup.
+          </p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <a
-              href="/api/github/sync"
+            <Link
+              href="/onboarding"
               className="rounded-2xl bg-[#C9A84C] px-5 py-3 text-sm font-semibold text-[#22190b]"
             >
-              Retry GitHub Sync
-            </a>
+              Return to Onboarding
+            </Link>
             <Link
               href="/"
               className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm text-white/80"
@@ -111,7 +105,7 @@ export default async function KingdomPage({
     name: getBuildingMetadata(building.type).label,
   }))
 
-  const kingdomData: KingdomData = {
+  const kingdomData = withStarterKingdomState({
     id: kingdomRow.id,
     userId: kingdomRow.user_id,
     name: kingdomRow.name,
@@ -126,7 +120,7 @@ export default async function KingdomPage({
     ownerAvatarUrl: profile?.avatar_url ?? null,
     buildings,
     githubStats: (githubStats as GitHubStatsData | null) ?? null,
-  }
+  })
 
   return <KingdomPageClient kingdomData={kingdomData} />
 }

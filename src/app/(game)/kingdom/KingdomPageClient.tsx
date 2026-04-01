@@ -45,6 +45,19 @@ export function KingdomPageClient({
     }
   }, [selectBuilding])
 
+  useEffect(() => {
+    const handleKingdomUpdated = (event: Event) => {
+      const customEvent = event as CustomEvent<KingdomData>
+      setKingdom(customEvent.detail)
+    }
+
+    window.addEventListener('codekingdom:kingdom-updated', handleKingdomUpdated as EventListener)
+
+    return () => {
+      window.removeEventListener('codekingdom:kingdom-updated', handleKingdomUpdated as EventListener)
+    }
+  }, [setKingdom])
+
   return (
     <main className="relative h-screen w-full overflow-hidden bg-[#0b0912]">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(201,168,76,0.18),transparent_40%),linear-gradient(180deg,#120f1d_0%,#09070e_100%)]" />

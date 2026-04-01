@@ -84,21 +84,34 @@ async function syncGitHubKingdom() {
         languages: ghStats.languages,
     })
 
+    const syncedAt = new Date().toISOString()
+
     const { error: kingdomError } = await admin.from('kingdoms').upsert({
         user_id: user.id,
         ...kingdomStats,
-        last_synced_at: new Date().toISOString(),
+        last_synced_at: syncedAt,
     }, { onConflict: 'user_id' })
 
     if (kingdomError) {
         return NextResponse.json({ error: kingdomError.message, code: 'sync_failed' }, { status: 500 })
     }
 
+    const { error: profileError } = await admin
+        .from('profiles')
+        .update({
+            onboarding_done: true,
+        })
+        .eq('id', user.id)
+
+    if (profileError) {
+        return NextResponse.json({ error: profileError.message, code: 'sync_failed' }, { status: 500 })
+    }
+
     return NextResponse.json({
         success: true,
         stats: {
             ...kingdomStats,
-            last_synced_at: new Date().toISOString(),
+            last_synced_at: syncedAt,
         },
     })
 }

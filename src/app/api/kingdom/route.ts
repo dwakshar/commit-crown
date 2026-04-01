@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
 
 import { calculateKingdomPower } from '@/src/lib/gameEngine'
+import { withStarterKingdomState } from '@/src/lib/onboarding'
 import { createClient } from '@/utils/supabase/server'
 
-import type { BuildingData, GitHubStatsData, KingdomData } from '@/src/types/game'
+import type { BuildingData, GitHubStatsData } from '@/src/types/game'
 
 type ProfileKingdomResult = {
   username: string | null
@@ -97,7 +98,7 @@ export async function GET() {
       }
     : null
 
-  const kingdomData: KingdomData = {
+  const kingdomData = withStarterKingdomState({
     id: kingdom.id,
     userId: kingdom.user_id,
     name: kingdom.name,
@@ -112,7 +113,7 @@ export async function GET() {
     ownerAvatarUrl: result.avatar_url,
     buildings,
     githubStats,
-  }
+  })
 
   const power = calculateKingdomPower(kingdomData, buildings)
 
