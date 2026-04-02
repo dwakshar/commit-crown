@@ -15,9 +15,19 @@ type AdminUserWithProviderToken = {
   }
 }
 
+function getEnvGitHubToken() {
+  return process.env.GITHUB_ACCESS_TOKEN ?? process.env.GITHUB_TOKEN ?? null
+}
+
 async function resolveGitHubToken(userId: string, fallbackToken: string | null | undefined) {
   if (fallbackToken) {
     return fallbackToken
+  }
+
+  const envToken = getEnvGitHubToken()
+
+  if (envToken) {
+    return envToken
   }
 
   const { data, error } = await supabaseAdmin

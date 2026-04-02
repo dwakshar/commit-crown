@@ -11,9 +11,19 @@ type AdminUserWithProviderToken = {
     }
 }
 
+function getEnvGitHubToken() {
+    return process.env.GITHUB_ACCESS_TOKEN ?? process.env.GITHUB_TOKEN ?? null
+}
+
 async function resolveGitHubToken(userId: string, sessionToken: string | null | undefined) {
     if (sessionToken) {
         return sessionToken
+    }
+
+    const envToken = getEnvGitHubToken()
+
+    if (envToken) {
+        return envToken
     }
 
     const { data: storedToken, error: storedTokenError } = await supabaseAdmin
@@ -52,7 +62,15 @@ async function syncGitHubKingdom() {
 
         const { data: { session } } = await supabase.auth.getSession()
         const githubToken = await resolveGitHubToken(user.id, session?.provider_token)
-        if (!githubToken) return NextResponse.json({ error: 'No GitHub token', code: 'no_github_token' }, { status: 400 })
+        if (!githubToken) {
+            return NextResponse.json(
+                {
+                    error: 'No GitHub token. Sign in with GitHub again or set GITHUB_ACCESS_TOKEN in .env.local for local development.',
+                    code: 'no_github_token',
+                },
+                { status: 400 },
+            )
+        }
 
         const { data: profile } = await supabase
             .from('profiles')
