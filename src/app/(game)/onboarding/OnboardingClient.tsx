@@ -14,6 +14,8 @@ type SyncResponse = {
   success?: boolean
   code?: string
   error?: string
+  stats?: Partial<KingdomData>
+  githubStats?: KingdomData['githubStats']
 }
 
 type KingdomResponse = {
@@ -100,6 +102,32 @@ export function OnboardingClient({
         const kingdomPayload = await parseJsonResponse<KingdomResponse>(kingdomResponse)
 
         if (!kingdomResponse.ok || !kingdomPayload.kingdom) {
+          if (syncPayload.success) {
+            setSummary({
+              id: 'pending-kingdom',
+              userId: 'pending-user',
+              name: trimmedName || 'My Kingdom',
+              gold: 0,
+              prestige: syncPayload.stats?.prestige ?? 0,
+              population: syncPayload.stats?.population ?? 0,
+              defense_rating: syncPayload.stats?.defense_rating ?? 0,
+              attack_rating: syncPayload.stats?.attack_rating ?? 0,
+              building_slots: syncPayload.stats?.building_slots ?? 5,
+              last_synced_at:
+                typeof syncPayload.stats?.last_synced_at === 'string'
+                  ? syncPayload.stats.last_synced_at
+                  : null,
+              ownerName: trimmedName || 'Code Monarch',
+              ownerAvatarUrl: null,
+              buildings: [],
+              githubStats: syncPayload.githubStats ?? null,
+            })
+            window.setTimeout(() => {
+              setStep(3)
+            }, 450)
+            return
+          }
+
           throw new Error(kingdomPayload.error ?? 'Unable to load kingdom summary')
         }
 
@@ -120,7 +148,7 @@ export function OnboardingClient({
     return () => {
       window.clearInterval(stageTimer)
     }
-  }, [step])
+  }, [step, trimmedName])
 
   const handleNext = async () => {
     if (trimmedName.length < 2) {

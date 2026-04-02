@@ -1,51 +1,38 @@
 import { NextResponse } from 'next/server'
 
 import { calculateKingdomPower } from '@/src/lib/gameEngine'
+import { getBuildingMetadata } from '@/src/lib/kingdom'
 import { withStarterKingdomState } from '@/src/lib/onboarding'
 import { supabaseAdmin } from '@/src/lib/supabaseAdmin'
 import { createClient } from '@/utils/supabase/server'
 
 import type { BuildingData, GitHubStatsData } from '@/src/types/game'
 
-type ProfileKingdomResult = {
+type ProfileRow = {
   username: string | null
   avatar_url: string | null
-  kingdoms:
+}
+
+type KingdomRow = {
+  id: string
+  user_id: string
+  name: string
+  gold: number
+  prestige: number
+  population: number
+  defense_rating: number
+  attack_rating: number
+  building_slots: number
+  last_synced_at: string | null
+  theme_id: string | null
+  buildings:
     | {
         id: string
-        user_id: string
-        name: string
-        gold: number
-        prestige: number
-        population: number
-        defense_rating: number
-        attack_rating: number
-        building_slots: number
-        last_synced_at: string | null
-        theme_id: string | null
-        buildings:
-          | {
-              id: string
-              type: BuildingData['type']
-              position_x: number
-              position_y: number
-              level: number
-              skin_id: string | null
-            }[]
-          | null
-      }[]
-    | null
-  github_stats:
-    | {
-        total_commits: number
-        total_repos: number
-        total_stars: number
-        total_prs: number
-        followers: number
-        current_streak: number
-        longest_streak: number
-        languages: Record<string, number> | null
-        synced_at: string | null
+        type: BuildingData['type']
+        position_x: number
+        position_y: number
+        level: number
+        skin_id: string | null
       }[]
     | null
 }
@@ -60,20 +47,34 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { data: profile, error } = await supabase
-    .from('profiles')
-    .select(
-      'username, avatar_url, kingdoms(id, user_id, name, gold, prestige, population, defense_rating, attack_rating, building_slots, last_synced_at, theme_id, buildings(id, type, position_x, position_y, level, skin_id)), github_stats(total_commits, total_repos, total_stars, total_prs, followers, current_streak, longest_streak, languages, synced_at)',
-    )
-    .eq('id', user.id)
-    .single()
+  const [{ data: profile, error: profileError }, { data: initialKingdom, error: kingdomError }, { data: githubStats }] =
+    await Promise.all([
+      supabase.from('profiles').select('username, avatar_url').eq('id', user.id).maybeSingle(),
+      supabase
+        .from('kingdoms')
+        .select(
+          'id, user_id, name, gold, prestige, population, defense_rating, attack_rating, building_slots, last_synced_at, theme_id, buildings(id, type, position_x, position_y, level, skin_id)',
+        )
+        .eq('user_id', user.id)
+        .maybeSingle(),
+      supabase
+        .from('github_stats')
+        .select(
+          'total_commits, total_repos, total_stars, total_prs, followers, current_streak, longest_streak, languages, synced_at',
+        )
+        .eq('user_id', user.id)
+        .maybeSingle(),
+    ])
 
-  if (error || !profile) {
-    return NextResponse.json({ error: 'Kingdom not found' }, { status: 404 })
+  if (profileError || !profile) {
+    return NextResponse.json({ error: profileError?.message ?? 'Profile not found' }, { status: 404 })
   }
 
-  const result = profile as ProfileKingdomResult
-  let kingdom = result.kingdoms?.[0]
+  let kingdom = initialKingdom
+
+  if (kingdomError) {
+    return NextResponse.json({ error: kingdomError.message }, { status: 500 })
+  }
 
   if (!kingdom) {
     const { error: createError } = await supabaseAdmin
@@ -96,69 +97,50 @@ export async function GET() {
       return NextResponse.json({ error: createError.message }, { status: 500 })
     }
 
-    const { data: refreshedProfile, error: refreshError } = await supabase
-      .from('profiles')
+    const { data: refreshedKingdom, error: refreshError } = await supabase
+      .from('kingdoms')
       .select(
-        'username, avatar_url, kingdoms(id, user_id, name, gold, prestige, population, defense_rating, attack_rating, building_slots, last_synced_at, theme_id, buildings(id, type, position_x, position_y, level, skin_id)), github_stats(total_commits, total_repos, total_stars, total_prs, followers, current_streak, longest_streak, languages, synced_at)',
+        'id, user_id, name, gold, prestige, population, defense_rating, attack_rating, building_slots, last_synced_at, theme_id, buildings(id, type, position_x, position_y, level, skin_id)',
       )
-      .eq('id', user.id)
-      .single()
+      .eq('user_id', user.id)
+      .maybeSingle()
 
-    if (refreshError || !refreshedProfile) {
-      return NextResponse.json({ error: 'Kingdom not found' }, { status: 404 })
+    if (refreshError || !refreshedKingdom) {
+      return NextResponse.json({ error: refreshError?.message ?? 'Kingdom not found' }, { status: 404 })
     }
 
-    const refreshedResult = refreshedProfile as ProfileKingdomResult
-    kingdom = refreshedResult.kingdoms?.[0]
-
-    if (!kingdom) {
-      return NextResponse.json({ error: 'Kingdom not found' }, { status: 404 })
-    }
-
-    result.username = refreshedResult.username
-    result.avatar_url = refreshedResult.avatar_url
-    result.github_stats = refreshedResult.github_stats
+    kingdom = refreshedKingdom
   }
 
-  const buildings: BuildingData[] = (kingdom.buildings ?? []).map((building) => ({
+  const typedProfile = profile as ProfileRow
+  const kingdomRow = kingdom as KingdomRow
+  const buildings: BuildingData[] = (kingdomRow.buildings ?? []).map((building) => ({
     id: building.id,
     type: building.type,
     x: building.position_x,
     y: building.position_y,
     level: Math.min(5, Math.max(1, building.level)) as 1 | 2 | 3 | 4 | 5,
     skinId: building.skin_id,
+    name: getBuildingMetadata(building.type).label,
   }))
 
-  const githubStats: GitHubStatsData | null = result.github_stats?.[0]
-    ? {
-        total_commits: result.github_stats[0].total_commits,
-        total_repos: result.github_stats[0].total_repos,
-        total_stars: result.github_stats[0].total_stars,
-        total_prs: result.github_stats[0].total_prs,
-        followers: result.github_stats[0].followers,
-        current_streak: result.github_stats[0].current_streak,
-        longest_streak: result.github_stats[0].longest_streak,
-        languages: result.github_stats[0].languages ?? {},
-        synced_at: result.github_stats[0].synced_at,
-      }
-    : null
-
+  const typedGithubStats = (githubStats as GitHubStatsData | null) ?? null
   const kingdomData = withStarterKingdomState({
-    id: kingdom.id,
-    userId: kingdom.user_id,
-    name: kingdom.name,
-    gold: kingdom.gold,
-    prestige: kingdom.prestige,
-    population: kingdom.population,
-    defense_rating: kingdom.defense_rating,
-    attack_rating: kingdom.attack_rating,
-    building_slots: kingdom.building_slots,
-    last_synced_at: kingdom.last_synced_at,
-    themeId: kingdom.theme_id,
-    ownerName: result.username ?? 'Code Monarch',
-    ownerAvatarUrl: result.avatar_url,
+    id: kingdomRow.id,
+    userId: kingdomRow.user_id,
+    name: kingdomRow.name,
+    gold: kingdomRow.gold,
+    prestige: kingdomRow.prestige,
+    population: kingdomRow.population,
+    defense_rating: kingdomRow.defense_rating,
+    attack_rating: kingdomRow.attack_rating,
+    building_slots: kingdomRow.building_slots,
+    last_synced_at: kingdomRow.last_synced_at,
+    themeId: kingdomRow.theme_id,
+    ownerName: typedProfile.username ?? 'Code Monarch',
+    ownerAvatarUrl: typedProfile.avatar_url,
     buildings,
-    githubStats,
+    githubStats: typedGithubStats,
   })
 
   const power = calculateKingdomPower(kingdomData, buildings)
