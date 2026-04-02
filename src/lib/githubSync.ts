@@ -45,6 +45,65 @@ function isMissingSnapshotFunction(error: { message?: string } | null) {
   )
 }
 
+async function persistGitHubSnapshotDirectly(options: {
+  userId: string
+  syncedAt: string
+  githubStats: Awaited<ReturnType<typeof fetchGitHubStats>>
+  kingdomStats: ReturnType<typeof mapGitHubToKingdom>
+}) {
+  const { userId, syncedAt, githubStats, kingdomStats } = options
+
+  const { error: githubStatsError } = await supabaseAdmin.from('github_stats').upsert(
+    {
+      user_id: userId,
+      followers: githubStats.followers,
+      total_commits: githubStats.total_commits,
+      total_repos: githubStats.total_repos,
+      total_stars: githubStats.total_stars,
+      total_prs: githubStats.total_prs,
+      current_streak: githubStats.current_streak,
+      longest_streak: githubStats.longest_streak,
+      night_commits: githubStats.night_commits,
+      monthly_peak: githubStats.monthly_peak,
+      starred_repo_count: githubStats.starred_repo_count,
+      languages: githubStats.languages,
+      synced_at: syncedAt,
+    },
+    { onConflict: 'user_id' },
+  )
+
+  if (githubStatsError) {
+    throw new Error(githubStatsError.message)
+  }
+
+  const { error: kingdomError } = await supabaseAdmin.from('kingdoms').upsert(
+    {
+      user_id: userId,
+      gold: kingdomStats.gold,
+      prestige: kingdomStats.prestige,
+      population: kingdomStats.population,
+      attack_rating: kingdomStats.attack_rating,
+      defense_rating: kingdomStats.defense_rating,
+      building_slots: kingdomStats.building_slots,
+      last_synced_at: syncedAt,
+    },
+    { onConflict: 'user_id' },
+  )
+
+  if (kingdomError) {
+    throw new Error(kingdomError.message)
+  }
+
+  const { error: profileError } = await supabaseAdmin
+    .from('profiles')
+    .update({ onboarding_done: true })
+    .eq('id', userId)
+
+  if (profileError) {
+    throw new Error(profileError.message)
+  }
+}
+
 export async function listStaleGitHubUsers(limit = 100) {
   const cutoff = getStaleSyncCutoff()
   const { data, error } = await supabaseAdmin
@@ -169,6 +228,16 @@ export async function syncGitHubKingdomForUser(options: {
 
       const legacyResult = await supabaseAdmin.rpc('apply_github_sync_snapshot', legacyPayload)
       syncWriteError = legacyResult.error
+    }
+
+    if (isMissingSnapshotFunction(syncWriteError)) {
+      await persistGitHubSnapshotDirectly({
+        userId,
+        syncedAt,
+        githubStats: ghStats,
+        kingdomStats,
+      })
+      syncWriteError = null
     }
 
     if (syncWriteError) {
