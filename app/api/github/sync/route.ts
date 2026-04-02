@@ -2,15 +2,40 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import { syncGitHubKingdomForUser } from '@/src/lib/githubSync'
+import { supabaseAdmin } from '@/src/lib/supabaseAdmin'
+
+type AdminUserWithProviderToken = {
+    provider_token?: string | null
+    app_metadata?: {
+        provider_token?: string | null
+    }
+}
+
+async function resolveGitHubToken(userId: string, sessionToken: string | null | undefined) {
+    if (sessionToken) {
+        return sessionToken
+    }
+
+    const { data, error } = await supabaseAdmin.auth.admin.getUserById(userId)
+
+    if (error) {
+        throw new Error(error.message)
+    }
+
+    return (
+        (data.user as AdminUserWithProviderToken | null)?.provider_token ??
+        (data.user as AdminUserWithProviderToken | null)?.app_metadata?.provider_token ??
+        null
+    )
+}
 
 async function syncGitHubKingdom() {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    // Get GitHub token from Supabase session
     const { data: { session } } = await supabase.auth.getSession()
-    const githubToken = session?.provider_token
+    const githubToken = await resolveGitHubToken(user.id, session?.provider_token)
     if (!githubToken) return NextResponse.json({ error: 'No GitHub token', code: 'no_github_token' }, { status: 400 })
 
     const { data: profile } = await supabase
