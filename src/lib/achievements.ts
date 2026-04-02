@@ -195,6 +195,9 @@ export async function checkAndAwardAchievements(
       .lte('prestige_rank', 10),
   ])
 
+  const shouldIgnoreExistingAchievementsError = isSchemaDriftError(existingError)
+  const shouldIgnoreTopWeeksError = isSchemaDriftError(topWeeksResponse.error)
+
   if (
     githubStatsError ||
     raidWinsResponse.error ||
@@ -202,8 +205,8 @@ export async function checkAndAwardAchievements(
     visitResponses[0].error ||
     visitResponses[1].error ||
     prestigeError ||
-    existingError ||
-    topWeeksResponse.error
+    (!shouldIgnoreExistingAchievementsError && existingError) ||
+    (!shouldIgnoreTopWeeksError && topWeeksResponse.error)
   ) {
     throw new Error(
       githubStatsError?.message ||
@@ -212,14 +215,10 @@ export async function checkAndAwardAchievements(
         visitResponses[0].error?.message ||
         visitResponses[1].error?.message ||
         prestigeError?.message ||
-        existingError?.message ||
-        topWeeksResponse.error?.message ||
+        (!shouldIgnoreExistingAchievementsError ? existingError?.message : undefined) ||
+        (!shouldIgnoreTopWeeksError ? topWeeksResponse.error?.message : undefined) ||
         'Unable to evaluate achievements',
     )
-  }
-
-  if (isSchemaDriftError(existingError) || isSchemaDriftError(topWeeksResponse.error)) {
-    return []
   }
 
   const typedGithubStats = (githubStats as StatsRow | null) ?? null
@@ -243,11 +242,11 @@ export async function checkAndAwardAchievements(
     totalCommits: typedGithubStats?.total_commits ?? 0,
     prestigeRank,
     visitsMade: visitResponses[0].count ?? 0,
-    top10WeeksCount: topWeeksResponse.count ?? 0,
+    top10WeeksCount: shouldIgnoreTopWeeksError ? 0 : (topWeeksResponse.count ?? 0),
   }
 
   const unlockedKeys = new Set(
-    ((existingAchievements as AchievementRow[] | null) ?? []).map(
+    (((shouldIgnoreExistingAchievementsError ? [] : existingAchievements) as AchievementRow[] | null) ?? []).map(
       (achievement) => achievement.achievement_key,
     ),
   )

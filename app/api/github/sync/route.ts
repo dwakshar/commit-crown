@@ -16,11 +16,15 @@ function getEnvGitHubToken() {
 }
 
 async function resolveGitHubToken(userId: string, sessionToken: string | null | undefined) {
+    const envToken = getEnvGitHubToken()
+
+    if (envToken && process.env.NODE_ENV !== 'production') {
+        return envToken
+    }
+
     if (sessionToken) {
         return sessionToken
     }
-
-    const envToken = getEnvGitHubToken()
 
     if (envToken) {
         return envToken

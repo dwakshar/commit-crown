@@ -63,6 +63,16 @@ export class GitHubRateLimitError extends Error {
   }
 }
 
+export class GitHubBadCredentialsError extends Error {
+  status: number
+
+  constructor(message = 'Bad credentials', status = 401) {
+    super(message)
+    this.name = 'GitHubBadCredentialsError'
+    this.status = status
+  }
+}
+
 export function getOctokit(token: string) {
   return new Octokit({ auth: token })
 }
@@ -95,6 +105,18 @@ function getRetryAfterSeconds(headers: Record<string, string | number | undefine
 }
 
 function normalizeGitHubError(error: unknown): never {
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'status' in error &&
+    error.status === 401
+  ) {
+    throw new GitHubBadCredentialsError(
+      'message' in error && typeof error.message === 'string' ? error.message : 'Bad credentials',
+      401,
+    )
+  }
+
   if (
     typeof error === 'object' &&
     error !== null &&

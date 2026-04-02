@@ -1,4 +1,4 @@
-import { fetchGitHubStats, GitHubRateLimitError } from '@/lib/github'
+import { fetchGitHubStats, GitHubBadCredentialsError, GitHubRateLimitError } from '@/lib/github'
 import { checkAndAwardAchievements } from '@/src/lib/achievements'
 import { mapGitHubToKingdom } from '@/lib/gameEngine'
 import { supabaseAdmin } from '@/src/lib/supabaseAdmin'
@@ -37,6 +37,10 @@ type StaleGitHubUserRow = {
 
 export function getStaleSyncCutoff() {
   return new Date(Date.now() - STALE_SYNC_WINDOW_HOURS * 60 * 60 * 1000).toISOString()
+}
+
+function getEnvGitHubToken() {
+  return process.env.GITHUB_ACCESS_TOKEN ?? process.env.GITHUB_TOKEN ?? null
 }
 
 function isMissingSnapshotFunction(error: { message?: string } | null) {
@@ -184,7 +188,26 @@ export async function syncGitHubKingdomForUser(options: {
   }
 
   try {
-    const ghStats = await fetchGitHubStats(githubToken, githubUsername)
+    let effectiveToken = githubToken
+    let ghStats
+
+    try {
+      ghStats = await fetchGitHubStats(effectiveToken, githubUsername)
+    } catch (error) {
+      const envToken = getEnvGitHubToken()
+
+      if (
+        error instanceof GitHubBadCredentialsError &&
+        envToken &&
+        envToken !== effectiveToken
+      ) {
+        effectiveToken = envToken
+        ghStats = await fetchGitHubStats(effectiveToken, githubUsername)
+      } else {
+        throw error
+      }
+    }
+
     const syncedAt = new Date().toISOString()
 
     const kingdomStats = mapGitHubToKingdom({
@@ -264,6 +287,14 @@ export async function syncGitHubKingdomForUser(options: {
         ok: false,
         error: error.message,
         code: 'github_rate_limited',
+      }
+    }
+
+    if (error instanceof GitHubBadCredentialsError) {
+      return {
+        ok: false,
+        error: 'Bad GitHub credentials. Update GITHUB_ACCESS_TOKEN in .env.local or sign in with GitHub again.',
+        code: 'sync_failed',
       }
     }
 
