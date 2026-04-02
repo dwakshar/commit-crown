@@ -62,7 +62,19 @@ export async function GET(request: Request) {
 
     const supabase = await createClient()
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
-    if (error) return NextResponse.redirect(new URL('/login?error=auth_failed', origin))
+    if (error) {
+        console.error('GitHub auth callback failed during code exchange', {
+            message: error.message,
+            status: 'status' in error ? error.status : undefined,
+            code: 'code' in error ? error.code : undefined,
+            origin,
+        })
+
+        const redirectUrl = new URL('/login', origin)
+        redirectUrl.searchParams.set('error', 'auth_failed')
+        redirectUrl.searchParams.set('reason', error.message.slice(0, 180))
+        return NextResponse.redirect(redirectUrl)
+    }
 
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.redirect(new URL('/login', origin))
