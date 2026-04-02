@@ -58,6 +58,14 @@ type AchievementRow = {
   achievement_key: AchievementKey
 }
 
+function isSchemaDriftError(error: { message?: string } | null) {
+  return Boolean(
+    error?.message?.includes('does not exist') ||
+      error?.message?.includes('Could not find the') ||
+      error?.message?.includes('schema cache'),
+  )
+}
+
 export const ACHIEVEMENTS: AchievementDefinition[] = [
   {
     key: 'night_owl',
@@ -210,6 +218,10 @@ export async function checkAndAwardAchievements(
     )
   }
 
+  if (isSchemaDriftError(existingError) || isSchemaDriftError(topWeeksResponse.error)) {
+    return []
+  }
+
   const typedGithubStats = (githubStats as StatsRow | null) ?? null
   const visitedHosts = new Set(
     (((visitResponses[1].data as { host_id: string }[] | null) ?? []).map((visit) => visit.host_id)),
@@ -259,6 +271,10 @@ export async function checkAndAwardAchievements(
   )
 
   if (insertAchievementsError) {
+    if (isSchemaDriftError(insertAchievementsError)) {
+      return []
+    }
+
     throw new Error(insertAchievementsError.message)
   }
 
@@ -275,6 +291,10 @@ export async function checkAndAwardAchievements(
   )
 
   if (notificationError) {
+    if (isSchemaDriftError(notificationError)) {
+      return []
+    }
+
     throw new Error(notificationError.message)
   }
 
