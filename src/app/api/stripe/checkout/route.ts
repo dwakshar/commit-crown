@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
 import { getAppUrl } from '@/src/lib/appUrl'
-import { stripeServer } from '@/src/lib/stripe/server'
+import { getStripeServer } from '@/src/lib/stripe/server'
 import { createClient } from '@/utils/supabase/server'
 
 export const runtime = 'nodejs'
@@ -92,6 +92,7 @@ export async function POST(request: Request) {
   }
 
   try {
+    const stripeServer = getStripeServer()
     const session = await stripeServer.checkout.sessions.create({
       mode: 'payment',
       line_items: [

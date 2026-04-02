@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
 import { checkAndAwardAchievements } from '@/src/lib/achievements'
-import { stripeServer } from '@/src/lib/stripe/server'
+import { getStripeServer } from '@/src/lib/stripe/server'
 import { supabaseAdmin } from '@/src/lib/supabaseAdmin'
 
 export const runtime = 'nodejs'
@@ -99,6 +99,7 @@ export async function POST(request: Request) {
   let event: Stripe.Event
 
   try {
+    const stripeServer = getStripeServer()
     event = stripeServer.webhooks.constructEvent(body, signature, webhookSecret)
   } catch (error) {
     return NextResponse.json(
