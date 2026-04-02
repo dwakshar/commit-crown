@@ -1,31 +1,97 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
-import { createClient as createServiceClient } from '@supabase/supabase-js'
+import { z } from 'zod'
+
+import { supabaseAdmin } from '@/src/lib/supabaseAdmin'
+
+const githubMetadataSchema = z.object({
+    user_name: z.string().min(1).max(39).optional(),
+    preferred_username: z.string().min(1).max(39).optional(),
+    avatar_url: z.string().url().optional(),
+    provider_id: z.coerce.number().int().optional(),
+})
+
+function slugifyUsername(value: string) {
+    const normalized = value
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9-]/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
+
+    return normalized.slice(0, 39)
+}
+
+async function resolveUsername(userId: string, rawUsername: string | undefined) {
+    const baseUsername = slugifyUsername(rawUsername ?? '') || `monarch-${userId.slice(0, 8)}`
+
+    for (let index = 0; index < 5; index += 1) {
+        const candidate =
+            index === 0
+                ? baseUsername
+                : `${baseUsername.slice(0, Math.max(1, 39 - (`-${index}`.length)))}-${index}`
+
+        const { data: existing, error } = await supabaseAdmin
+            .from('profiles')
+            .select('id')
+            .eq('username', candidate)
+            .maybeSingle()
+
+        if (error) {
+            throw error
+        }
+
+        if (!existing || existing.id === userId) {
+            return candidate
+        }
+    }
+
+    return `monarch-${userId.slice(0, 8)}`
+}
 
 export async function GET(request: Request) {
-    const { searchParams, origin } = new URL(request.url)
+    const url = new URL(request.url)
+    const { searchParams, origin } = url
     const code = searchParams.get('code')
-    if (!code) return NextResponse.redirect(`${origin}/login?error=no_code`)
+    if (!code) return NextResponse.redirect(new URL('/login?error=no_code', origin))
 
     const supabase = await createClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (error) return NextResponse.redirect(`${origin}/login?error=auth_failed`)
+    if (error) return NextResponse.redirect(new URL('/login?error=auth_failed', origin))
 
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.redirect(`${origin}/login`)
+    if (!user) return NextResponse.redirect(new URL('/login', origin))
+
+    const metadataResult = githubMetadataSchema.safeParse(user.user_metadata)
+
+    if (!metadataResult.success) {
+        return NextResponse.redirect(new URL('/login?error=invalid_profile', origin))
+    }
+
+    const metadata = metadataResult.data
+    let username: string
+
+    try {
+        username = await resolveUsername(
+            user.id,
+            metadata.user_name ?? metadata.preferred_username,
+        )
+    } catch {
+        return NextResponse.redirect(new URL('/login?error=profile_lookup_failed', origin))
+    }
 
     // Create profile if first login
-    const admin = createServiceClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
-    await admin.from('profiles').upsert({
+    const { error: profileError } = await supabaseAdmin.from('profiles').upsert({
         id: user.id,
-        username: user.user_metadata.user_name,
-        github_username: user.user_metadata.user_name,
-        avatar_url: user.user_metadata.avatar_url,
-        github_id: user.user_metadata.provider_id,
+        username,
+        github_username: username,
+        avatar_url: metadata.avatar_url ?? null,
+        github_id: metadata.provider_id ?? null,
     }, { onConflict: 'id' })
 
-    return NextResponse.redirect(`${origin}/kingdom`)
+    if (profileError) {
+        return NextResponse.redirect(new URL('/login?error=profile_create_failed', origin))
+    }
+
+    return NextResponse.redirect(new URL('/kingdom', origin))
 }

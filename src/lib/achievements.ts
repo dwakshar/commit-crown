@@ -249,12 +249,13 @@ export async function checkAndAwardAchievements(
 
   const awardedAt = new Date().toISOString()
 
-  const { error: insertAchievementsError } = await supabase.from('user_achievements').insert(
+  const { error: insertAchievementsError } = await supabase.from('user_achievements').upsert(
     newlyUnlocked.map((achievement) => ({
       user_id: userId,
       achievement_key: achievement.key,
       unlocked_at: awardedAt,
     })),
+    { onConflict: 'user_id,achievement_key', ignoreDuplicates: true },
   )
 
   if (insertAchievementsError) {

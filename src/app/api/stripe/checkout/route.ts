@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
-import { stripeServer } from '@/src/lib/stripe'
+import { getAppUrl } from '@/src/lib/appUrl'
+import { stripeServer } from '@/src/lib/stripe/server'
 import { createClient } from '@/utils/supabase/server'
 
 export const runtime = 'nodejs'
@@ -38,10 +39,15 @@ export async function POST(request: Request) {
     )
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL
+  let appUrl: string
 
-  if (!appUrl) {
-    return NextResponse.json({ error: 'Missing NEXT_PUBLIC_APP_URL' }, { status: 500 })
+  try {
+    appUrl = getAppUrl()
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Missing NEXT_PUBLIC_APP_URL' },
+      { status: 500 },
+    )
   }
 
   const [{ data: item, error: itemError }, { data: existingOwnership, error: ownershipError }] =

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
+import { checkAndAwardAchievements } from '@/src/lib/achievements'
+import { supabaseAdmin } from '@/src/lib/supabaseAdmin'
 import { createClient } from '@/utils/supabase/server'
 
 const upgradeBuildingSchema = z.object({
@@ -65,6 +67,8 @@ export async function POST(request: Request) {
   if (!updated) {
     return NextResponse.json({ error: 'Upgrade failed' }, { status: 500 })
   }
+
+  await checkAndAwardAchievements(user.id, supabaseAdmin)
 
   return NextResponse.json({
     success: true,

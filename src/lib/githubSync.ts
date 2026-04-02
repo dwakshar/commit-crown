@@ -1,4 +1,5 @@
-import { fetchGitHubStats } from '@/lib/github'
+import { fetchGitHubStats, GitHubRateLimitError } from '@/lib/github'
+import { checkAndAwardAchievements } from '@/src/lib/achievements'
 import { mapGitHubToKingdom } from '@/lib/gameEngine'
 import { supabaseAdmin } from '@/src/lib/supabaseAdmin'
 
@@ -9,7 +10,8 @@ type SyncResult =
   | {
       ok: true
       syncedAt: string
-      stats: ReturnType<typeof mapGitHubToKingdom>
+      githubStats: Awaited<ReturnType<typeof fetchGitHubStats>>
+      stats: Omit<ReturnType<typeof mapGitHubToKingdom>, 'gold'>
     }
   | {
       ok: false
@@ -19,6 +21,7 @@ type SyncResult =
         | 'cooldown_active'
         | 'no_github_token'
         | 'no_github_username'
+        | 'github_rate_limited'
         | 'sync_failed'
     }
 
@@ -119,66 +122,63 @@ export async function syncGitHubKingdomForUser(options: {
     const ghStats = await fetchGitHubStats(githubToken, githubUsername)
     const syncedAt = new Date().toISOString()
 
-    const { error: githubStatsError } = await supabaseAdmin.from('github_stats').upsert({
-      user_id: userId,
-      followers: ghStats.followers,
-      total_commits: 0,
-      total_repos: ghStats.total_repos,
-      total_stars: ghStats.total_stars,
-      total_prs: 0,
-      current_streak: 0,
-      longest_streak: 0,
-      night_commits: ghStats.night_commits,
-      monthly_peak: ghStats.monthly_peak,
-      starred_repo_count: ghStats.starred_repo_count,
-      languages: ghStats.languages,
-      synced_at: syncedAt,
-    })
-
-    if (githubStatsError) {
-      return { ok: false, error: githubStatsError.message, code: 'sync_failed' }
-    }
-
     const kingdomStats = mapGitHubToKingdom({
-      total_commits: 0,
+      total_commits: ghStats.total_commits,
       total_repos: ghStats.total_repos,
       total_stars: ghStats.total_stars,
-      total_prs: 0,
+      total_prs: ghStats.total_prs,
       followers: ghStats.followers,
-      current_streak: 0,
+      current_streak: ghStats.current_streak,
       languages: ghStats.languages,
     })
+    const { error: syncWriteError } = await supabaseAdmin.rpc('apply_github_sync_snapshot', {
+      p_user_id: userId,
+      p_followers: ghStats.followers,
+      p_total_commits: ghStats.total_commits,
+      p_total_repos: ghStats.total_repos,
+      p_total_stars: ghStats.total_stars,
+      p_total_prs: ghStats.total_prs,
+      p_current_streak: ghStats.current_streak,
+      p_longest_streak: ghStats.longest_streak,
+      p_night_commits: ghStats.night_commits,
+      p_monthly_peak: ghStats.monthly_peak,
+      p_starred_repo_count: ghStats.starred_repo_count,
+      p_languages: ghStats.languages,
+      p_prestige: kingdomStats.prestige,
+      p_population: kingdomStats.population,
+      p_attack_rating: kingdomStats.attack_rating,
+      p_defense_rating: kingdomStats.defense_rating,
+      p_building_slots: kingdomStats.building_slots,
+      p_synced_at: syncedAt,
+    })
 
-    const { error: kingdomError } = await supabaseAdmin.from('kingdoms').upsert(
-      {
-        user_id: userId,
-        ...kingdomStats,
-        last_synced_at: syncedAt,
-      },
-      { onConflict: 'user_id' },
-    )
-
-    if (kingdomError) {
-      return { ok: false, error: kingdomError.message, code: 'sync_failed' }
+    if (syncWriteError) {
+      return { ok: false, error: syncWriteError.message, code: 'sync_failed' }
     }
 
-    const { error: profileError } = await supabaseAdmin
-      .from('profiles')
-      .update({
-        onboarding_done: true,
-      })
-      .eq('id', userId)
-
-    if (profileError) {
-      return { ok: false, error: profileError.message, code: 'sync_failed' }
-    }
+    await checkAndAwardAchievements(userId, supabaseAdmin)
 
     return {
       ok: true,
       syncedAt,
-      stats: kingdomStats,
+      githubStats: ghStats,
+      stats: {
+        prestige: kingdomStats.prestige,
+        population: kingdomStats.population,
+        attack_rating: kingdomStats.attack_rating,
+        defense_rating: kingdomStats.defense_rating,
+        building_slots: kingdomStats.building_slots,
+      },
     }
   } catch (error) {
+    if (error instanceof GitHubRateLimitError) {
+      return {
+        ok: false,
+        error: error.message,
+        code: 'github_rate_limited',
+      }
+    }
+
     return {
       ok: false,
       error: error instanceof Error ? error.message : 'Unable to sync GitHub data',

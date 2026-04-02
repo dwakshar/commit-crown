@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
+import { checkAndAwardAchievements } from '@/src/lib/achievements'
+import { supabaseAdmin } from '@/src/lib/supabaseAdmin'
 import { createClient } from '@/utils/supabase/server'
 
 const visitRecordSchema = z.object({
@@ -31,40 +33,29 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Cannot visit your own kingdom' }, { status: 400 })
   }
 
-  const [{ data: host }, { data: visitorProfile }] = await Promise.all([
-    supabase.from('profiles').select('id').eq('id', parsed.data.defenderId).maybeSingle(),
-    supabase.from('profiles').select('username').eq('id', user.id).maybeSingle(),
-  ])
+  const { data, error } = await supabaseAdmin.rpc('record_kingdom_visit', {
+    p_visitor_id: user.id,
+    p_host_id: parsed.data.defenderId,
+  })
 
-  if (!host) {
-    return NextResponse.json({ error: 'Kingdom host not found' }, { status: 404 })
-  }
+  if (error) {
+    const status = error.message === 'Kingdom host not found' ? 404 : 500
 
-  const visitedAt = new Date().toISOString()
-
-  const [{ error: visitError }, { error: notificationError }] = await Promise.all([
-    supabase.from('visits').insert({
-      visitor_id: user.id,
-      host_id: parsed.data.defenderId,
-      visited_at: visitedAt,
-    }),
-    supabase.from('notifications').insert({
-      user_id: parsed.data.defenderId,
-      type: 'kingdom_visited',
-      message: `${visitorProfile?.username ?? 'A scout'} left a flag at your kingdom.`,
-      data: {
-        visitor_id: user.id,
-        visited_at: visitedAt,
-      },
-    }),
-  ])
-
-  if (visitError || notificationError) {
     return NextResponse.json(
-      { error: visitError?.message ?? notificationError?.message ?? 'Unable to record visit' },
-      { status: 500 },
+      { error: error.message ?? 'Unable to record visit' },
+      { status },
     )
   }
 
-  return NextResponse.json({ success: true })
+  const visitResult = (data?.[0] as { recorded: boolean; visited_at: string } | undefined) ?? null
+
+  if (!visitResult) {
+    return NextResponse.json({ error: 'Unable to record visit' }, { status: 500 })
+  }
+
+  if (visitResult.recorded) {
+    await checkAndAwardAchievements(user.id, supabaseAdmin)
+  }
+
+  return NextResponse.json({ success: true, recorded: visitResult.recorded, visitedAt: visitResult.visited_at })
 }

@@ -1,0 +1,62 @@
+0 verbose cli C:\nvm4w\nodejs\node.exe C:\nvm4w\nodejs\node_modules\npm\bin\npm-cli.js
+1 info using npm@10.9.2
+2 info using node@v22.16.0
+3 silly config load:file:C:\Users\user\AppData\Local\nvm\v22.16.0\node_modules\npm\npmrc
+4 silly config load:file:C:\Users\CodexSandboxOffline\.codex\.sandbox\cwd\d652f7cd7bf96eaa\.npmrc
+5 silly config load:file:C:\Users\user\.npmrc
+6 silly config load:file:C:\nvm4w\nodejs\etc\npmrc
+7 verbose title npm uninstall @supabase/auth-helpers-nextjs
+8 verbose argv "uninstall" "@supabase/auth-helpers-nextjs" "--package-lock-only" "--cache" ".npm-cache"
+9 verbose logfile logs-max:10 dir:C:\Users\CodexSandboxOffline\.codex\.sandbox\cwd\d652f7cd7bf96eaa\.npm-cache\_logs\2026-04-02T11_22_12_801Z-
+10 verbose logfile C:\Users\CodexSandboxOffline\.codex\.sandbox\cwd\d652f7cd7bf96eaa\.npm-cache\_logs\2026-04-02T11_22_12_801Z-debug-0.log
+11 silly logfile done cleaning log files
+12 silly packumentCache heap:4345298944 maxSize:1086324736 maxEntrySize:543162368
+13 silly idealTree buildDeps
+14 http fetch GET https://registry.npmjs.org/npm attempt 1 failed with EACCES
+15 http cache https://registry.npmjs.org/@tailwindcss/oxide-wasm32-wasi/-/oxide-wasm32-wasi-4.2.2.tgz 1ms (cache hit)
+16 silly tarball no local data for https://registry.npmjs.org/@tailwindcss/oxide-wasm32-wasi/-/oxide-wasm32-wasi-4.2.2.tgz. Extracting by manifest.
+17 http fetch GET https://registry.npmjs.org/@tailwindcss/oxide-wasm32-wasi/-/oxide-wasm32-wasi-4.2.2.tgz attempt 1 failed with EACCES
+18 http fetch GET https://registry.npmjs.org/npm attempt 2 failed with EACCES
+19 http fetch GET https://registry.npmjs.org/@tailwindcss/oxide-wasm32-wasi/-/oxide-wasm32-wasi-4.2.2.tgz attempt 2 failed with EACCES
+20 http fetch GET https://registry.npmjs.org/npm attempt 3 failed with EACCES
+21 http fetch GET https://registry.npmjs.org/@tailwindcss/oxide-wasm32-wasi/-/oxide-wasm32-wasi-4.2.2.tgz attempt 3 failed with EACCES
+22 verbose type system
+23 verbose stack FetchError: request to https://registry.npmjs.org/@tailwindcss/oxide-wasm32-wasi/-/oxide-wasm32-wasi-4.2.2.tgz failed, reason: 
+23 verbose stack     at ClientRequest.<anonymous> (C:\Users\user\AppData\Local\nvm\v22.16.0\node_modules\npm\node_modules\minipass-fetch\lib\index.js:130:14)
+23 verbose stack     at ClientRequest.emit (node:events:518:28)
+23 verbose stack     at emitErrorEvent (node:_http_client:104:11)
+23 verbose stack     at _destroy (node:_http_client:898:9)
+23 verbose stack     at onSocketNT (node:_http_client:918:5)
+23 verbose stack     at process.processTicksAndRejections (node:internal/process/task_queues:91:21)
+24 error code EACCES
+25 error errno EACCES
+26 error FetchError: request to https://registry.npmjs.org/@tailwindcss/oxide-wasm32-wasi/-/oxide-wasm32-wasi-4.2.2.tgz failed, reason: 
+26 error     at ClientRequest.<anonymous> (C:\Users\user\AppData\Local\nvm\v22.16.0\node_modules\npm\node_modules\minipass-fetch\lib\index.js:130:14)
+26 error     at ClientRequest.emit (node:events:518:28)
+26 error     at emitErrorEvent (node:_http_client:104:11)
+26 error     at _destroy (node:_http_client:898:9)
+26 error     at onSocketNT (node:_http_client:918:5)
+26 error     at process.processTicksAndRejections (node:internal/process/task_queues:91:21) {
+26 error   code: 'EACCES',
+26 error   errno: 'EACCES',
+26 error   type: 'system'
+26 error }
+27 error
+27 error The operation was rejected by your operating system.
+27 error It's possible that the file was already in use (by a text editor or antivirus),
+27 error or that you lack permissions to access it.
+27 error
+27 error If you believe this might be a permissions issue, please double-check the
+27 error permissions of the file and its containing directories, or try running
+27 error the command again as root/Administrator.
+28 silly unfinished npm timer reify 1775128933362
+29 silly unfinished npm timer reify:loadTrees 1775128933362
+30 silly unfinished npm timer idealTree:buildDeps 1775128933504
+31 silly unfinished npm timer idealTree:node_modules/@tailwindcss/oxide-wasm32-wasi 1775128933506
+32 verbose cwd C:\Users\CodexSandboxOffline\.codex\.sandbox\cwd\d652f7cd7bf96eaa
+33 verbose os Windows_NT 10.0.26200
+34 verbose node v22.16.0
+35 verbose npm  v10.9.2
+36 verbose exit 1
+37 verbose code 1
+38 error A complete log of this run can be found in: C:\Users\CodexSandboxOffline\.codex\.sandbox\cwd\d652f7cd7bf96eaa\.npm-cache\_logs\2026-04-02T11_22_12_801Z-debug-0.log

@@ -27,6 +27,7 @@ type VisitProfileResult = {
         attack_rating: number
         building_slots: number
         last_synced_at: string | null
+        theme_id: string | null
         buildings:
           | {
               id: string
@@ -34,6 +35,7 @@ type VisitProfileResult = {
               level: number
               position_x: number
               position_y: number
+              skin_id: string | null
             }[]
           | null
       }[]
@@ -70,7 +72,7 @@ async function getVisitData(username: string) {
     supabase
       .from('profiles')
       .select(
-        'id, username, github_username, avatar_url, created_at, raids_enabled, kingdoms(id, user_id, name, gold, prestige, population, defense_rating, attack_rating, building_slots, last_synced_at, buildings(id, type, level, position_x, position_y)), github_stats(total_commits, total_repos, total_stars, total_prs, followers, current_streak, longest_streak, languages, synced_at)',
+        'id, username, github_username, avatar_url, created_at, raids_enabled, kingdoms(id, user_id, name, gold, prestige, population, defense_rating, attack_rating, building_slots, last_synced_at, theme_id, buildings(id, type, level, position_x, position_y, skin_id)), github_stats(total_commits, total_repos, total_stars, total_prs, followers, current_streak, longest_streak, languages, synced_at)',
       )
       .eq('username', username)
       .maybeSingle(),
@@ -111,6 +113,7 @@ async function getVisitData(username: string) {
     x: building.position_x,
     y: building.position_y,
     level: Math.min(5, Math.max(1, building.level)) as 1 | 2 | 3 | 4 | 5,
+    skinId: building.skin_id,
     name: getBuildingMetadata(building.type).label,
   }))
 
@@ -147,6 +150,7 @@ async function getVisitData(username: string) {
     building_slots: kingdom.building_slots,
     raids_enabled: Boolean(result.raids_enabled),
     last_synced_at: kingdom.last_synced_at,
+    themeId: kingdom.theme_id,
     ownerName: result.username,
     ownerAvatarUrl: result.avatar_url,
     ownerGithubUsername: result.github_username,

@@ -21,6 +21,7 @@ type ProfileKingdomResult = {
         attack_rating: number
         building_slots: number
         last_synced_at: string | null
+        theme_id: string | null
         buildings:
           | {
               id: string
@@ -28,6 +29,7 @@ type ProfileKingdomResult = {
               position_x: number
               position_y: number
               level: number
+              skin_id: string | null
             }[]
           | null
       }[]
@@ -60,7 +62,7 @@ export async function GET() {
   const { data: profile, error } = await supabase
     .from('profiles')
     .select(
-      'username, avatar_url, kingdoms(id, user_id, name, gold, prestige, population, defense_rating, attack_rating, building_slots, last_synced_at, buildings(id, type, position_x, position_y, level)), github_stats(total_commits, total_repos, total_stars, total_prs, followers, current_streak, longest_streak, languages, synced_at)',
+      'username, avatar_url, kingdoms(id, user_id, name, gold, prestige, population, defense_rating, attack_rating, building_slots, last_synced_at, theme_id, buildings(id, type, position_x, position_y, level, skin_id)), github_stats(total_commits, total_repos, total_stars, total_prs, followers, current_streak, longest_streak, languages, synced_at)',
     )
     .eq('id', user.id)
     .single()
@@ -82,6 +84,7 @@ export async function GET() {
     x: building.position_x,
     y: building.position_y,
     level: Math.min(5, Math.max(1, building.level)) as 1 | 2 | 3 | 4 | 5,
+    skinId: building.skin_id,
   }))
 
   const githubStats: GitHubStatsData | null = result.github_stats?.[0]
@@ -109,6 +112,7 @@ export async function GET() {
     attack_rating: kingdom.attack_rating,
     building_slots: kingdom.building_slots,
     last_synced_at: kingdom.last_synced_at,
+    themeId: kingdom.theme_id,
     ownerName: result.username ?? 'Code Monarch',
     ownerAvatarUrl: result.avatar_url,
     buildings,

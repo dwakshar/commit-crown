@@ -63,6 +63,7 @@ function toKingdomData(
     attack_rating: kingdom.attack_rating,
     building_slots: kingdom.building_slots,
     last_synced_at: kingdom.last_synced_at,
+    themeId: kingdom.theme_id,
     ownerName: profile?.username ?? 'Code Monarch',
     ownerAvatarUrl: profile?.avatar_url ?? null,
     buildings: (kingdom.buildings ?? []).map((building) => ({
@@ -71,6 +72,7 @@ function toKingdomData(
       x: building.position_x,
       y: building.position_y,
       level: Math.min(5, Math.max(1, building.level)) as 1 | 2 | 3 | 4 | 5,
+      skinId: building.skin_id,
       name: getBuildingMetadata(building.type).label,
     })),
     githubStats,

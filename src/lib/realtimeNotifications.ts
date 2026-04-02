@@ -20,8 +20,14 @@ export function useRealtimeNotifications(userId: string) {
 
     const supabase = createClient()
     let active = true
+    let cleanupChannel: (() => void) | null = null
+    let authenticatedUserId: string | null = null
 
-    const bootstrap = async () => {
+    const fetchNotifications = async () => {
+      if (!active || !authenticatedUserId) {
+        return
+      }
+
       const response = await fetch('/api/notifications', { cache: 'no-store' })
       if (!response.ok || !active) {
         return
@@ -31,27 +37,47 @@ export function useRealtimeNotifications(userId: string) {
       setNotifications(payload.notifications ?? [])
     }
 
-    void bootstrap()
+    const bootstrap = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
 
-    const channel = supabase
-      .channel(`notifications:${userId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${userId}`,
-        },
-        (payload) => {
-          addNotification(payload.new as NotificationData)
-        },
-      )
-      .subscribe()
+      if (!active || !user || user.id !== userId) {
+        return
+      }
+
+      authenticatedUserId = user.id
+      await fetchNotifications()
+      const channel = supabase
+        .channel(`notifications:${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${user.id}`,
+          },
+          (payload) => {
+            addNotification(payload.new as NotificationData)
+          },
+        )
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            void fetchNotifications()
+          }
+        })
+
+      cleanupChannel = () => {
+        void supabase.removeChannel(channel)
+      }
+    }
+
+    void bootstrap()
 
     return () => {
       active = false
-      void supabase.removeChannel(channel)
+      void cleanupChannel?.()
     }
   }, [addNotification, setNotifications, userId])
 

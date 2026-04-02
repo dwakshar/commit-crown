@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next'
 
+import { getAppUrl } from '@/src/lib/appUrl'
 import { createClient } from '@/utils/supabase/server'
 
 type SitemapProfileRow = {
@@ -12,7 +13,7 @@ type SitemapProfileRow = {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+  const siteUrl = getAppUrl()
   const supabase = await createClient()
 
   const { data: profiles, error } = await supabase

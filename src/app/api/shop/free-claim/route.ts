@@ -66,10 +66,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Item already owned' }, { status: 409 })
   }
 
-  const { error: insertError } = await supabaseAdmin.from('owned_items').insert({
-    user_id: user.id,
-    item_id: typedItem.id,
-  })
+  const { error: insertError } = await supabaseAdmin.from('owned_items').upsert(
+    {
+      user_id: user.id,
+      item_id: typedItem.id,
+    },
+    { onConflict: 'user_id,item_id', ignoreDuplicates: true },
+  )
 
   if (insertError) {
     return NextResponse.json({ error: insertError.message }, { status: 500 })

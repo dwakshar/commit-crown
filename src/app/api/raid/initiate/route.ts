@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
+import { checkAndAwardAchievements } from '@/src/lib/achievements'
+import { supabaseAdmin } from '@/src/lib/supabaseAdmin'
 import { createClient } from '@/utils/supabase/server'
 
 const initiateRaidSchema = z.object({
@@ -59,7 +61,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Cannot raid yourself' }, { status: 400 })
   }
 
-  const [{ data: attackerKingdom }, { data: defenderProfile }, { data: cooldown }] = await Promise.all([
+  const [{ data: attackerKingdom }, { data: defenderProfile }] = await Promise.all([
     supabase
       .from('kingdoms')
       .select('id, gold, attack_rating')
@@ -69,12 +71,6 @@ export async function POST(request: Request) {
       .from('profiles')
       .select('id, username, raids_enabled, kingdoms(gold, defense_rating)')
       .eq('id', defenderId)
-      .maybeSingle(),
-    supabase
-      .from('raid_cooldowns')
-      .select('last_raid_at')
-      .eq('attacker_id', user.id)
-      .eq('defender_id', defenderId)
       .maybeSingle(),
   ])
 
@@ -93,44 +89,39 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'raids_disabled' }, { status: 403 })
   }
 
-  if (cooldown?.last_raid_at) {
-    const cooldownEndsAt = new Date(cooldown.last_raid_at)
-    cooldownEndsAt.setHours(cooldownEndsAt.getHours() + 24)
-
-    if (cooldownEndsAt.getTime() > Date.now()) {
-      return NextResponse.json(
-        {
-          error: 'cooldown',
-          availableAt: cooldownEndsAt.toISOString(),
-        },
-        { status: 429 },
-      )
-    }
-  }
-
   const attackerStats = attackerKingdom as AttackerKingdomRow
   const attackerVariance = Math.random() * (attackerStats.attack_rating * 0.3)
   const defenderVariance = Math.random() * (defenderKingdom.defense_rating * 0.3)
   const attackPower = Math.floor(attackerStats.attack_rating + attackerVariance)
   const defensePower = Math.floor(defenderKingdom.defense_rating + defenderVariance)
-  const result: 'attacker_win' | 'defender_win' =
-    attackPower > defensePower ? 'attacker_win' : 'defender_win'
-  const goldStolen =
-    result === 'attacker_win' ? Math.floor(defenderKingdom.gold * 0.1) : 0
 
-  const { data: transactionData, error: transactionError } = await supabase.rpc(
+  const { data: transactionData, error: transactionError } = await supabaseAdmin.rpc(
     'execute_raid_transaction',
     {
       p_attacker_id: user.id,
       p_defender_id: defenderId,
       p_attacker_power: attackPower,
       p_defender_power: defensePower,
-      p_result: result,
-      p_gold_stolen: goldStolen,
     },
   )
 
   if (transactionError) {
+    if (transactionError.message.startsWith('Raid cooldown active until ')) {
+      const availableAt = transactionError.message.replace('Raid cooldown active until ', '')
+
+      return NextResponse.json(
+        {
+          error: 'cooldown',
+          availableAt,
+        },
+        { status: 429 },
+      )
+    }
+
+    if (transactionError.message === 'raids_disabled') {
+      return NextResponse.json({ error: 'raids_disabled' }, { status: 403 })
+    }
+
     return NextResponse.json(
       { error: transactionError.message || 'Raid failed' },
       { status: 500 },
@@ -143,6 +134,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Raid failed' }, { status: 500 })
   }
 
+  await checkAndAwardAchievements(user.id, supabaseAdmin)
+
   return NextResponse.json({
     success: true,
     raid: {
@@ -150,7 +143,7 @@ export async function POST(request: Request) {
       result: transactionRow.result,
       attackPower,
       defensePower,
-      goldStolen: Math.min(goldStolen, Math.floor(defenderKingdom.gold * 0.1)),
+      goldStolen: transactionRow.gold_stolen,
       attackerGold: transactionRow.attacker_gold,
       defenderGold: transactionRow.defender_gold,
       defenderName: defender.username ?? 'Unknown Defender',

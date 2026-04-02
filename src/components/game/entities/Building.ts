@@ -24,6 +24,26 @@ function getPhaser(): PhaserModule {
 
 const Phaser = getPhaser()
 
+function hashString(value: string) {
+  let hash = 0
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) >>> 0
+  }
+
+  return hash
+}
+
+function deriveSkinTint(skinId: string | null | undefined) {
+  if (!skinId) {
+    return null
+  }
+
+  const hash = hashString(skinId)
+  const hue = hash % 360
+  return Phaser.Display.Color.HSLToColor(hue / 360, 0.72, 0.62).color
+}
+
 export class Building extends Phaser.GameObjects.Container {
   public readonly buildingData: BuildingData
 
@@ -57,8 +77,12 @@ export class Building extends Phaser.GameObjects.Container {
 
   private createVisual(): PhaserContainer {
     if (!this.buildingData.isPlaceholder) {
+      const tint = deriveSkinTint(this.buildingData.skinId)
       return this.scene.add.container(0, 0, [
-        this.scene.add.image(0, -32, this.buildingData.type).setOrigin(0.5, 1),
+        this.scene.add
+          .image(0, -32, this.buildingData.type)
+          .setOrigin(0.5, 1)
+          .setTint(tint ?? 0xffffff),
       ])
     }
 

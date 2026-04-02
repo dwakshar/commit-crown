@@ -130,6 +130,10 @@ export async function POST(request: Request) {
     .single()
 
   if (insertError || !newBuilding) {
+    if (insertError?.code === '23505') {
+      return NextResponse.json({ error: 'Position is already occupied' }, { status: 400 })
+    }
+
     return NextResponse.json(
       { error: insertError?.message ?? 'Unable to place building' },
       { status: 500 },

@@ -2,17 +2,17 @@ import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
 import { checkAndAwardAchievements } from '@/src/lib/achievements'
-import { stripeServer } from '@/src/lib/stripe'
+import { stripeServer } from '@/src/lib/stripe/server'
 import { supabaseAdmin } from '@/src/lib/supabaseAdmin'
 
 export const runtime = 'nodejs'
 
-type OwnedItemRow = {
+type NotificationRow = {
   id: string
 }
 
-type NotificationRow = {
-  id: string
+type StripeWebhookEventRow = {
+  event_id: string
 }
 
 async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
@@ -27,14 +27,8 @@ async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
     return
   }
 
-  const [{ data: existingOwnership, error: ownershipLookupError }, { data: existingNotification, error: notificationLookupError }] =
+  const [{ data: existingNotification, error: notificationLookupError }] =
     await Promise.all([
-      supabaseAdmin
-        .from('owned_items')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('item_id', itemId)
-        .maybeSingle(),
       supabaseAdmin
         .from('notifications')
         .select('id')
@@ -44,8 +38,8 @@ async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
         .maybeSingle(),
     ])
 
-  if (ownershipLookupError || notificationLookupError) {
-    throw new Error(ownershipLookupError?.message ?? notificationLookupError?.message ?? 'Unable to load purchase state')
+  if (notificationLookupError) {
+    throw new Error(notificationLookupError.message)
   }
 
   const purchasedAt =
@@ -55,15 +49,16 @@ async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
 
   const writes = []
 
-  if (!(existingOwnership as OwnedItemRow | null)) {
-    writes.push(
-      supabaseAdmin.from('owned_items').insert({
+  writes.push(
+    supabaseAdmin.from('owned_items').upsert(
+      {
         user_id: userId,
         item_id: itemId,
         purchased_at: purchasedAt,
-      }),
-    )
-  }
+      },
+      { onConflict: 'user_id,item_id', ignoreDuplicates: true },
+    ),
+  )
 
   if (!(existingNotification as NotificationRow | null)) {
     writes.push(
@@ -113,6 +108,33 @@ export async function POST(request: Request) {
   }
 
   try {
+    const { data: existingEvent, error: existingEventError } = await supabaseAdmin
+      .from('stripe_webhook_events')
+      .select('event_id')
+      .eq('event_id', event.id)
+      .maybeSingle()
+
+    if (existingEventError) {
+      return NextResponse.json({ error: existingEventError.message }, { status: 500 })
+    }
+
+    if (existingEvent as StripeWebhookEventRow | null) {
+      return NextResponse.json({ received: true })
+    }
+
+    const { error: eventInsertError } = await supabaseAdmin.from('stripe_webhook_events').insert({
+      event_id: event.id,
+      event_type: event.type,
+    })
+
+    if (eventInsertError) {
+      if (eventInsertError.code === '23505') {
+        return NextResponse.json({ received: true })
+      }
+
+      return NextResponse.json({ error: eventInsertError.message }, { status: 500 })
+    }
+
     if (event.type === 'checkout.session.completed') {
       await fulfillCheckoutSession(event.data.object as Stripe.Checkout.Session)
     }

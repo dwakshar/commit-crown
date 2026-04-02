@@ -19,6 +19,7 @@ type KingdomRow = {
   attack_rating: number
   building_slots: number
   last_synced_at: string | null
+  theme_id: string | null
   buildings:
     | {
         id: string
@@ -26,6 +27,7 @@ type KingdomRow = {
         level: number
         position_x: number
         position_y: number
+        skin_id: string | null
       }[]
     | null
 }
@@ -50,7 +52,7 @@ export default async function KingdomPage({
     supabase
       .from('kingdoms')
       .select(
-        'id, user_id, name, gold, prestige, population, defense_rating, attack_rating, building_slots, last_synced_at, buildings(id, type, level, position_x, position_y)',
+        'id, user_id, name, gold, prestige, population, defense_rating, attack_rating, building_slots, last_synced_at, theme_id, buildings(id, type, level, position_x, position_y, skin_id)',
       )
       .eq('user_id', user.id)
       .maybeSingle(),
@@ -102,6 +104,7 @@ export default async function KingdomPage({
     x: building.position_x,
     y: building.position_y,
     level: Math.min(5, Math.max(1, building.level)) as 1 | 2 | 3 | 4 | 5,
+    skinId: building.skin_id,
     name: getBuildingMetadata(building.type).label,
   }))
 
@@ -116,6 +119,7 @@ export default async function KingdomPage({
     attack_rating: kingdomRow.attack_rating,
     building_slots: kingdomRow.building_slots,
     last_synced_at: kingdomRow.last_synced_at,
+    themeId: kingdomRow.theme_id,
     ownerName: profile?.username ?? 'Code Monarch',
     ownerAvatarUrl: profile?.avatar_url ?? null,
     buildings,

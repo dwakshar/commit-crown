@@ -34,6 +34,8 @@ async function syncGitHubKingdom() {
         const status =
             result.code === 'cooldown_active'
                 ? 429
+                : result.code === 'github_rate_limited'
+                    ? 429
                 : result.code === 'no_github_token' || result.code === 'no_github_username'
                     ? 400
                     : result.code === 'unauthorized'
@@ -48,6 +50,20 @@ async function syncGitHubKingdom() {
         stats: {
             ...result.stats,
             last_synced_at: result.syncedAt,
+        },
+        githubStats: {
+            total_commits: result.githubStats.total_commits,
+            total_repos: result.githubStats.total_repos,
+            total_stars: result.githubStats.total_stars,
+            total_prs: result.githubStats.total_prs,
+            followers: result.githubStats.followers,
+            current_streak: result.githubStats.current_streak,
+            longest_streak: result.githubStats.longest_streak,
+            night_commits: result.githubStats.night_commits,
+            monthly_peak: result.githubStats.monthly_peak,
+            starred_repo_count: result.githubStats.starred_repo_count,
+            languages: result.githubStats.languages,
+            synced_at: result.syncedAt,
         },
     })
 }

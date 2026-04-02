@@ -61,8 +61,9 @@ function ResourceCard({
 export function HUD() {
   const kingdom = useKingdomStore((state) => state.kingdom)
   const isSyncing = useKingdomStore((state) => state.isSyncing)
+  const syncError = useKingdomStore((state) => state.syncError)
+  const clearSyncError = useKingdomStore((state) => state.clearSyncError)
   const syncKingdom = useKingdomStore((state) => state.syncKingdom)
-  const [syncError, setSyncError] = useState<string | null>(null)
   const cooldownRemaining = useMemo(
     () => getSyncCooldownRemaining(kingdom?.last_synced_at ?? null),
     [kingdom?.last_synced_at],
@@ -78,13 +79,11 @@ export function HUD() {
   const showStarterMessage = hasStarterKingdomState(kingdom)
 
   const handleSync = async () => {
-    setSyncError(null)
+    clearSyncError()
 
     try {
       await syncKingdom()
-    } catch (error) {
-      setSyncError(error instanceof Error ? error.message : 'Unable to sync')
-    }
+    } catch {}
   }
 
   return (

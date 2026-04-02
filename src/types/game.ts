@@ -15,6 +15,7 @@ export interface BuildingData {
   x: number
   y: number
   level: 1 | 2 | 3 | 4 | 5
+  skinId?: string | null
   name?: string
   isPlaceholder?: boolean
   placeholderLabel?: string
@@ -48,6 +49,7 @@ export interface KingdomData {
   raid_opt_in?: boolean
   raids_enabled?: boolean
   last_synced_at: string | null
+  themeId?: string | null
   ownerName: string
   ownerAvatarUrl: string | null
   ownerGithubUsername?: string | null

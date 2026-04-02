@@ -26,6 +26,56 @@ type IsoPoint = {
   y: number
 }
 
+type ThemePalette = {
+  background: string
+  grassColors: [number, number]
+  gridLine: number
+}
+
+function hashString(value: string) {
+  let hash = 0
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) >>> 0
+  }
+
+  return hash
+}
+
+function toHexColor(value: number) {
+  return `#${value.toString(16).padStart(6, '0')}`
+}
+
+function deriveThemePalette(themeId: string | null | undefined): ThemePalette {
+  if (!themeId) {
+    return {
+      background: '#0d0d1a',
+      grassColors: [0x3f7d3a, 0x4b8f43],
+      gridLine: 0x20361f,
+    }
+  }
+
+  const hash = hashString(themeId)
+  const hue = hash % 360
+  const alternateHue = (hue + 18) % 360
+  const saturation = 36 + (hash % 18)
+  const lightness = 28 + (hash % 10)
+  const grassPrimary = Phaser.Display.Color.HSLToColor(hue / 360, saturation / 100, lightness / 100).color
+  const grassSecondary = Phaser.Display.Color.HSLToColor(
+    alternateHue / 360,
+    Math.min((saturation + 8) / 100, 1),
+    Math.min((lightness + 6) / 100, 1),
+  ).color
+  const background = Phaser.Display.Color.HSLToColor(hue / 360, 0.32, 0.1).color
+  const gridLine = Phaser.Display.Color.HSLToColor(hue / 360, 0.35, 0.16).color
+
+  return {
+    background: toHexColor(background),
+    grassColors: [grassPrimary, grassSecondary],
+    gridLine,
+  }
+}
+
 export class KingdomScene extends Phaser.Scene {
   private readonly tileWidth = 64
   private readonly tileHeight = 32
@@ -42,11 +92,12 @@ export class KingdomScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.cameras.main.setBackgroundColor('#0d0d1a')
+    const kingdomData = this.getKingdomData()
+    this.cameras.main.setBackgroundColor(deriveThemePalette(kingdomData.themeId).background)
     this.originX = this.scale.width / 2
 
     this.drawGrid()
-    this.renderBuildings(this.getKingdomData())
+    this.renderBuildings(kingdomData)
 
     this.game.events.on('kingdom-updated', this.handleKingdomUpdated, this)
     this.scale.on('resize', this.handleResize, this)
@@ -101,6 +152,7 @@ export class KingdomScene extends Phaser.Scene {
       last_synced_at: null,
       ownerName: 'Unknown Ruler',
       ownerAvatarUrl: null,
+      themeId: null,
       buildings: [],
       githubStats: null,
     }
@@ -108,7 +160,8 @@ export class KingdomScene extends Phaser.Scene {
 
   private drawGrid(): void {
     const grid = this.add.graphics()
-    const grassColors = [0x3f7d3a, 0x4b8f43]
+    const themePalette = deriveThemePalette(this.getKingdomData().themeId)
+    const grassColors = themePalette.grassColors
 
     for (let y = 0; y < this.gridSize; y += 1) {
       for (let x = 0; x < this.gridSize; x += 1) {
@@ -116,7 +169,7 @@ export class KingdomScene extends Phaser.Scene {
         const color = grassColors[(x + y) % grassColors.length]
 
         grid.fillStyle(color, 1)
-        grid.lineStyle(1, 0x20361f, 0.45)
+        grid.lineStyle(1, themePalette.gridLine, 0.45)
         grid.fillPoints(
           [
             new Phaser.Geom.Point(point.x, point.y - this.tileHeight / 2),
@@ -161,6 +214,7 @@ export class KingdomScene extends Phaser.Scene {
 
   private handleKingdomUpdated(updatedKingdom?: KingdomData): void {
     const kingdomData = updatedKingdom ?? this.getKingdomData()
+    this.cameras.main.setBackgroundColor(deriveThemePalette(kingdomData.themeId).background)
     this.renderBuildings(kingdomData)
   }
 
