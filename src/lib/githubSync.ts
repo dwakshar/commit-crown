@@ -39,6 +39,12 @@ export function getStaleSyncCutoff() {
   return new Date(Date.now() - STALE_SYNC_WINDOW_HOURS * 60 * 60 * 1000).toISOString()
 }
 
+function isMissingSnapshotFunction(error: { message?: string } | null) {
+  return Boolean(
+    error?.message?.includes('Could not find the function public.apply_github_sync_snapshot'),
+  )
+}
+
 export async function listStaleGitHubUsers(limit = 100) {
   const cutoff = getStaleSyncCutoff()
   const { data, error } = await supabaseAdmin
@@ -131,7 +137,8 @@ export async function syncGitHubKingdomForUser(options: {
       current_streak: ghStats.current_streak,
       languages: ghStats.languages,
     })
-    const { error: syncWriteError } = await supabaseAdmin.rpc('apply_github_sync_snapshot', {
+
+    const snapshotPayload = {
       p_user_id: userId,
       p_followers: ghStats.followers,
       p_total_commits: ghStats.total_commits,
@@ -150,7 +157,19 @@ export async function syncGitHubKingdomForUser(options: {
       p_defense_rating: kingdomStats.defense_rating,
       p_building_slots: kingdomStats.building_slots,
       p_synced_at: syncedAt,
-    })
+    }
+
+    let { error: syncWriteError } = await supabaseAdmin.rpc('apply_github_sync_snapshot', snapshotPayload)
+
+    if (isMissingSnapshotFunction(syncWriteError)) {
+      const legacyPayload = {
+        ...snapshotPayload,
+        p_gold: kingdomStats.gold,
+      }
+
+      const legacyResult = await supabaseAdmin.rpc('apply_github_sync_snapshot', legacyPayload)
+      syncWriteError = legacyResult.error
+    }
 
     if (syncWriteError) {
       return { ok: false, error: syncWriteError.message, code: 'sync_failed' }
