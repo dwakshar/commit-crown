@@ -1,0 +1,19 @@
+0 verbose cli C:\nvm4w\nodejs\node.exe C:\nvm4w\nodejs\node_modules\npm\bin\npm-cli.js
+1 info using npm@10.9.2
+2 info using node@v22.16.0
+3 silly config load:file:C:\Users\user\AppData\Local\nvm\v22.16.0\node_modules\npm\npmrc
+4 silly config load:file:D:\Projects\commit-crown\.npmrc
+5 silly config load:file:C:\Users\user\.npmrc
+6 silly config load:file:C:\nvm4w\nodejs\etc\npmrc
+7 verbose title npm ls node-domexception
+8 verbose argv "ls" "node-domexception" "--all" "--cache" ".npm-cache"
+9 verbose logfile logs-max:10 dir:D:\Projects\commit-crown\.npm-cache\_logs\2026-04-02T11_41_41_409Z-
+10 verbose logfile D:\Projects\commit-crown\.npm-cache\_logs\2026-04-02T11_41_41_409Z-debug-0.log
+11 silly logfile done cleaning log files
+12 silly packumentCache heap:4345298944 maxSize:1086324736 maxEntrySize:543162368
+13 verbose cwd D:\Projects\commit-crown
+14 verbose os Windows_NT 10.0.26200
+15 verbose node v22.16.0
+16 verbose npm  v10.9.2
+17 verbose exit 0
+18 info ok
