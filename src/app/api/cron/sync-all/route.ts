@@ -27,7 +27,11 @@ async function resolveGitHubToken(userId: string, fallbackToken: string | null |
     .maybeSingle()
 
   if (error) {
-    throw new Error(error.message)
+    console.warn('Unable to read stored GitHub token during cron sync, falling back to auth admin user lookup', {
+      userId,
+      error: error.message,
+    })
+    return null
   }
 
   return data?.access_token ?? null

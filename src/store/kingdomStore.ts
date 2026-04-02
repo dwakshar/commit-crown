@@ -10,6 +10,22 @@ type SyncResponse = {
   githubStats?: GitHubStatsData
 }
 
+async function parseJsonResponse<T extends { error?: string }>(response: Response): Promise<T> {
+  const raw = await response.text()
+
+  if (!raw.trim()) {
+    return {} as T
+  }
+
+  try {
+    return JSON.parse(raw) as T
+  } catch {
+    return {
+      error: raw,
+    } as T
+  }
+}
+
 interface KingdomStore {
   kingdom: KingdomData | null
   buildings: BuildingData[]
@@ -58,9 +74,9 @@ export const useKingdomStore = create<KingdomStore>((set, get) => ({
         method: 'POST',
       })
 
-      const payload = (await response.json()) as SyncResponse & {
+      const payload = await parseJsonResponse<SyncResponse & {
         error?: string
-      }
+      }>(response)
 
       if (!response.ok) {
         throw new Error(payload.error ?? 'Unable to sync kingdom')

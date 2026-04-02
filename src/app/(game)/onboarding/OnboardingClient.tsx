@@ -22,6 +22,22 @@ type KingdomResponse = {
   error?: string
 }
 
+async function parseJsonResponse<T extends { error?: string }>(response: Response): Promise<T> {
+  const raw = await response.text()
+
+  if (!raw.trim()) {
+    return {} as T
+  }
+
+  try {
+    return JSON.parse(raw) as T
+  } catch {
+    return {
+      error: raw,
+    } as T
+  }
+}
+
 const SYNC_STAGES = [
   'Counting your commits...',
   'Mapping your repositories...',
@@ -70,7 +86,7 @@ export function OnboardingClient({
           method: 'POST',
         })
 
-        const syncPayload = (await syncResponse.json()) as SyncResponse
+        const syncPayload = await parseJsonResponse<SyncResponse>(syncResponse)
 
         if (!syncResponse.ok) {
           throw new Error(syncPayload.error ?? 'Unable to forge your kingdom')
@@ -81,7 +97,7 @@ export function OnboardingClient({
           cache: 'no-store',
         })
 
-        const kingdomPayload = (await kingdomResponse.json()) as KingdomResponse
+        const kingdomPayload = await parseJsonResponse<KingdomResponse>(kingdomResponse)
 
         if (!kingdomResponse.ok || !kingdomPayload.kingdom) {
           throw new Error(kingdomPayload.error ?? 'Unable to load kingdom summary')
@@ -124,7 +140,7 @@ export function OnboardingClient({
         body: JSON.stringify({ name: trimmedName }),
       })
 
-      const payload = (await response.json()) as { success?: boolean; error?: string }
+      const payload = await parseJsonResponse<{ success?: boolean; error?: string }>(response)
 
       if (!response.ok) {
         throw new Error(payload.error ?? 'Unable to save kingdom name')
