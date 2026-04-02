@@ -11,6 +11,11 @@ const githubMetadataSchema = z.object({
     provider_id: z.coerce.number().int().optional(),
 })
 
+type AuthSessionWithProviderToken = {
+    provider_token?: string | null
+    provider_refresh_token?: string | null
+}
+
 function slugifyUsername(value: string) {
     const normalized = value
         .trim()
@@ -56,7 +61,7 @@ export async function GET(request: Request) {
     if (!code) return NextResponse.redirect(new URL('/login?error=no_code', origin))
 
     const supabase = await createClient()
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
     if (error) return NextResponse.redirect(new URL('/login?error=auth_failed', origin))
 
     const { data: { user } } = await supabase.auth.getUser()
@@ -69,12 +74,13 @@ export async function GET(request: Request) {
     }
 
     const metadata = metadataResult.data
+    const githubUsername = metadata.user_name ?? metadata.preferred_username
     let username: string
 
     try {
         username = await resolveUsername(
             user.id,
-            metadata.user_name ?? metadata.preferred_username,
+            githubUsername,
         )
     } catch {
         return NextResponse.redirect(new URL('/login?error=profile_lookup_failed', origin))
@@ -84,13 +90,28 @@ export async function GET(request: Request) {
     const { error: profileError } = await supabaseAdmin.from('profiles').upsert({
         id: user.id,
         username,
-        github_username: username,
+        github_username: githubUsername ?? null,
         avatar_url: metadata.avatar_url ?? null,
         github_id: metadata.provider_id ?? null,
     }, { onConflict: 'id' })
 
     if (profileError) {
         return NextResponse.redirect(new URL('/login?error=profile_create_failed', origin))
+    }
+
+    const session = data.session as AuthSessionWithProviderToken | null
+
+    if (session?.provider_token) {
+        const { error: tokenError } = await supabaseAdmin.from('github_oauth_tokens').upsert({
+            user_id: user.id,
+            access_token: session.provider_token,
+            refresh_token: session.provider_refresh_token ?? null,
+            updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id' })
+
+        if (tokenError) {
+            return NextResponse.redirect(new URL('/login?error=token_store_failed', origin))
+        }
     }
 
     return NextResponse.redirect(new URL('/kingdom', origin))

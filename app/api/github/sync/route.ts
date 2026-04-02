@@ -16,6 +16,20 @@ async function resolveGitHubToken(userId: string, sessionToken: string | null | 
         return sessionToken
     }
 
+    const { data: storedToken, error: storedTokenError } = await supabaseAdmin
+        .from('github_oauth_tokens')
+        .select('access_token')
+        .eq('user_id', userId)
+        .maybeSingle()
+
+    if (storedTokenError) {
+        throw new Error(storedTokenError.message)
+    }
+
+    if (storedToken?.access_token) {
+        return storedToken.access_token
+    }
+
     const { data, error } = await supabaseAdmin.auth.admin.getUserById(userId)
 
     if (error) {

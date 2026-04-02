@@ -15,6 +15,24 @@ type AdminUserWithProviderToken = {
   }
 }
 
+async function resolveGitHubToken(userId: string, fallbackToken: string | null | undefined) {
+  if (fallbackToken) {
+    return fallbackToken
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('github_oauth_tokens')
+    .select('access_token')
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return data?.access_token ?? null
+}
+
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
@@ -53,12 +71,14 @@ export async function GET(request: Request) {
         continue
       }
 
+      const authToken =
+        (data.user as AdminUserWithProviderToken | null)?.provider_token ??
+        (data.user as AdminUserWithProviderToken | null)?.app_metadata?.provider_token
+
       const syncResult = await syncGitHubKingdomForUser({
         userId: user.userId,
         githubUsername: user.githubUsername,
-        githubToken:
-          (data.user as AdminUserWithProviderToken | null)?.provider_token ??
-          (data.user as AdminUserWithProviderToken | null)?.app_metadata?.provider_token,
+        githubToken: await resolveGitHubToken(user.userId, authToken),
       })
 
       if (syncResult.ok) {
