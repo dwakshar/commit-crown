@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { calculateKingdomPower } from '@/src/lib/gameEngine'
 import { withStarterKingdomState } from '@/src/lib/onboarding'
+import { supabaseAdmin } from '@/src/lib/supabaseAdmin'
 import { createClient } from '@/utils/supabase/server'
 
 import type { BuildingData, GitHubStatsData } from '@/src/types/game'
@@ -72,10 +73,51 @@ export async function GET() {
   }
 
   const result = profile as ProfileKingdomResult
-  const kingdom = result.kingdoms?.[0]
+  let kingdom = result.kingdoms?.[0]
 
   if (!kingdom) {
-    return NextResponse.json({ error: 'Kingdom not found' }, { status: 404 })
+    const { error: createError } = await supabaseAdmin
+      .from('kingdoms')
+      .upsert(
+        {
+          user_id: user.id,
+          name: 'My Kingdom',
+          gold: 0,
+          prestige: 0,
+          population: 0,
+          defense_rating: 0,
+          attack_rating: 0,
+          building_slots: 5,
+        },
+        { onConflict: 'user_id' },
+      )
+
+    if (createError) {
+      return NextResponse.json({ error: createError.message }, { status: 500 })
+    }
+
+    const { data: refreshedProfile, error: refreshError } = await supabase
+      .from('profiles')
+      .select(
+        'username, avatar_url, kingdoms(id, user_id, name, gold, prestige, population, defense_rating, attack_rating, building_slots, last_synced_at, theme_id, buildings(id, type, position_x, position_y, level, skin_id)), github_stats(total_commits, total_repos, total_stars, total_prs, followers, current_streak, longest_streak, languages, synced_at)',
+      )
+      .eq('id', user.id)
+      .single()
+
+    if (refreshError || !refreshedProfile) {
+      return NextResponse.json({ error: 'Kingdom not found' }, { status: 404 })
+    }
+
+    const refreshedResult = refreshedProfile as ProfileKingdomResult
+    kingdom = refreshedResult.kingdoms?.[0]
+
+    if (!kingdom) {
+      return NextResponse.json({ error: 'Kingdom not found' }, { status: 404 })
+    }
+
+    result.username = refreshedResult.username
+    result.avatar_url = refreshedResult.avatar_url
+    result.github_stats = refreshedResult.github_stats
   }
 
   const buildings: BuildingData[] = (kingdom.buildings ?? []).map((building) => ({

@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { KingdomPageClient } from '@/src/app/(game)/kingdom/KingdomPageClient'
 import { getBuildingMetadata } from '@/src/lib/kingdom'
 import { withStarterKingdomState } from '@/src/lib/onboarding'
+import { supabaseAdmin } from '@/src/lib/supabaseAdmin'
 import { createClient } from '@/utils/supabase/server'
 
 import type { BuildingData, GitHubStatsData } from '@/src/types/game'
@@ -47,7 +48,7 @@ export default async function KingdomPage({
     redirect('/')
   }
 
-  const [{ data: profile }, { data: kingdom }, { data: githubStats }] = await Promise.all([
+  const [{ data: profile }, { data: initialKingdom }, { data: githubStats }] = await Promise.all([
     supabase.from('profiles').select('username, avatar_url, onboarding_done').eq('id', user.id).maybeSingle(),
     supabase
       .from('kingdoms')
@@ -67,6 +68,36 @@ export default async function KingdomPage({
 
   if (!profile?.onboarding_done) {
     redirect('/onboarding')
+  }
+
+  let kingdom = initialKingdom
+
+  if (!kingdom) {
+    await supabaseAdmin
+      .from('kingdoms')
+      .upsert(
+        {
+          user_id: user.id,
+          name: 'My Kingdom',
+          gold: 0,
+          prestige: 0,
+          population: 0,
+          defense_rating: 0,
+          attack_rating: 0,
+          building_slots: 5,
+        },
+        { onConflict: 'user_id' },
+      )
+
+    const { data: refreshedKingdom } = await supabase
+      .from('kingdoms')
+      .select(
+        'id, user_id, name, gold, prestige, population, defense_rating, attack_rating, building_slots, last_synced_at, theme_id, buildings(id, type, level, position_x, position_y, skin_id)',
+      )
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    kingdom = refreshedKingdom
   }
 
   if (!kingdom) {
