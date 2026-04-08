@@ -373,8 +373,6 @@ MIT — see [LICENSE](LICENSE) for details.
 
 <div align="center">
 
-Built by [Mr Sharma](https://github.com/yourusername)
-
 _Your commits built this._
 
 </div>
