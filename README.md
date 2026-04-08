@@ -16,7 +16,7 @@ A developer platform that transforms real GitHub contribution data into a persis
 
 ---
 
-## What Is This
+⩑ ## What Is This
 
 Commit Crown is a **SaaS-style developer platform** combining three layers:
 
@@ -30,7 +30,7 @@ Every in-game resource maps directly to a GitHub metric. No fake grind. No idle 
 
 ---
 
-## Core Mechanic
+⩑ ## Core Mechanic
 
 ```
 Code IRL  →  GitHub sync  →  Kingdom grows  →  Compete & share  →  Repeat
@@ -49,7 +49,7 @@ Code IRL  →  GitHub sync  →  Kingdom grows  →  Compete & share  →  Repea
 
 ---
 
-## Tech Stack
+⩑ ## Tech Stack
 
 | Layer       | Technology                                               |
 | ----------- | -------------------------------------------------------- |
@@ -67,7 +67,7 @@ Code IRL  →  GitHub sync  →  Kingdom grows  →  Compete & share  →  Repea
 
 ---
 
-## Getting Started
+⩑ ## Getting Started
 
 ### Prerequisites
 
@@ -144,7 +144,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ---
 
-## Project Structure
+⩑ ## Project Structure
 
 ```
 commit-crown/
@@ -206,7 +206,7 @@ commit-crown/
 
 ---
 
-## Architecture Decisions
+⩑ ## Architecture Decisions
 
 **Phaser is client-only — never SSR.**
 Loaded exclusively via `dynamic(() => import('./PhaserGame'), { ssr: false })`. Any SSR attempt will crash the server.
@@ -225,7 +225,7 @@ Row Level Security is active on every table before any data is written. All poli
 
 ---
 
-## Features
+⩑ ## Features
 
 ### Kingdom Engine
 
@@ -282,7 +282,7 @@ Row Level Security is active on every table before any data is written. All poli
 
 ---
 
-## UX Principles
+⩑ ## UX Principles
 
 | Principle                      | Implementation                                                       |
 | ------------------------------ | -------------------------------------------------------------------- |
@@ -293,7 +293,7 @@ Row Level Security is active on every table before any data is written. All poli
 
 ---
 
-## Roadmap
+⩑ ## Roadmap
 
 | Phase               | Timeline | Scope                                                   |
 | ------------------- | -------- | ------------------------------------------------------- |
@@ -305,7 +305,7 @@ Row Level Security is active on every table before any data is written. All poli
 
 ---
 
-## Contributing
+⩑ ## Contributing
 
 ```bash
 # 1. Fork and clone
@@ -329,7 +329,7 @@ git commit -m "feat: describe what and why"
 
 ---
 
-## Design System
+⩑ ## Design System
 
 | Token         | Value     | Usage                       |
 | ------------- | --------- | --------------------------- |
@@ -348,7 +348,7 @@ Dark mode only. No light theme.
 
 ---
 
-## Success Metrics — v1 Targets
+⩑ ## Success Metrics — v1 Targets
 
 | Category  | Metric                   | Target                   |
 | --------- | ------------------------ | ------------------------ |
@@ -365,7 +365,7 @@ Dark mode only. No light theme.
 
 ---
 
-## License
+⩑ ## License
 
 MIT — see [LICENSE](LICENSE) for details.
 
