@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="banner.jpg" alt="Commit Crown" width="72" height="72" />
+<img src="banner.jpg" alt="Commit Crown" width=100% />
 
 # Commit Crown
 
