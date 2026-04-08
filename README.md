@@ -49,7 +49,7 @@ Code IRL  →  GitHub sync  →  Kingdom grows  →  Compete & share  →  Repea
 
 ---
 
-⩑ ## Tech Stack
+## Tech Stack
 
 | Layer       | Technology                                               |
 | ----------- | -------------------------------------------------------- |
