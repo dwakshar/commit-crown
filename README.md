@@ -2,10 +2,6 @@
 
 <img src="banner.jpg" alt="Commit Crown" width=100% />
 
-# Commit Crown
-
-**Your GitHub activity. Your kingdom. Your rank.**
-
 [![Next.js](https://img.shields.io/badge/Next.js_14-000000?style=flat-square&logo=nextdotjs&logoColor=white)](https://nextjs.org)
 [![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=flat-square&logo=supabase&logoColor=white)](https://supabase.com)
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://typescriptlang.org)
