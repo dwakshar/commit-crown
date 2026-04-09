@@ -48,7 +48,7 @@ export async function GET() {
     return NextResponse.json({ error: profileError?.message ?? 'Profile not found' }, { status: 404 })
   }
 
-  let kingdom = initialKingdom
+  let kingdom = (initialKingdom as PersistedKingdomRow | null) ?? null
 
   if (kingdomError) {
     return NextResponse.json({ error: kingdomError.message }, { status: 500 })
@@ -66,7 +66,7 @@ export async function GET() {
   }
 
   const typedProfile = profile as ProfileRow
-  const kingdomRow = kingdom as PersistedKingdomRow
+  const kingdomRow = kingdom
 
   if (!kingdomRow) {
     return NextResponse.json({ error: 'Kingdom not found' }, { status: 404 })

@@ -47,7 +47,7 @@ export default async function KingdomPage({
     redirect('/onboarding')
   }
 
-  let kingdom = initialKingdom
+  let kingdom = (initialKingdom as PersistedKingdomRow | null) ?? null
 
   if (!kingdom) {
     kingdom = await ensureKingdomForUser(user.id)
@@ -57,7 +57,7 @@ export default async function KingdomPage({
     throw new Error(`Unable to load or create kingdom for user ${user.id}`)
   }
 
-  const kingdomRow = kingdom as PersistedKingdomRow
+  const kingdomRow = kingdom
   const buildings: BuildingData[] = (kingdomRow.buildings ?? []).map((building) => ({
     id: building.id,
     type: building.type,
