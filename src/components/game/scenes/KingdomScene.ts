@@ -217,6 +217,9 @@ export class KingdomScene extends Phaser.Scene {
   }
 
   private getWorldBounds() {
+    const camera = this.cameras.main
+    const horizontalPadding = Math.max(this.worldPadding, Math.floor(camera.width * 0.45))
+    const verticalPadding = Math.max(this.worldPadding, Math.floor(camera.height * 0.35))
     const corners = [
       this.isoToScreen(0, 0),
       this.isoToScreen(this.gridSize - 1, 0),
@@ -224,10 +227,10 @@ export class KingdomScene extends Phaser.Scene {
       this.isoToScreen(this.gridSize - 1, this.gridSize - 1),
     ]
 
-    const minX = Math.min(...corners.map((point) => point.x)) - this.tileWidth - this.worldPadding
-    const maxX = Math.max(...corners.map((point) => point.x)) + this.tileWidth + this.worldPadding
-    const minY = Math.min(...corners.map((point) => point.y)) - this.tileHeight - this.worldPadding
-    const maxY = Math.max(...corners.map((point) => point.y)) + this.tileHeight + this.worldPadding
+    const minX = Math.min(...corners.map((point) => point.x)) - this.tileWidth - horizontalPadding
+    const maxX = Math.max(...corners.map((point) => point.x)) + this.tileWidth + horizontalPadding
+    const minY = Math.min(...corners.map((point) => point.y)) - this.tileHeight - verticalPadding
+    const maxY = Math.max(...corners.map((point) => point.y)) + this.tileHeight + verticalPadding
 
     return {
       x: minX,
