@@ -35,6 +35,12 @@ export async function POST(request: Request) {
       {
         user_id: user.id,
         name: kingdomName,
+        gold: 0,
+        prestige: 0,
+        population: 0,
+        defense_rating: 0,
+        attack_rating: 0,
+        building_slots: 5,
       },
       {
         onConflict: 'user_id',

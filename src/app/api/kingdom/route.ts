@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server'
 
 import { calculateKingdomPower } from '@/src/lib/gameEngine'
+import {
+  ensureKingdomForUser,
+  KINGDOM_WITH_BUILDINGS_SELECT,
+  type PersistedKingdomRow,
+} from '@/src/lib/kingdomPersistence'
 import { getBuildingMetadata } from '@/src/lib/kingdom'
 import { withStarterKingdomState } from '@/src/lib/onboarding'
-import { supabaseAdmin } from '@/src/lib/supabaseAdmin'
 import { createClient } from '@/utils/supabase/server'
 
 import type { BuildingData, GitHubStatsData } from '@/src/types/game'
@@ -11,30 +15,6 @@ import type { BuildingData, GitHubStatsData } from '@/src/types/game'
 type ProfileRow = {
   username: string | null
   avatar_url: string | null
-}
-
-type KingdomRow = {
-  id: string
-  user_id: string
-  name: string
-  gold: number
-  prestige: number
-  population: number
-  defense_rating: number
-  attack_rating: number
-  building_slots: number
-  last_synced_at: string | null
-  theme_id: string | null
-  buildings:
-    | {
-        id: string
-        type: BuildingData['type']
-        position_x: number
-        position_y: number
-        level: number
-        skin_id: string | null
-      }[]
-    | null
 }
 
 export async function GET() {
@@ -52,9 +32,7 @@ export async function GET() {
       supabase.from('profiles').select('username, avatar_url').eq('id', user.id).maybeSingle(),
       supabase
         .from('kingdoms')
-        .select(
-          'id, user_id, name, gold, prestige, population, defense_rating, attack_rating, building_slots, last_synced_at, theme_id, buildings(id, type, position_x, position_y, level, skin_id)',
-        )
+        .select(KINGDOM_WITH_BUILDINGS_SELECT)
         .eq('user_id', user.id)
         .maybeSingle(),
       supabase
@@ -77,43 +55,23 @@ export async function GET() {
   }
 
   if (!kingdom) {
-    const { error: createError } = await supabaseAdmin
-      .from('kingdoms')
-      .upsert(
-        {
-          user_id: user.id,
-          name: 'My Kingdom',
-          gold: 0,
-          prestige: 0,
-          population: 0,
-          defense_rating: 0,
-          attack_rating: 0,
-          building_slots: 5,
-        },
-        { onConflict: 'user_id' },
+    try {
+      kingdom = await ensureKingdomForUser(user.id)
+    } catch (error) {
+      return NextResponse.json(
+        { error: error instanceof Error ? error.message : 'Unable to create kingdom' },
+        { status: 500 },
       )
-
-    if (createError) {
-      return NextResponse.json({ error: createError.message }, { status: 500 })
     }
-
-    const { data: refreshedKingdom, error: refreshError } = await supabase
-      .from('kingdoms')
-      .select(
-        'id, user_id, name, gold, prestige, population, defense_rating, attack_rating, building_slots, last_synced_at, theme_id, buildings(id, type, position_x, position_y, level, skin_id)',
-      )
-      .eq('user_id', user.id)
-      .maybeSingle()
-
-    if (refreshError || !refreshedKingdom) {
-      return NextResponse.json({ error: refreshError?.message ?? 'Kingdom not found' }, { status: 404 })
-    }
-
-    kingdom = refreshedKingdom
   }
 
   const typedProfile = profile as ProfileRow
-  const kingdomRow = kingdom as KingdomRow
+  const kingdomRow = kingdom as PersistedKingdomRow
+
+  if (!kingdomRow) {
+    return NextResponse.json({ error: 'Kingdom not found' }, { status: 404 })
+  }
+
   const buildings: BuildingData[] = (kingdomRow.buildings ?? []).map((building) => ({
     id: building.id,
     type: building.type,
