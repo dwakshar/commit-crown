@@ -11,8 +11,8 @@ import { RealmTopNav } from "@/src/components/ui/RealmTopNav";
 import {
   getBuildingMetadata,
   getBuildingName,
-  getUpgradeCost,
   getSyncCooldownRemaining,
+  getUpgradeCost,
 } from "@/src/lib/kingdom";
 import { hasStarterKingdomState } from "@/src/lib/onboarding";
 import { useKingdomStore } from "@/src/store/kingdomStore";
@@ -195,7 +195,9 @@ function MinimapPanel({
                   type="button"
                   onClick={() => onSelectBuilding(building)}
                   aria-label={`Focus ${getBuildingName(building)}`}
-                  className={`h-[6px] w-[6px] rounded-[2px] border transition ${getMinimapTone(building)} ${
+                  className={`h-[6px] w-[6px] rounded-[2px] border transition ${getMinimapTone(
+                    building
+                  )} ${
                     isActive
                       ? "border-[#fff0d2] scale-[1.55] shadow-[0_0_12px_rgba(200,88,26,0.78)]"
                       : "border-black/20 opacity-95 hover:scale-[1.25]"
@@ -305,7 +307,11 @@ export function HUD() {
         gold?: number;
       };
 
-      if (!response.ok || !payload.building || typeof payload.gold !== "number") {
+      if (
+        !response.ok ||
+        !payload.building ||
+        typeof payload.gold !== "number"
+      ) {
         throw new Error(payload.error ?? "Upgrade failed");
       }
 
@@ -328,7 +334,9 @@ export function HUD() {
         handleSelectBuilding(nextSelectedBuilding);
       }
     } catch (error) {
-      setUpgradeError(error instanceof Error ? error.message : "Upgrade failed");
+      setUpgradeError(
+        error instanceof Error ? error.message : "Upgrade failed"
+      );
     } finally {
       setIsUpgrading(false);
     }
@@ -440,7 +448,7 @@ export function HUD() {
           onSelectBuilding={handleSelectBuilding}
         />
 
-        <div className="pointer-events-auto absolute right-0 top-0 z-30 hidden h-full w-[300px] overflow-y-auto border-l border-[var(--b1)] bg-[linear-gradient(180deg,rgba(4,6,10,0.96),rgba(4,6,10,0.88))] xl:block">
+        <div className="pointer-events-auto absolute right-0 top-0 z-30 hidden h-full w-[400px] overflow-y-auto border-l border-[var(--b1)] bg-[linear-gradient(180deg,rgba(4,6,10,0.96),rgba(4,6,10,0.88))] xl:block">
           <div className="border-b border-[var(--b1)] px-5 py-6">
             <div className="font-[var(--font-head)] text-[1.9rem] uppercase leading-none tracking-[0.04em] text-[var(--silver-0)]">
               Structures
@@ -507,8 +515,10 @@ export function HUD() {
               {isUpgrading
                 ? "Upgrading..."
                 : activeBuilding?.level >= 5
-                  ? "Max Level"
-                  : `Upgrade to Level ${activeBuilding ? Math.min(5, activeBuilding.level + 1) : "V"}`}
+                ? "Max Level"
+                : `Upgrade to Level ${
+                    activeBuilding ? Math.min(5, activeBuilding.level + 1) : "V"
+                  }`}
             </button>
             {upgradeError ? (
               <p className="mt-3 text-sm text-[#ff8e8e]">{upgradeError}</p>
@@ -609,15 +619,6 @@ export function HUD() {
           realm.
         </div>
       ) : null}
-
-      <div className="pointer-events-auto absolute right-[314px] top-[126px] z-30 hidden items-center gap-3 lg:flex">
-        <button className="realm-button realm-button-secondary rounded-[14px] px-4 py-2">
-          Realm
-        </button>
-        <button className="realm-button realm-button-secondary rounded-[14px] px-4 py-2">
-          Chronicle
-        </button>
-      </div>
 
       <div className="pointer-events-auto absolute left-3 top-[126px] z-30 md:hidden">
         <button className="realm-button realm-button-secondary rounded-[14px] px-4 py-2">
