@@ -40,20 +40,15 @@ export default async function Home({
 
   return (
     <main className="min-h-screen overflow-hidden text-[var(--silver-1)] font-[var(--font-body)]">
-      {/* HERO SECTION - Pure cinematic landing like the HTML */}
       <section className="relative min-h-screen flex flex-col">
-        {/* Deep background layers */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_90%_70%_at_50%_-10%,rgba(20,30,50,0.75)_0%,transparent_65%),radial-gradient(ellipse_60%_50%_at_20%_60%,rgba(8,12,20,0.85)_0%,transparent_60%),radial-gradient(ellipse_60%_50%_at_80%_60%,rgba(8,12,20,0.85)_0%,transparent_60%),linear-gradient(180deg,#030408_0%,#06080f_18%,#0a0e18_45%,#070a12_75%,#040507_100%)]" />
 
-        {/* Stars */}
         <div className="absolute inset-0 pointer-events-none" id="stars" />
 
-        {/* Mist layers */}
         <div className="absolute bottom-0 left-[-25%] right-[-25%] h-[48%] bg-[radial-gradient(ellipse_80%_100%_at_50%_100%,rgba(90,115,145,0.06)_0%,transparent_70%)] animate-[mist-drift_16s_ease-in-out_infinite_alternate]" />
         <div className="absolute bottom-[8%] left-[-15%] right-[-15%] h-[30%] bg-[radial-gradient(ellipse_60%_100%_at_30%_100%,rgba(70,90,120,0.05)_0%,transparent_70%)] animate-[mist-drift_22s_ease-in-out_infinite_alternate-reverse]" />
         <div className="absolute bottom-[20%] left-0 right-0 h-[20%] bg-[radial-gradient(ellipse_40%_100%_at_65%_100%,rgba(60,80,110,0.04)_0%,transparent_70%)] animate-[mist-drift_30s_ease-in-out_infinite_alternate]" />
 
-        {/* Mountain + Castle Silhouette (exact from HTML) */}
         <div className="absolute bottom-0 left-0 right-0 h-[62%] pointer-events-none">
           <svg
             viewBox="0 0 1440 480"
@@ -74,8 +69,6 @@ export default async function Home({
                 <stop offset="100%" stopColor="#030406" />
               </linearGradient>
             </defs>
-
-            {/* Mountains */}
             <polygon
               points="0,480 90,220 180,285 310,140 420,230 550,85 680,175 800,65 920,145 1050,100 1160,185 1290,140 1380,195 1440,170 1440,480"
               fill="url(#mtn1)"
@@ -90,8 +83,6 @@ export default async function Home({
               points="0,480 200,350 420,390 620,320 820,375 1000,305 1200,360 1440,330 1440,480"
               fill="url(#mtn3)"
             />
-
-            {/* Castle silhouette (detailed) */}
             <rect x="590" y="370" width="260" height="20" fill="#040507" />
             <rect x="600" y="365" width="240" height="8" fill="#06080c" />
             <rect x="605" y="300" width="230" height="70" fill="#050709" />
@@ -105,8 +96,6 @@ export default async function Home({
             <polygon points="705,133 735,133 720,88" fill="#06080e" />
             <rect x="698" y="326" width="44" height="44" fill="#030405" />
             <ellipse cx="720" cy="326" rx="22" ry="14" fill="#030405" />
-
-            {/* Ember windows */}
             <rect
               x="682"
               y="235"
@@ -145,10 +134,8 @@ export default async function Home({
           </svg>
         </div>
 
-        {/* Ember particles */}
         <div className="absolute inset-0 pointer-events-none" id="embers" />
 
-        {/* Top Navigation */}
         <nav className="relative z-20 flex items-center justify-between px-8 py-8">
           <div className="flex items-center gap-3 font-[var(--font-head)] text-lg tracking-[0.03em] text-[var(--silver-0)]">
             <div className="realm-orb h-9 w-9 rounded-full border border-[var(--b1)] bg-[radial-gradient(circle_at_35%_35%,var(--plate-hi)_0%,var(--steel-5)_58%,var(--steel-3)_100%)]" />
@@ -178,7 +165,6 @@ export default async function Home({
           </div>
         </nav>
 
-        {/* Hero Content */}
         <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 text-center">
           <div className="mb-6 flex items-center gap-4 text-[11px] uppercase tracking-[0.4em] text-[var(--plate-hi)]">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-[var(--steel-6)]" />
@@ -213,7 +199,6 @@ export default async function Home({
           </p>
         </div>
 
-        {/* Scroll hint */}
         <a
           href="#chronicle"
           className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-[10px] uppercase tracking-[0.25em] text-[var(--silver-4)] hover:text-[var(--silver-2)] transition">
@@ -230,7 +215,6 @@ export default async function Home({
         </a>
       </section>
 
-      {/* Stat Bar */}
       <div className="border-y border-[var(--b1)] bg-[linear-gradient(180deg,var(--steel-1)_0%,var(--steel-2)_100%)] py-14">
         <div className="mx-auto max-w-5xl grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           {[
@@ -254,57 +238,94 @@ export default async function Home({
         </div>
       </div>
 
-      {/* Features Section */}
-      <section id="chronicle" className="px-6 py-24">
+      <section
+        id="chronicle"
+        className="px-6 py-24 bg-[var(--steel-0)] border-t border-[var(--b1)]">
         <div className="mx-auto max-w-6xl">
           <div className="text-center mb-16">
-            <div className="eyebrow mx-auto">The Pillars of the Realm</div>
-            <h2 className="realm-page-title text-[clamp(2.4rem,5vw,3.8rem)] mt-3">
-              How the Kingdom is Forged
+            <div className="inline-flex items-center gap-6 text-[var(--silver-3)] text-xs uppercase tracking-[0.25em]">
+              <div className="h-px w-12 bg-gradient-to-r from-transparent via-[var(--b2)] to-transparent" />
+              THE PILLARS OF THE REALM
+              <div className="h-px w-12 bg-gradient-to-l from-transparent via-[var(--b2)] to-transparent" />
+            </div>
+
+            <h2 className="realm-page-title mt-4 text-[clamp(2.4rem,5.5vw,3.8rem)] leading-none tracking-tight text-[var(--silver-0)]">
+              HOW THE KINGDOM IS FORGED
             </h2>
-            <p className="realm-lore mt-6 max-w-xl mx-auto text-lg">
+
+            <p className="realm-lore mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-[var(--silver-2)]">
               From raw commits to castle spires — your craft is the only
               currency that matters in this realm.
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {[
-              [
-                "GitHub Forges Your Keep",
-                "Each commit adds stone. Each repository raises a new district. Every streak strengthens your walls.",
-              ],
-              [
-                "Wage War on Rivals",
-                "Challenge kingdoms with equivalent code output. The battle lasts seven days. Only consistent commits decide the victor.",
-              ],
-              [
-                "Build Without Limit",
-                "Forge towers, granaries, training grounds, and observatories. Each structure grants prestige and power.",
-              ],
-              [
-                "The Chronicle",
-                "An unbroken record of every language and milestone. Your history cannot be erased — only extended.",
-              ],
-              [
-                "Explore Other Realms",
-                "Visit allied kingdoms. Study their architecture. Challenge them. Forge pacts.",
-              ],
-              [
-                "Hall of Legend",
-                "The mightiest realms are carved in iron. Weekly conquest. Seasonal campaigns.",
-              ],
-            ].map(([title, desc]) => (
-              <div key={title} className="realm-panel p-8 rounded-3xl">
-                <div className="realm-label text-[var(--ember-hi)]">PILLAR</div>
-                <h3 className="mt-4 text-2xl font-semibold text-[var(--silver-0)]">
-                  {title}
-                </h3>
-                <p className="mt-5 text-[var(--silver-2)] leading-relaxed">
-                  {desc}
-                </p>
-              </div>
-            ))}
+            <div className="realm-panel group rounded-3xl p-8 transition-all hover:-translate-y-1">
+              <div className="text-4xl mb-6">⚒️</div>
+              <h3 className="text-xl font-semibold text-[var(--silver-0)] mb-3 tracking-wide">
+                GitHub Forges Your Keep
+              </h3>
+              <p className="text-[var(--silver-2)] leading-relaxed">
+                Each commit adds stone. Each repository raises a new district.
+                Every streak strengthens your walls against the siege of time.
+              </p>
+            </div>
+
+            <div className="realm-panel group rounded-3xl p-8 transition-all hover:-translate-y-1">
+              <div className="text-4xl mb-6">⚔️</div>
+              <h3 className="text-xl font-semibold text-[var(--silver-0)] mb-3 tracking-wide">
+                Wage War on Rivals
+              </h3>
+              <p className="text-[var(--silver-2)] leading-relaxed">
+                Challenge kingdoms with equivalent code output. The battle lasts
+                seven days. Only consistent commits determine the victor.
+              </p>
+            </div>
+
+            <div className="realm-panel group rounded-3xl p-8 transition-all hover:-translate-y-1">
+              <div className="text-4xl mb-6">🏰</div>
+              <h3 className="text-xl font-semibold text-[var(--silver-0)] mb-3 tracking-wide">
+                Build Without Limit
+              </h3>
+              <p className="text-[var(--silver-2)] leading-relaxed">
+                Forge towers, granaries, training grounds, and observatories.
+                Each structure grants prestige bonuses and passive abilities.
+              </p>
+            </div>
+
+            <div className="realm-panel group rounded-3xl p-8 transition-all hover:-translate-y-1">
+              <div className="text-4xl mb-6">📜</div>
+              <h3 className="text-xl font-semibold text-[var(--silver-0)] mb-3 tracking-wide">
+                The Chronicle
+              </h3>
+              <p className="text-[var(--silver-2)] leading-relaxed">
+                An unbroken record of every language wielded, every milestone
+                crossed. Your history cannot be erased — only extended.
+              </p>
+            </div>
+
+            <div className="realm-panel group rounded-3xl p-8 transition-all hover:-translate-y-1">
+              <div className="text-4xl mb-6">🌍</div>
+              <h3 className="text-xl font-semibold text-[var(--silver-0)] mb-3 tracking-wide">
+                Explore Other Realms
+              </h3>
+              <p className="text-[var(--silver-2)] leading-relaxed">
+                Traverse the world map and visit allied kingdoms. Study their
+                architecture. Challenge them. Forge pacts. Compete for
+                dominance.
+              </p>
+            </div>
+
+            <div className="realm-panel group rounded-3xl p-8 transition-all hover:-translate-y-1">
+              <div className="text-4xl mb-6">🏆</div>
+              <h3 className="text-xl font-semibold text-[var(--silver-0)] mb-3 tracking-wide">
+                Hall of Legend
+              </h3>
+              <p className="text-[var(--silver-2)] leading-relaxed">
+                The mightiest realms inscribed in the Hall of Legend. Weekly
+                conquest. Seasonal campaigns. Your name carved in iron.
+              </p>
+            </div>
           </div>
         </div>
       </section>

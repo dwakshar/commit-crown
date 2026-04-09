@@ -376,6 +376,15 @@ h4 {
   }
 }
 
+@keyframes mist-drift {
+  from {
+    transform: translateX(-2.5%) scaleX(1);
+  }
+  to {
+    transform: translateX(2.5%) scaleX(1.06);
+  }
+}
+
 @keyframes ember-rise {
   0% {
     opacity: 0;
