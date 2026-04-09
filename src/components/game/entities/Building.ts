@@ -6,6 +6,7 @@ type PhaserScene = import('phaser').Scene
 
 type SelectableScene = PhaserScene & {
   selectBuilding: (building: BuildingData) => void
+  canSelectBuilding: () => boolean
 }
 
 type PhaserGlobal = typeof globalThis & {
@@ -148,7 +149,11 @@ export class Building extends Phaser.GameObjects.Container {
       this.outline.setVisible(false)
     })
 
-    this.on('pointerdown', () => {
+    this.on('pointerup', () => {
+      if (!scene.canSelectBuilding()) {
+        return
+      }
+
       scene.selectBuilding(this.buildingData)
     })
   }

@@ -80,12 +80,20 @@ export class KingdomScene extends Phaser.Scene {
   private readonly tileWidth = 64
   private readonly tileHeight = 32
   private readonly gridSize = 20
+  private readonly worldPadding = 220
 
   private originX = 0
   private originY = 120
   private buildingLayer?: PhaserContainer
   private selectionMarker?: PhaserGraphics
   private buildingMap = new Map<string, Building>()
+  private isDraggingCamera = false
+  private didCameraDrag = false
+  private dragStartPointerX = 0
+  private dragStartPointerY = 0
+  private dragStartScrollX = 0
+  private dragStartScrollY = 0
+  private dragDistance = 0
 
   constructor() {
     super('KingdomScene')
@@ -95,9 +103,11 @@ export class KingdomScene extends Phaser.Scene {
     const kingdomData = this.getKingdomData()
     this.cameras.main.setBackgroundColor(deriveThemePalette(kingdomData.themeId).background)
     this.originX = this.scale.width / 2
+    this.configureCamera()
 
     this.drawGrid()
     this.renderBuildings(kingdomData)
+    this.registerCameraDrag()
 
     this.game.events.on('kingdom-updated', this.handleKingdomUpdated, this)
     this.scale.on('resize', this.handleResize, this)
@@ -136,6 +146,10 @@ export class KingdomScene extends Phaser.Scene {
       .setVisible(true)
 
     this.game.events.emit('building-selected', building)
+  }
+
+  canSelectBuilding(): boolean {
+    return !this.didCameraDrag
   }
 
   private getKingdomData(): KingdomData {
@@ -194,6 +208,89 @@ export class KingdomScene extends Phaser.Scene {
     this.selectionMarker = this.add.graphics().setVisible(false)
   }
 
+  private configureCamera(): void {
+    const camera = this.cameras.main
+    const worldBounds = this.getWorldBounds()
+
+    camera.setBounds(worldBounds.x, worldBounds.y, worldBounds.width, worldBounds.height)
+    camera.centerOn(worldBounds.centerX, worldBounds.centerY)
+  }
+
+  private getWorldBounds() {
+    const corners = [
+      this.isoToScreen(0, 0),
+      this.isoToScreen(this.gridSize - 1, 0),
+      this.isoToScreen(0, this.gridSize - 1),
+      this.isoToScreen(this.gridSize - 1, this.gridSize - 1),
+    ]
+
+    const minX = Math.min(...corners.map((point) => point.x)) - this.tileWidth - this.worldPadding
+    const maxX = Math.max(...corners.map((point) => point.x)) + this.tileWidth + this.worldPadding
+    const minY = Math.min(...corners.map((point) => point.y)) - this.tileHeight - this.worldPadding
+    const maxY = Math.max(...corners.map((point) => point.y)) + this.tileHeight + this.worldPadding
+
+    return {
+      x: minX,
+      y: minY,
+      width: maxX - minX,
+      height: maxY - minY,
+      centerX: (minX + maxX) / 2,
+      centerY: (minY + maxY) / 2,
+    }
+  }
+
+  private registerCameraDrag(): void {
+    this.input.on(Phaser.Input.Events.POINTER_DOWN, this.handlePointerDown, this)
+    this.input.on(Phaser.Input.Events.POINTER_MOVE, this.handlePointerMove, this)
+    this.input.on(Phaser.Input.Events.POINTER_UP, this.handlePointerUp, this)
+    this.input.on(Phaser.Input.Events.GAME_OUT, this.handlePointerUp, this)
+  }
+
+  private handlePointerDown(pointer: import('phaser').Input.Pointer): void {
+    if (!pointer.leftButtonDown()) {
+      return
+    }
+
+    this.isDraggingCamera = true
+    this.dragDistance = 0
+    this.dragStartPointerX = pointer.x
+    this.dragStartPointerY = pointer.y
+    this.dragStartScrollX = this.cameras.main.scrollX
+    this.dragStartScrollY = this.cameras.main.scrollY
+  }
+
+  private handlePointerMove(pointer: import('phaser').Input.Pointer): void {
+    if (!this.isDraggingCamera || !pointer.isDown) {
+      return
+    }
+
+    const deltaX = pointer.x - this.dragStartPointerX
+    const deltaY = pointer.y - this.dragStartPointerY
+
+    this.dragDistance = Math.hypot(deltaX, deltaY)
+
+    if (this.dragDistance > 6) {
+      this.didCameraDrag = true
+      this.input.setDefaultCursor('grabbing')
+    }
+
+    this.cameras.main.setScroll(this.dragStartScrollX - deltaX, this.dragStartScrollY - deltaY)
+  }
+
+  private handlePointerUp(): void {
+    this.isDraggingCamera = false
+    this.input.setDefaultCursor('default')
+
+    if (!this.didCameraDrag) {
+      return
+    }
+
+    this.time.delayedCall(0, () => {
+      this.didCameraDrag = false
+      this.dragDistance = 0
+    })
+  }
+
   private renderBuildings(kingdomData: KingdomData): void {
     this.buildingLayer?.destroy(true)
     this.buildingLayer = this.add.container()
@@ -220,6 +317,7 @@ export class KingdomScene extends Phaser.Scene {
 
   private handleResize(gameSize: { width: number }): void {
     this.originX = gameSize.width / 2
+    this.configureCamera()
     this.children.removeAll(true)
     this.buildingLayer = undefined
     this.selectionMarker = undefined
@@ -230,5 +328,9 @@ export class KingdomScene extends Phaser.Scene {
   private handleShutdown(): void {
     this.game.events.off('kingdom-updated', this.handleKingdomUpdated, this)
     this.scale.off('resize', this.handleResize, this)
+    this.input.off(Phaser.Input.Events.POINTER_DOWN, this.handlePointerDown, this)
+    this.input.off(Phaser.Input.Events.POINTER_MOVE, this.handlePointerMove, this)
+    this.input.off(Phaser.Input.Events.POINTER_UP, this.handlePointerUp, this)
+    this.input.off(Phaser.Input.Events.GAME_OUT, this.handlePointerUp, this)
   }
 }
