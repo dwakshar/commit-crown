@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
+import { RealmTopNav } from "@/src/components/ui/RealmTopNav";
 import { ShopItemCard } from "@/src/components/ui/ShopItemCard";
 import { useNotificationStore } from "@/src/store/notificationStore";
 
@@ -86,6 +87,9 @@ export function MarketplaceClient({
 
   return (
     <main className="min-h-screen px-4 py-10 text-[var(--silver-1)] sm:px-6 lg:px-8">
+      <div className="mx-[-1rem] mt-[-2.5rem] mb-10 sm:mx-[-1.5rem] lg:mx-[-2rem]">
+        <RealmTopNav active="marketplace" />
+      </div>
       <div className="mx-auto max-w-7xl">
         <section className="realm-panel rounded-[32px] p-5 sm:p-8">
           <div className="flex flex-col gap-5 border-b border-[var(--b0)] pb-6 lg:flex-row lg:items-end lg:justify-between">

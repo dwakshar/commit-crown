@@ -63,7 +63,7 @@ export function KingdomPageClient({
       <div className="pointer-events-none absolute inset-0 opacity-80">
         <div className="absolute inset-0 bg-[repeating-linear-gradient(180deg,transparent,transparent_3px,rgba(100,130,160,0.015)_3px,rgba(100,130,160,0.015)_4px)]" />
       </div>
-      <div className="absolute inset-x-0 top-[116px] bottom-[64px] left-[58px] right-0 xl:right-[280px]">
+      <div className="absolute inset-x-0 top-[116px] bottom-[64px] left-[58px] right-0 xl:right-[300px]">
         <PhaserGame
           kingdomData={kingdom ?? kingdomData}
           userId={kingdomData.userId}
