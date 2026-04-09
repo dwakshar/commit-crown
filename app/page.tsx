@@ -141,38 +141,16 @@ export default async function Home({
             <div className="realm-orb h-9 w-9 rounded-full border border-[var(--b1)] bg-[radial-gradient(circle_at_35%_35%,var(--plate-hi)_0%,var(--steel-5)_58%,var(--steel-3)_100%)]" />
             CodeKingdom
           </div>
-          <div className="hidden md:flex items-center gap-8 text-sm uppercase tracking-widest text-[var(--silver-2)]">
-            <a
-              href="#chronicle"
-              className="hover:text-[var(--silver-0)] transition">
-              Chronicle
-            </a>
-            <a
-              href="#conquest"
-              className="hover:text-[var(--silver-0)] transition">
-              Conquest
-            </a>
-            <a
-              href="#bazaar"
-              className="hover:text-[var(--silver-0)] transition">
-              Bazaar
-            </a>
-            <a
-              href="#enlist"
-              className="hover:text-[var(--silver-0)] transition">
-              Enlist
-            </a>
-          </div>
         </nav>
 
         <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 text-center">
-          <div className="mb-6 flex items-center gap-4 text-[11px] uppercase tracking-[0.4em] text-[var(--plate-hi)]">
+          <div className="mb-6 flex items-center gap-4 text-[12px] uppercase tracking-[0.4em] text-[var(--plate-hi)]">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-[var(--steel-6)]" />
             Your Code. Your Kingdom.
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-[var(--steel-6)]" />
           </div>
 
-          <h1 className="realm-display text-[clamp(52px,9vw,96px)] leading-[0.96] tracking-[-0.02em] text-[var(--silver-0)]">
+          <h1 className="realm-display text-[clamp(52px,9vw,96px)] font-bold leading-[0.96] tracking-[-0.02em] text-[var(--silver-0)]">
             Code<span className="text-[var(--ember)]">Kingdom</span>
           </h1>
 
@@ -222,8 +200,8 @@ export default async function Home({
               value: (kingdomCount ?? 0).toLocaleString(),
               label: "Kingdoms Forged",
             },
-            { value: "3.1M", label: "Commits Chronicled" },
-            { value: "214K", label: "Raids Waged" },
+            { value: "120", label: "Commits Chronicled" },
+            { value: "18", label: "Raids Waged" },
             { value: "62", label: "Languages of War" },
           ].map((stat) => (
             <div key={stat.label}>
@@ -249,8 +227,8 @@ export default async function Home({
               <div className="h-px w-12 bg-gradient-to-l from-transparent via-[var(--b2)] to-transparent" />
             </div>
 
-            <h2 className="realm-page-title mt-4 text-[clamp(2.4rem,5.5vw,3.8rem)] leading-none tracking-tight text-[var(--silver-0)]">
-              HOW THE KINGDOM IS FORGED
+            <h2 className="realm-page-title mt-4 text-[clamp(2.4rem,5.5vw,3.8rem)] font-bold leading-none tracking-tight text-[var(--silver-0)]">
+              How The Kingdom Is Forged
             </h2>
 
             <p className="realm-lore mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-[var(--silver-2)]">
@@ -271,60 +249,57 @@ export default async function Home({
               </p>
             </div>
 
-            <div className="realm-panel group rounded-3xl p-8 transition-all hover:-translate-y-1">
-              <div className="text-4xl mb-6">⚔️</div>
-              <h3 className="text-xl font-semibold text-[var(--silver-0)] mb-3 tracking-wide">
-                Wage War on Rivals
-              </h3>
-              <p className="text-[var(--silver-2)] leading-relaxed">
-                Challenge kingdoms with equivalent code output. The battle lasts
-                seven days. Only consistent commits determine the victor.
-              </p>
-            </div>
-
-            <div className="realm-panel group rounded-3xl p-8 transition-all hover:-translate-y-1">
+            <div className="bg-[var(--steel-2)] p-8 group relative">
               <div className="text-4xl mb-6">🏰</div>
-              <h3 className="text-xl font-semibold text-[var(--silver-0)] mb-3 tracking-wide">
-                Build Without Limit
+              <h3 className="font-[var(--font-head)] text-xl tracking-wide text-[var(--silver-0)] mb-4">
+                BUILD WITHOUT LIMIT
               </h3>
               <p className="text-[var(--silver-2)] leading-relaxed">
                 Forge towers, granaries, training grounds, and observatories.
                 Each structure grants prestige bonuses and passive abilities.
               </p>
+              <div className="absolute top-4 right-4 w-1.5 h-1.5 bg-[var(--steel-5)] rounded-full" />
+              <div className="absolute bottom-4 left-4 w-1.5 h-1.5 bg-[var(--steel-5)] rounded-full" />
             </div>
 
-            <div className="realm-panel group rounded-3xl p-8 transition-all hover:-translate-y-1">
+            <div className="bg-[var(--steel-2)] p-8 group relative">
               <div className="text-4xl mb-6">📜</div>
-              <h3 className="text-xl font-semibold text-[var(--silver-0)] mb-3 tracking-wide">
-                The Chronicle
+              <h3 className="font-[var(--font-head)] text-xl tracking-wide text-[var(--silver-0)] mb-4">
+                THE CHRONICLE
               </h3>
               <p className="text-[var(--silver-2)] leading-relaxed">
                 An unbroken record of every language wielded, every milestone
                 crossed. Your history cannot be erased — only extended.
               </p>
+              <div className="absolute top-4 right-4 w-1.5 h-1.5 bg-[var(--steel-5)] rounded-full" />
+              <div className="absolute bottom-4 left-4 w-1.5 h-1.5 bg-[var(--steel-5)] rounded-full" />
             </div>
 
-            <div className="realm-panel group rounded-3xl p-8 transition-all hover:-translate-y-1">
+            <div className="bg-[var(--steel-2)] p-8 group relative">
               <div className="text-4xl mb-6">🌍</div>
-              <h3 className="text-xl font-semibold text-[var(--silver-0)] mb-3 tracking-wide">
-                Explore Other Realms
+              <h3 className="font-[var(--font-head)] text-xl tracking-wide text-[var(--silver-0)] mb-4">
+                EXPLORE OTHER REALMS
               </h3>
               <p className="text-[var(--silver-2)] leading-relaxed">
                 Traverse the world map and visit allied kingdoms. Study their
                 architecture. Challenge them. Forge pacts. Compete for
                 dominance.
               </p>
+              <div className="absolute top-4 right-4 w-1.5 h-1.5 bg-[var(--steel-5)] rounded-full" />
+              <div className="absolute bottom-4 left-4 w-1.5 h-1.5 bg-[var(--steel-5)] rounded-full" />
             </div>
 
-            <div className="realm-panel group rounded-3xl p-8 transition-all hover:-translate-y-1">
+            <div className="bg-[var(--steel-2)] p-8 group relative">
               <div className="text-4xl mb-6">🏆</div>
-              <h3 className="text-xl font-semibold text-[var(--silver-0)] mb-3 tracking-wide">
-                Hall of Legend
+              <h3 className="font-[var(--font-head)] text-xl tracking-wide text-[var(--silver-0)] mb-4">
+                HALL OF LEGEND
               </h3>
               <p className="text-[var(--silver-2)] leading-relaxed">
                 The mightiest realms inscribed in the Hall of Legend. Weekly
                 conquest. Seasonal campaigns. Your name carved in iron.
               </p>
+              <div className="absolute top-4 right-4 w-1.5 h-1.5 bg-[var(--steel-5)] rounded-full" />
+              <div className="absolute bottom-4 left-4 w-1.5 h-1.5 bg-[var(--steel-5)] rounded-full" />
             </div>
           </div>
         </div>
