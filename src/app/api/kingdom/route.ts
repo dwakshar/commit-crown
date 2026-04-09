@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { calculateKingdomPower } from '@/src/lib/gameEngine'
 import {
+  createFallbackKingdomData,
   ensureKingdomForUser,
   KINGDOM_WITH_BUILDINGS_SELECT,
   type PersistedKingdomRow,
@@ -58,10 +59,10 @@ export async function GET() {
     try {
       kingdom = await ensureKingdomForUser(user.id)
     } catch (error) {
-      return NextResponse.json(
-        { error: error instanceof Error ? error.message : 'Unable to create kingdom' },
-        { status: 500 },
-      )
+      console.error('Unable to bootstrap kingdom API payload', {
+        userId: user.id,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      })
     }
   }
 
@@ -69,7 +70,21 @@ export async function GET() {
   const kingdomRow = kingdom
 
   if (!kingdomRow) {
-    return NextResponse.json({ error: 'Kingdom not found' }, { status: 404 })
+    const typedGithubStats = (githubStats as GitHubStatsData | null) ?? null
+    const fallbackKingdomData = withStarterKingdomState(
+      createFallbackKingdomData({
+        userId: user.id,
+        username: typedProfile.username ?? null,
+        avatarUrl: typedProfile.avatar_url,
+        githubStats: typedGithubStats,
+      }),
+    )
+
+    return NextResponse.json({
+      success: true,
+      kingdom: fallbackKingdomData,
+      power: calculateKingdomPower(fallbackKingdomData, fallbackKingdomData.buildings),
+    })
   }
 
   const buildings: BuildingData[] = (kingdomRow.buildings ?? []).map((building) => ({

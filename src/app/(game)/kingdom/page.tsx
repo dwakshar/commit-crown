@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 
 import { KingdomPageClient } from '@/src/app/(game)/kingdom/KingdomPageClient'
 import {
+  createFallbackKingdomData,
   ensureKingdomForUser,
   KINGDOM_WITH_BUILDINGS_SELECT,
   type PersistedKingdomRow,
@@ -50,11 +51,27 @@ export default async function KingdomPage({
   let kingdom = (initialKingdom as PersistedKingdomRow | null) ?? null
 
   if (!kingdom) {
-    kingdom = await ensureKingdomForUser(user.id)
+    try {
+      kingdom = await ensureKingdomForUser(user.id)
+    } catch (error) {
+      console.error('Unable to bootstrap kingdom page', {
+        userId: user.id,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      })
+    }
   }
 
   if (!kingdom) {
-    throw new Error(`Unable to load or create kingdom for user ${user.id}`)
+    const fallbackKingdomData = withStarterKingdomState(
+      createFallbackKingdomData({
+        userId: user.id,
+        username: profile?.username ?? null,
+        avatarUrl: profile?.avatar_url ?? null,
+        githubStats: (githubStats as GitHubStatsData | null) ?? null,
+      }),
+    )
+
+    return <KingdomPageClient kingdomData={fallbackKingdomData} />
   }
 
   const kingdomRow = kingdom
