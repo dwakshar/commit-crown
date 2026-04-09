@@ -208,3 +208,45 @@ h4 {
     transform: translate3d(0, 0, 0);
   }
 }
+
+@keyframes star-twinkle {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0.25;
+    transform: scale(0.7);
+  }
+}
+
+@keyframes mist-drift {
+  from {
+    transform: translateX(-2.5%) scaleX(1);
+  }
+
+  to {
+    transform: translateX(2.5%) scaleX(1.06);
+  }
+}
+
+@keyframes ember-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(0) translateX(0) scale(1);
+  }
+
+  6% {
+    opacity: 0.85;
+  }
+
+  80% {
+    opacity: 0.15;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-380px) translateX(var(--ember-drift, 24px)) scale(0.3);
+  }
+}

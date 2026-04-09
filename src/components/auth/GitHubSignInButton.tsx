@@ -37,7 +37,7 @@ export function GitHubSignInButton() {
         type="button"
         onClick={handleSignIn}
         disabled={isLoading}
-        className="rounded-2xl bg-[#C9A84C] px-5 py-3 text-sm font-semibold text-[#22190b] transition hover:bg-[#d7b864] disabled:cursor-not-allowed disabled:bg-[#6e5b25] disabled:text-[#d2c7a3]"
+        className="realm-button realm-button-primary rounded-[18px] px-5 py-3 disabled:cursor-not-allowed disabled:opacity-55"
       >
         {isLoading ? 'Connecting to GitHub...' : 'Sign In With GitHub'}
       </button>
