@@ -177,24 +177,12 @@ function MinimapPanel({
     : null;
 
   return (
-    <div className="pointer-events-auto absolute bottom-5 left-[76px] z-30 hidden w-[168px] overflow-hidden rounded-[22px] border border-[var(--b1)] bg-[linear-gradient(180deg,rgba(8,11,18,0.96),rgba(5,8,13,0.94))] shadow-[0_18px_42px_rgba(0,0,0,0.42)] xl:block">
-      <div className="border-b border-[var(--b0)] px-3 py-2.5">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-[10px] uppercase tracking-[0.24em] text-[var(--silver-3)]">
-            Realm Atlas
-          </p>
-          <span className="rounded-full border border-[rgba(200,88,26,0.24)] bg-[rgba(44,21,13,0.55)] px-2 py-0.5 text-[9px] uppercase tracking-[0.18em] text-[var(--ember-hi)]">
-            {buildings.length} sites
-          </span>
-        </div>
-        <p className="mt-1 text-[11px] text-[var(--silver-3)]">
-          {center ? `${getBuildingName(center)} selected` : "Select a structure"}
-        </p>
-      </div>
-
-      <div className="p-3">
-        <div className="relative overflow-hidden rounded-[18px] border border-[var(--b0)] bg-[radial-gradient(circle_at_50%_0%,rgba(176,196,214,0.08),transparent_38%),linear-gradient(180deg,#0b1018,#06090f)] p-2">
-          <div className="grid grid-cols-20 gap-[2px]">
+    <div className="pointer-events-auto absolute bottom-5 left-[76px] z-30 hidden w-[212px] overflow-hidden rounded-[24px] border border-[var(--b1)] bg-[linear-gradient(180deg,rgba(8,11,18,0.97),rgba(5,8,13,0.95))] shadow-[0_20px_48px_rgba(0,0,0,0.46)] xl:block">
+      <div className="relative p-3">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-[linear-gradient(180deg,rgba(176,196,214,0.06),transparent)]" />
+        <div className="relative overflow-hidden rounded-[20px] border border-[var(--b0)] bg-[radial-gradient(circle_at_50%_0%,rgba(176,196,214,0.08),transparent_38%),linear-gradient(180deg,#0b1018,#06090f)] p-3">
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.02),transparent_26%),radial-gradient(circle_at_bottom,rgba(122,150,94,0.08),transparent_48%)]" />
+          <div className="relative grid grid-cols-20 gap-[3px]">
             {Array.from({ length: gridSize * gridSize }, (_, index) => {
               const x = index % gridSize;
               const y = Math.floor(index / gridSize);
@@ -207,16 +195,16 @@ function MinimapPanel({
                   type="button"
                   onClick={() => onSelectBuilding(building)}
                   aria-label={`Focus ${getBuildingName(building)}`}
-                  className={`h-[5px] w-[5px] rounded-[2px] border transition ${getMinimapTone(building)} ${
+                  className={`h-[6px] w-[6px] rounded-[2px] border transition ${getMinimapTone(building)} ${
                     isActive
-                      ? "border-[#fff0d2] scale-[1.6] shadow-[0_0_10px_rgba(200,88,26,0.75)]"
-                      : "border-black/20 opacity-95 hover:scale-[1.35]"
+                      ? "border-[#fff0d2] scale-[1.55] shadow-[0_0_12px_rgba(200,88,26,0.78)]"
+                      : "border-black/20 opacity-95 hover:scale-[1.25]"
                   }`}
                 />
               ) : (
                 <span
                   key={`${x}-${y}`}
-                  className="h-[5px] w-[5px] rounded-[2px] bg-[rgba(122,150,94,0.14)]"
+                  className="h-[6px] w-[6px] rounded-[2px] bg-[rgba(122,150,94,0.14)]"
                 />
               );
             })}
@@ -226,33 +214,14 @@ function MinimapPanel({
             <div
               className="pointer-events-none absolute rounded-full border border-[rgba(255,208,160,0.4)] bg-[rgba(200,88,26,0.08)]"
               style={{
-                width: "18px",
-                height: "18px",
-                left: `${8 + center.x * 7 - 6}px`,
-                top: `${8 + center.y * 7 - 6}px`,
+                width: "20px",
+                height: "20px",
+                left: `${12 + center.x * 9 - 7}px`,
+                top: `${12 + center.y * 9 - 7}px`,
                 boxShadow: "0 0 18px rgba(200,88,26,0.24)",
               }}
             />
           ) : null}
-        </div>
-
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          <div className="rounded-[14px] border border-[var(--b0)] bg-[rgba(255,255,255,0.03)] px-2.5 py-2">
-            <p className="text-[9px] uppercase tracking-[0.2em] text-[var(--silver-3)]">
-              Center
-            </p>
-            <p className="mt-1 font-[var(--font-head)] text-[13px] text-[var(--silver-0)]">
-              {center ? `${center.x},${center.y}` : "--"}
-            </p>
-          </div>
-          <div className="rounded-[14px] border border-[var(--b0)] bg-[rgba(255,255,255,0.03)] px-2.5 py-2">
-            <p className="text-[9px] uppercase tracking-[0.2em] text-[var(--silver-3)]">
-              Grid
-            </p>
-            <p className="mt-1 font-[var(--font-head)] text-[13px] text-[var(--silver-0)]">
-              20 x 20
-            </p>
-          </div>
         </div>
       </div>
     </div>

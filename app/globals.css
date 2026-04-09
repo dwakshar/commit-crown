@@ -263,7 +263,6 @@ h4 {
 .realm-button-secondary {
   background: rgba(16, 20, 30, 0.78);
   color: var(--silver-1);
-  border: 1px solid var(--b2);
 }
 
 .realm-button-secondary:hover {
