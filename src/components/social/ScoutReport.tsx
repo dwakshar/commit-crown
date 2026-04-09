@@ -1,25 +1,25 @@
-'use client'
+"use client";
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState } from "react";
 
-import Image from 'next/image'
-import { formatDistanceToNowStrict } from 'date-fns'
+import { formatDistanceToNowStrict } from "date-fns";
+import Image from "next/image";
 
-import { RaidConfirmModal } from '@/src/components/ui/RaidConfirmModal'
-import type { KingdomData } from '@/src/types/game'
+import { RaidConfirmModal } from "@/src/components/ui/RaidConfirmModal";
+import type { KingdomData } from "@/src/types/game";
 
 type ScoutReportProps = {
-  kingdomData: KingdomData
-  prestigeRank: number
-  totalBuildings: number
-  topLanguage: string
-  recentVisitors: string[]
-  canLeaveFlag: boolean
-  canRaid: boolean
-  attackerName?: string
-  attackerAttackRating?: number
-  attackerGold?: number
-}
+  kingdomData: KingdomData;
+  prestigeRank: number;
+  totalBuildings: number;
+  topLanguage: string;
+  recentVisitors: string[];
+  canLeaveFlag: boolean;
+  canRaid: boolean;
+  attackerName?: string;
+  attackerAttackRating?: number;
+  attackerGold?: number;
+};
 
 export function ScoutReport({
   kingdomData,
@@ -33,50 +33,57 @@ export function ScoutReport({
   attackerAttackRating,
   attackerGold,
 }: ScoutReportProps) {
-  const [isFlagging, setIsFlagging] = useState(false)
-  const [hasFlagged, setHasFlagged] = useState(false)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [isRaidOpen, setIsRaidOpen] = useState(false)
+  const [isFlagging, setIsFlagging] = useState(false);
+  const [hasFlagged, setHasFlagged] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isRaidOpen, setIsRaidOpen] = useState(false);
 
   const accountAge = useMemo(() => {
     if (!kingdomData.ownerCreatedAt) {
-      return 'Unknown age'
+      return "Unknown age";
     }
 
-    return formatDistanceToNowStrict(new Date(kingdomData.ownerCreatedAt), { addSuffix: true })
-  }, [kingdomData.ownerCreatedAt])
+    return formatDistanceToNowStrict(new Date(kingdomData.ownerCreatedAt), {
+      addSuffix: true,
+    });
+  }, [kingdomData.ownerCreatedAt]);
 
   const handleLeaveFlag = async () => {
-    setIsFlagging(true)
-    setErrorMessage(null)
+    setIsFlagging(true);
+    setErrorMessage(null);
 
     try {
-      const response = await fetch('/api/visit/record', {
-        method: 'POST',
+      const response = await fetch("/api/visit/record", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ defenderId: kingdomData.userId }),
-      })
+      });
 
-      const payload = (await response.json()) as { error?: string }
+      const payload = (await response.json()) as { error?: string };
 
       if (!response.ok) {
-        throw new Error(payload.error ?? 'Unable to leave a flag')
+        throw new Error(payload.error ?? "Unable to leave a flag");
       }
 
-      setHasFlagged(true)
+      setHasFlagged(true);
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Unable to leave a flag')
+      setErrorMessage(
+        error instanceof Error ? error.message : "Unable to leave a flag"
+      );
     } finally {
-      setIsFlagging(false)
+      setIsFlagging(false);
     }
-  }
+  };
 
-  const commandHandle = kingdomData.ownerGithubUsername ?? kingdomData.ownerName
-  const kingdomStatus = kingdomData.raids_enabled ? 'Raid window open' : 'Protected keep'
-  const defenseLabel = kingdomData.defense_rating.toLocaleString()
-  const treasuryLabel = kingdomData.gold.toLocaleString()
+  const commandHandle =
+    kingdomData.ownerGithubUsername ?? kingdomData.ownerName;
+  const kingdomStatus = kingdomData.raids_enabled
+    ? "Raid window open"
+    : "Protected keep";
+  const defenseLabel = kingdomData.defense_rating.toLocaleString();
+  const treasuryLabel = kingdomData.gold.toLocaleString();
 
   return (
     <>
@@ -166,7 +173,8 @@ export function ScoutReport({
             Operation Window
           </div>
           <div className="mt-2 text-sm text-[var(--silver-2)]">
-            Leave your banner, survey this kingdom, or launch a raid if both realms are open for battle.
+            Leave your banner, survey this kingdom, or launch a raid if both
+            realms are open for battle.
           </div>
           <div className="mt-4 flex flex-col gap-3">
             {canLeaveFlag ? (
@@ -174,13 +182,17 @@ export function ScoutReport({
                 type="button"
                 onClick={handleLeaveFlag}
                 disabled={isFlagging || hasFlagged}
-                className="realm-button border border-[var(--b1)] bg-[rgba(255,255,255,0.02)] px-5 py-3 text-sm text-[var(--silver-2)] transition hover:text-[var(--silver-0)] disabled:cursor-not-allowed disabled:opacity-45"
-              >
-                {isFlagging ? 'Leaving Flag...' : hasFlagged ? 'Flag Planted' : 'Leave A Flag'}
+                className="realm-button border border-[var(--b1)] bg-[rgba(255,255,255,0.02)] px-5 py-3 text-sm text-[var(--silver-2)] transition hover:text-[var(--silver-0)] disabled:cursor-not-allowed disabled:opacity-45">
+                {isFlagging
+                  ? "Leaving Flag..."
+                  : hasFlagged
+                  ? "Flag Planted"
+                  : "Leave A Flag"}
               </button>
             ) : (
               <div className="rounded-[20px] border border-[var(--b0)] bg-[rgba(255,255,255,0.02)] px-4 py-3 text-sm text-[var(--silver-2)]">
-                Sign in with a different account to leave a flag on this kingdom.
+                Sign in with a different account to leave a flag on this
+                kingdom.
               </div>
             )}
 
@@ -188,8 +200,7 @@ export function ScoutReport({
               <button
                 type="button"
                 onClick={() => setIsRaidOpen(true)}
-                className="realm-button border border-[rgba(200,88,26,0.58)] bg-[linear-gradient(180deg,rgba(36,16,10,0.86),rgba(24,10,6,0.92))] px-5 py-3 text-sm text-[var(--ember-hi)] transition hover:border-[var(--ember)] hover:text-[#ffd2ad]"
-              >
+                className="realm-button border border-[rgba(200,88,26,0.58)] bg-[linear-gradient(180deg,rgba(36,16,10,0.86),rgba(24,10,6,0.92))] px-5 py-3 text-sm text-[var(--ember-hi)] transition hover:border-[var(--ember)] hover:text-[#ffd2ad]">
                 Raid This Kingdom
               </button>
             ) : (
@@ -199,7 +210,9 @@ export function ScoutReport({
             )}
           </div>
 
-          {errorMessage ? <p className="mt-3 text-sm text-[#ff9696]">{errorMessage}</p> : null}
+          {errorMessage ? (
+            <p className="mt-3 text-sm text-[#ff9696]">{errorMessage}</p>
+          ) : null}
         </div>
 
         <div className="border-b border-[var(--b0)] px-5 py-5">
@@ -207,8 +220,9 @@ export function ScoutReport({
             Advisory
           </div>
           <div className="mt-3 rounded-[20px] border border-[var(--b0)] bg-[rgba(255,255,255,0.02)] px-4 py-4 text-sm leading-6 text-[var(--silver-2)]">
-            Strong treasuries support prolonged raids, while high defense makes this keep harder to crack. Use the
-            board view to inspect district density before committing troops.
+            Strong treasuries support prolonged raids, while high defense makes
+            this keep harder to crack. Use the board view to inspect district
+            density before committing troops.
           </div>
         </div>
 
@@ -218,16 +232,22 @@ export function ScoutReport({
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
             {recentVisitors.length > 0 ? (
-              recentVisitors.map((visitor) => (
-                <span
-                  key={visitor}
-                  className="border border-[var(--b1)] bg-[rgba(255,255,255,0.03)] px-3 py-1 text-sm text-[var(--silver-2)]"
-                >
-                  @{visitor}
-                </span>
-              ))
+              [...new Set(recentVisitors)].map(
+                (
+                  visitor,
+                  index // removes duplicates
+                ) => (
+                  <span
+                    key={`${visitor}-${index}`}
+                    className="border border-[var(--b1)] bg-[rgba(255,255,255,0.03)] px-3 py-1 text-sm text-[var(--silver-2)]">
+                    @{visitor}
+                  </span>
+                )
+              )
             ) : (
-              <span className="text-sm text-[var(--silver-3)]">No scouts have left a flag yet.</span>
+              <span className="text-sm text-[var(--silver-3)]">
+                No scouts have left a flag yet.
+              </span>
             )}
           </div>
         </div>
@@ -235,7 +255,7 @@ export function ScoutReport({
 
       <RaidConfirmModal
         open={isRaidOpen}
-        attackerName={attackerName ?? 'Unknown Raider'}
+        attackerName={attackerName ?? "Unknown Raider"}
         attackerAttackRating={attackerAttackRating ?? 0}
         attackerGold={attackerGold ?? 0}
         defenderId={kingdomData.userId}
@@ -245,5 +265,5 @@ export function ScoutReport({
         onClose={() => setIsRaidOpen(false)}
       />
     </>
-  )
+  );
 }
