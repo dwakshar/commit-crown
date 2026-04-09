@@ -35,7 +35,7 @@ const STARTER_BUILDINGS: BuildingData[] = [
 ]
 
 export function withStarterKingdomState(kingdom: KingdomData): KingdomData {
-  if ((kingdom.githubStats?.total_commits ?? 0) > 0 || kingdom.buildings.length > 0) {
+  if (kingdom.buildings.length > 0) {
     return kingdom
   }
 
