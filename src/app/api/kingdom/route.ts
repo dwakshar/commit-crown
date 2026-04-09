@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import { calculateKingdomPower } from '@/src/lib/gameEngine'
 import {
   createFallbackKingdomData,
-  KINGDOM_WITH_BUILDINGS_SELECT,
+  fetchPersistedKingdomForUser,
   type PersistedKingdomRow,
   tryEnsureKingdomForUser,
 } from '@/src/lib/kingdomPersistence'
@@ -28,14 +28,15 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const [{ data: profile, error: profileError }, { data: initialKingdom, error: kingdomError }, { data: githubStats }] =
+  const [{ data: profile, error: profileError }, kingdomResult, { data: githubStats }] =
     await Promise.all([
       supabase.from('profiles').select('username, avatar_url').eq('id', user.id).maybeSingle(),
-      supabase
-        .from('kingdoms')
-        .select(KINGDOM_WITH_BUILDINGS_SELECT)
-        .eq('user_id', user.id)
-        .maybeSingle(),
+      fetchPersistedKingdomForUser(supabase, user.id)
+        .then((data) => ({ data, error: null }))
+        .catch((error) => ({
+          data: null,
+          error: error instanceof Error ? error : new Error('Unable to load kingdom'),
+        })),
       supabase
         .from('github_stats')
         .select(
@@ -49,11 +50,13 @@ export async function GET() {
     return NextResponse.json({ error: profileError?.message ?? 'Profile not found' }, { status: 404 })
   }
 
-  let kingdom = (initialKingdom as PersistedKingdomRow | null) ?? null
+  let kingdom: PersistedKingdomRow | null = null
 
-  if (kingdomError) {
-    return NextResponse.json({ error: kingdomError.message }, { status: 500 })
+  if (kingdomResult.error) {
+    return NextResponse.json({ error: kingdomResult.error.message }, { status: 500 })
   }
+
+  kingdom = (kingdomResult.data as PersistedKingdomRow | null) ?? null
 
   if (!kingdom) {
     kingdom = await tryEnsureKingdomForUser(user.id)

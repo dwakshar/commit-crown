@@ -30,9 +30,19 @@ export async function POST(request: Request) {
 
   const kingdomName = parsed.data.name
 
-  const [{ error: kingdomError }, { error: profileError }] = await Promise.all([
-    supabaseAdmin.from('kingdoms').upsert(
-      {
+  const { data: existingKingdom, error: existingKingdomError } = await supabaseAdmin
+    .from('kingdoms')
+    .select('id')
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (existingKingdomError) {
+    return NextResponse.json({ error: existingKingdomError.message }, { status: 500 })
+  }
+
+  const kingdomMutation = existingKingdom
+    ? supabaseAdmin.from('kingdoms').update({ name: kingdomName }).eq('user_id', user.id)
+    : supabaseAdmin.from('kingdoms').insert({
         user_id: user.id,
         name: kingdomName,
         gold: 0,
@@ -41,11 +51,10 @@ export async function POST(request: Request) {
         defense_rating: 0,
         attack_rating: 0,
         building_slots: 5,
-      },
-      {
-        onConflict: 'user_id',
-      },
-    ),
+      })
+
+  const [{ error: kingdomError }, { error: profileError }] = await Promise.all([
+    kingdomMutation,
     supabaseAdmin
       .from('profiles')
       .update({

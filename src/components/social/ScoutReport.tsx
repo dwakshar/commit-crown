@@ -73,95 +73,161 @@ export function ScoutReport({
     }
   }
 
+  const commandHandle = kingdomData.ownerGithubUsername ?? kingdomData.ownerName
+  const kingdomStatus = kingdomData.raids_enabled ? 'Raid window open' : 'Protected keep'
+  const defenseLabel = kingdomData.defense_rating.toLocaleString()
+  const treasuryLabel = kingdomData.gold.toLocaleString()
+
   return (
     <>
-      <aside className="pointer-events-auto w-full max-w-md rounded-[32px] border border-[#C9A84C]/25 bg-[linear-gradient(180deg,rgba(20,15,30,0.96),rgba(10,7,16,0.95))] p-5 text-[#f7f1e4] shadow-[0_24px_90px_rgba(0,0,0,0.5)] backdrop-blur-md md:p-6">
-        <p className="text-xs uppercase tracking-[0.28em] text-[#C9A84C]/75">Scout Report</p>
+      <aside className="pointer-events-auto w-full max-w-[420px] overflow-hidden border border-[var(--b1)] bg-[linear-gradient(180deg,rgba(5,8,13,0.97),rgba(6,10,16,0.9))] text-[var(--silver-1)] shadow-[0_24px_90px_rgba(0,0,0,0.45)]">
+        <div className="border-b border-[var(--b1)] px-5 py-6">
+          <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--silver-3)]">
+            Scout Report
+          </div>
+          <div className="mt-2 font-[var(--font-head)] text-[1.9rem] leading-none text-[var(--silver-0)]">
+            {kingdomData.name}
+          </div>
+          <div className="mt-2 text-sm italic text-[var(--silver-2)]">
+            Commanded by @{commandHandle.toLowerCase()} / {kingdomStatus}
+          </div>
+        </div>
 
-        <div className="mt-4 flex items-center gap-4">
-          {kingdomData.ownerAvatarUrl ? (
-            <Image
-              src={kingdomData.ownerAvatarUrl}
-              alt={kingdomData.ownerName}
-              width={72}
-              height={72}
-              className="h-[72px] w-[72px] rounded-3xl border border-[#C9A84C]/40 object-cover shadow-[0_0_0_4px_rgba(201,168,76,0.12)]"
-            />
-          ) : (
-            <div className="flex h-[72px] w-[72px] items-center justify-center rounded-3xl border border-[#C9A84C]/40 bg-[#241d11] text-2xl font-semibold text-[#C9A84C]">
-              {kingdomData.ownerName.slice(0, 1).toUpperCase()}
+        <div className="border-b border-[var(--b0)] px-5 py-5">
+          <div className="flex items-center gap-4">
+            {kingdomData.ownerAvatarUrl ? (
+              <Image
+                src={kingdomData.ownerAvatarUrl}
+                alt={kingdomData.ownerName}
+                width={72}
+                height={72}
+                className="h-[72px] w-[72px] rounded-[22px] border border-[var(--b1)] object-cover"
+              />
+            ) : (
+              <div className="flex h-[72px] w-[72px] items-center justify-center rounded-[22px] border border-[var(--b1)] bg-[var(--steel-3)] text-2xl font-[var(--font-head)] text-[var(--silver-0)]">
+                {kingdomData.ownerName.slice(0, 1).toUpperCase()}
+              </div>
+            )}
+
+            <div>
+              <div className="text-[10px] uppercase tracking-[0.2em] text-[var(--silver-3)]">
+                Commander
+              </div>
+              <h1 className="mt-2 font-[var(--font-head)] text-[1.5rem] leading-none text-[var(--silver-0)]">
+                {kingdomData.ownerName}
+              </h1>
+              <p className="mt-2 text-sm text-[var(--silver-2)]">
+                @{commandHandle}
+              </p>
+              <p className="mt-1 text-[11px] uppercase tracking-[0.16em] text-[var(--silver-3)]">
+                Defense {defenseLabel} / Treasury {treasuryLabel}
+              </p>
             </div>
-          )}
-
-          <div>
-            <h1 className="text-2xl font-semibold">{kingdomData.ownerName}</h1>
-            <p className="mt-1 text-sm text-white/65">@{kingdomData.ownerGithubUsername ?? kingdomData.ownerName}</p>
-            <p className="mt-2 text-lg text-[#C9A84C]">{kingdomData.name}</p>
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-2 gap-3">
-          <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-            <p className="text-xs uppercase tracking-[0.22em] text-white/45">Prestige Rank</p>
-            <p className="mt-2 text-2xl font-semibold text-[#C9A84C]">#{prestigeRank}</p>
-          </div>
-          <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-            <p className="text-xs uppercase tracking-[0.22em] text-white/45">Buildings</p>
-            <p className="mt-2 text-2xl font-semibold text-[#C9A84C]">{totalBuildings}</p>
-          </div>
-          <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-            <p className="text-xs uppercase tracking-[0.22em] text-white/45">Top Language</p>
-            <p className="mt-2 text-lg font-semibold text-[#C9A84C]">{topLanguage}</p>
-          </div>
-          <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-            <p className="text-xs uppercase tracking-[0.22em] text-white/45">Account Age</p>
-            <p className="mt-2 text-sm font-semibold text-[#C9A84C]">{accountAge}</p>
-          </div>
-        </div>
-
-        <div className="mt-6 flex flex-col gap-3">
-          {canLeaveFlag ? (
-            <button
-              type="button"
-              onClick={handleLeaveFlag}
-              disabled={isFlagging || hasFlagged}
-              className="rounded-2xl bg-[#C9A84C] px-5 py-3 text-sm font-semibold text-[#22190b] transition hover:bg-[#d7b864] disabled:cursor-not-allowed disabled:bg-[#6e5b25] disabled:text-[#d2c7a3]"
-            >
-              {isFlagging ? 'Leaving Flag...' : hasFlagged ? 'Flag Planted' : 'Leave a Flag'}
-            </button>
-          ) : (
-            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/65">
-              Sign in with a different account to leave a flag on this kingdom.
+        <div className="grid grid-cols-2 gap-px border-b border-[var(--b0)] bg-[var(--b0)]">
+          <div className="bg-[rgba(7,10,16,0.96)] px-5 py-4">
+            <div className="text-[10px] uppercase tracking-[0.2em] text-[var(--silver-3)]">
+              Prestige Rank
             </div>
-          )}
-
-          {canRaid ? (
-            <button
-              type="button"
-              onClick={() => setIsRaidOpen(true)}
-              className="rounded-2xl border border-[#C9A84C]/35 bg-[#1a1524] px-5 py-3 text-sm font-semibold text-[#f3dc9b] transition hover:bg-[#231a31]"
-            >
-              Raid this Kingdom
-            </button>
-          ) : null}
+            <div className="mt-2 font-[var(--font-head)] text-2xl text-[var(--silver-0)]">
+              #{prestigeRank}
+            </div>
+          </div>
+          <div className="bg-[rgba(7,10,16,0.96)] px-5 py-4">
+            <div className="text-[10px] uppercase tracking-[0.2em] text-[var(--silver-3)]">
+              Structures
+            </div>
+            <div className="mt-2 font-[var(--font-head)] text-2xl text-[var(--silver-0)]">
+              {totalBuildings}
+            </div>
+          </div>
+          <div className="bg-[rgba(7,10,16,0.96)] px-5 py-4">
+            <div className="text-[10px] uppercase tracking-[0.2em] text-[var(--silver-3)]">
+              Top Language
+            </div>
+            <div className="mt-2 font-[var(--font-head)] text-2xl text-[var(--silver-0)]">
+              {topLanguage}
+            </div>
+          </div>
+          <div className="bg-[rgba(7,10,16,0.96)] px-5 py-4">
+            <div className="text-[10px] uppercase tracking-[0.2em] text-[var(--silver-3)]">
+              Account Age
+            </div>
+            <div className="mt-2 text-sm font-semibold text-[var(--silver-1)]">
+              {accountAge}
+            </div>
+          </div>
         </div>
 
-        {errorMessage ? <p className="mt-3 text-sm text-[#ff9696]">{errorMessage}</p> : null}
+        <div className="border-b border-[var(--b0)] px-5 py-5">
+          <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--silver-3)]">
+            Operation Window
+          </div>
+          <div className="mt-2 text-sm text-[var(--silver-2)]">
+            Leave your banner, survey this kingdom, or launch a raid if both realms are open for battle.
+          </div>
+          <div className="mt-4 flex flex-col gap-3">
+            {canLeaveFlag ? (
+              <button
+                type="button"
+                onClick={handleLeaveFlag}
+                disabled={isFlagging || hasFlagged}
+                className="realm-button border border-[var(--b1)] bg-[rgba(255,255,255,0.02)] px-5 py-3 text-sm text-[var(--silver-2)] transition hover:text-[var(--silver-0)] disabled:cursor-not-allowed disabled:opacity-45"
+              >
+                {isFlagging ? 'Leaving Flag...' : hasFlagged ? 'Flag Planted' : 'Leave A Flag'}
+              </button>
+            ) : (
+              <div className="rounded-[20px] border border-[var(--b0)] bg-[rgba(255,255,255,0.02)] px-4 py-3 text-sm text-[var(--silver-2)]">
+                Sign in with a different account to leave a flag on this kingdom.
+              </div>
+            )}
 
-        <div className="mt-6 rounded-3xl border border-white/10 bg-black/20 p-4">
-          <p className="text-xs uppercase tracking-[0.22em] text-white/45">Recent Flags</p>
+            {canRaid ? (
+              <button
+                type="button"
+                onClick={() => setIsRaidOpen(true)}
+                className="realm-button border border-[rgba(200,88,26,0.58)] bg-[linear-gradient(180deg,rgba(36,16,10,0.86),rgba(24,10,6,0.92))] px-5 py-3 text-sm text-[var(--ember-hi)] transition hover:border-[var(--ember)] hover:text-[#ffd2ad]"
+              >
+                Raid This Kingdom
+              </button>
+            ) : (
+              <div className="rounded-[20px] border border-[rgba(120,140,160,0.12)] bg-[rgba(255,255,255,0.01)] px-4 py-3 text-sm text-[var(--silver-3)]">
+                Raids are unavailable until both commanders enable battle.
+              </div>
+            )}
+          </div>
+
+          {errorMessage ? <p className="mt-3 text-sm text-[#ff9696]">{errorMessage}</p> : null}
+        </div>
+
+        <div className="border-b border-[var(--b0)] px-5 py-5">
+          <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--silver-3)]">
+            Advisory
+          </div>
+          <div className="mt-3 rounded-[20px] border border-[var(--b0)] bg-[rgba(255,255,255,0.02)] px-4 py-4 text-sm leading-6 text-[var(--silver-2)]">
+            Strong treasuries support prolonged raids, while high defense makes this keep harder to crack. Use the
+            board view to inspect district density before committing troops.
+          </div>
+        </div>
+
+        <div className="px-5 py-5">
+          <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--silver-3)]">
+            Recent Flags
+          </div>
           <div className="mt-3 flex flex-wrap gap-2">
             {recentVisitors.length > 0 ? (
               recentVisitors.map((visitor) => (
                 <span
                   key={visitor}
-                  className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-white/75"
+                  className="border border-[var(--b1)] bg-[rgba(255,255,255,0.03)] px-3 py-1 text-sm text-[var(--silver-2)]"
                 >
                   @{visitor}
                 </span>
               ))
             ) : (
-              <span className="text-sm text-white/55">No scouts have left a flag yet.</span>
+              <span className="text-sm text-[var(--silver-3)]">No scouts have left a flag yet.</span>
             )}
           </div>
         </div>

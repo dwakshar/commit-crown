@@ -28,11 +28,16 @@ type IsoPoint = {
 
 type ThemePalette = {
   background: string
-  grassColors: [number, number]
+  tileTop: [number, number]
+  tileMid: [number, number]
+  tileShadow: number
   gridLine: number
   accent: number
   road: number
   water: number
+  border: number
+  beacon: number
+  fog: number
 }
 
 function hashString(value: string) {
@@ -45,10 +50,6 @@ function hashString(value: string) {
   return hash
 }
 
-function toHexColor(value: number) {
-  return `#${value.toString(16).padStart(6, '0')}`
-}
-
 function tileKey(x: number, y: number) {
   return `${x}:${y}`
 }
@@ -57,11 +58,16 @@ function deriveThemePalette(themeId: string | null | undefined): ThemePalette {
   if (!themeId) {
     return {
       background: '#0d0d1a',
-      grassColors: [0x3f7d3a, 0x4b8f43],
-      gridLine: 0x20361f,
+      tileTop: [0x223a30, 0x2d4b3d],
+      tileMid: [0x182a24, 0x20332d],
+      tileShadow: 0x0a1218,
+      gridLine: 0x33524a,
       accent: 0xd1b06a,
-      road: 0x7b6444,
-      water: 0x274764,
+      road: 0x6f5637,
+      water: 0x18324f,
+      border: 0x101b2b,
+      beacon: 0xe07030,
+      fog: 0x0b1219,
     }
   }
 
@@ -70,25 +76,35 @@ function deriveThemePalette(themeId: string | null | undefined): ThemePalette {
   const alternateHue = (hue + 18) % 360
   const saturation = 36 + (hash % 18)
   const lightness = 28 + (hash % 10)
-  const grassPrimary = Phaser.Display.Color.HSLToColor(hue / 360, saturation / 100, lightness / 100).color
-  const grassSecondary = Phaser.Display.Color.HSLToColor(
+  const topPrimary = Phaser.Display.Color.HSLToColor(hue / 360, saturation / 100, lightness / 100).color
+  const topSecondary = Phaser.Display.Color.HSLToColor(
     alternateHue / 360,
     Math.min((saturation + 8) / 100, 1),
     Math.min((lightness + 6) / 100, 1),
   ).color
+  const midPrimary = Phaser.Display.Color.HSLToColor(hue / 360, 0.28, 0.18).color
+  const midSecondary = Phaser.Display.Color.HSLToColor(alternateHue / 360, 0.28, 0.22).color
   const background = Phaser.Display.Color.HSLToColor(hue / 360, 0.32, 0.1).color
   const gridLine = Phaser.Display.Color.HSLToColor(hue / 360, 0.35, 0.16).color
   const accent = Phaser.Display.Color.HSLToColor(((hue + 28) % 360) / 360, 0.72, 0.68).color
   const road = Phaser.Display.Color.HSLToColor(((hue + 12) % 360) / 360, 0.26, 0.36).color
   const water = Phaser.Display.Color.HSLToColor(((hue + 180) % 360) / 360, 0.44, 0.26).color
+  const border = Phaser.Display.Color.HSLToColor(hue / 360, 0.34, 0.12).color
+  const beacon = Phaser.Display.Color.HSLToColor(((hue + 24) % 360) / 360, 0.82, 0.58).color
+  const fog = Phaser.Display.Color.HSLToColor(hue / 360, 0.3, 0.08).color
 
   return {
-    background: toHexColor(background),
-    grassColors: [grassPrimary, grassSecondary],
+    background: `#${background.toString(16).padStart(6, '0')}`,
+    tileTop: [topPrimary, topSecondary],
+    tileMid: [midPrimary, midSecondary],
+    tileShadow: Phaser.Display.Color.HSLToColor(hue / 360, 0.22, 0.08).color,
     gridLine,
     accent,
     road,
     water,
+    border,
+    beacon,
+    fog,
   }
 }
 
@@ -202,40 +218,104 @@ export class KingdomScene extends Phaser.Scene {
 
     const grid = this.add.graphics()
     const themePalette = deriveThemePalette(this.getKingdomData().themeId)
-    const grassColors = themePalette.grassColors
+    const tileTop = themePalette.tileTop
+    const tileMid = themePalette.tileMid
+    const center = (this.gridSize - 1) / 2
 
     for (let y = 0; y < this.gridSize; y += 1) {
       for (let x = 0; x < this.gridSize; x += 1) {
         const point = this.isoToScreen(x, y)
         const isWaterEdge = x === 0 || y === 0 || x === this.gridSize - 1 || y === this.gridSize - 1
-        const color = isWaterEdge ? themePalette.water : grassColors[(x + y) % grassColors.length]
+        const distanceFromCenter = Math.abs(x - center) + Math.abs(y - center)
+        const isCitadelBand = distanceFromCenter < 4.6
+        const topFill = isWaterEdge
+          ? themePalette.water
+          : isCitadelBand
+            ? Phaser.Display.Color.GetColor(
+                Math.round(
+                  Phaser.Display.Color.IntegerToColor(tileTop[(x + y) % tileTop.length]).red * 0.86 +
+                    Phaser.Display.Color.IntegerToColor(themePalette.accent).red * 0.14,
+                ),
+                Math.round(
+                  Phaser.Display.Color.IntegerToColor(tileTop[(x + y) % tileTop.length]).green * 0.86 +
+                    Phaser.Display.Color.IntegerToColor(themePalette.accent).green * 0.14,
+                ),
+                Math.round(
+                  Phaser.Display.Color.IntegerToColor(tileTop[(x + y) % tileTop.length]).blue * 0.86 +
+                    Phaser.Display.Color.IntegerToColor(themePalette.accent).blue * 0.14,
+                ),
+              )
+            : tileTop[(x + y) % tileTop.length]
+        const midFill = isWaterEdge ? themePalette.border : tileMid[(x + y) % tileMid.length]
+        const topPoints = [
+          new Phaser.Geom.Point(point.x, point.y - this.tileHeight / 2),
+          new Phaser.Geom.Point(point.x + this.tileWidth / 2, point.y),
+          new Phaser.Geom.Point(point.x, point.y + this.tileHeight / 2),
+          new Phaser.Geom.Point(point.x - this.tileWidth / 2, point.y),
+        ]
 
-        grid.fillStyle(color, 1)
-        grid.lineStyle(1, themePalette.gridLine, 0.45)
+        grid.fillStyle(themePalette.tileShadow, 0.95)
         grid.fillPoints(
           [
-            new Phaser.Geom.Point(point.x, point.y - this.tileHeight / 2),
-            new Phaser.Geom.Point(point.x + this.tileWidth / 2, point.y),
-            new Phaser.Geom.Point(point.x, point.y + this.tileHeight / 2),
-            new Phaser.Geom.Point(point.x - this.tileWidth / 2, point.y),
+            new Phaser.Geom.Point(point.x, point.y - this.tileHeight / 2 + 10),
+            new Phaser.Geom.Point(point.x + this.tileWidth / 2, point.y + 10),
+            new Phaser.Geom.Point(point.x, point.y + this.tileHeight / 2 + 10),
+            new Phaser.Geom.Point(point.x - this.tileWidth / 2, point.y + 10),
           ],
           true,
         )
+        grid.fillStyle(midFill, 1)
+        grid.fillPoints(
+          [
+            new Phaser.Geom.Point(point.x, point.y - this.tileHeight / 2 + 4),
+            new Phaser.Geom.Point(point.x + this.tileWidth / 2, point.y + 4),
+            new Phaser.Geom.Point(point.x, point.y + this.tileHeight / 2 + 4),
+            new Phaser.Geom.Point(point.x - this.tileWidth / 2, point.y + 4),
+          ],
+          true,
+        )
+        grid.fillStyle(topFill, 1)
+        grid.lineStyle(1, themePalette.gridLine, 0.38)
+        grid.fillPoints(topPoints, true)
+        grid.strokePoints(topPoints, true)
+
+        grid.lineStyle(1, 0xffffff, isWaterEdge ? 0.04 : 0.025)
         grid.strokePoints(
           [
-            new Phaser.Geom.Point(point.x, point.y - this.tileHeight / 2),
-            new Phaser.Geom.Point(point.x + this.tileWidth / 2, point.y),
-            new Phaser.Geom.Point(point.x, point.y + this.tileHeight / 2),
-            new Phaser.Geom.Point(point.x - this.tileWidth / 2, point.y),
+            new Phaser.Geom.Point(point.x, point.y - this.tileHeight / 2 + 1),
+            new Phaser.Geom.Point(point.x + this.tileWidth / 2 - 4, point.y - 2),
+            new Phaser.Geom.Point(point.x, point.y + this.tileHeight / 2 - 8),
           ],
-          true,
+          false,
         )
+
+        if (isWaterEdge) {
+          grid.lineStyle(2, themePalette.accent, 0.08)
+          grid.strokePoints(
+            topPoints,
+            true,
+          )
+        }
       }
     }
 
     this.terrainLayer = grid
+    this.drawAtmosphere(themePalette)
     this.selectionMarker = this.add.graphics().setVisible(false)
     this.placementMarker = this.add.graphics().setVisible(false)
+  }
+
+  private drawAtmosphere(themePalette: ThemePalette) {
+    const worldBounds = this.getWorldBounds()
+    const glow = this.add.graphics()
+
+    glow.fillStyle(themePalette.fog, 0.55)
+    glow.fillEllipse(worldBounds.centerX, worldBounds.centerY - 30, 1200, 640)
+    glow.fillStyle(themePalette.accent, 0.04)
+    glow.fillEllipse(worldBounds.centerX, worldBounds.centerY - 40, 460, 180)
+    glow.fillStyle(themePalette.beacon, 0.03)
+    glow.fillEllipse(worldBounds.centerX, worldBounds.centerY - 56, 220, 80)
+    glow.setDepth(-20)
   }
 
   private configureCamera(): void {
@@ -374,8 +454,20 @@ export class KingdomScene extends Phaser.Scene {
     const townHall = kingdomData.buildings.find((building) => building.type === 'town_hall')
 
     if (townHall) {
-      roadGraphics.lineStyle(6, theme.road, 0.42)
+      roadGraphics.lineStyle(10, 0x0b1017, 0.24)
+      kingdomData.buildings
+        .filter((building) => !building.isPlaceholder && building.id !== townHall.id)
+        .forEach((building) => {
+          const path = this.getRoadPath(townHall, building)
+          const points = path.map(({ x, y }) => {
+            const point = this.isoToScreen(x, y)
+            return new Phaser.Geom.Point(point.x, point.y)
+          })
 
+          roadGraphics.strokePoints(points, false)
+        })
+
+      roadGraphics.lineStyle(5, theme.road, 0.52)
       kingdomData.buildings
         .filter((building) => !building.isPlaceholder && building.id !== townHall.id)
         .forEach((building) => {
@@ -403,16 +495,25 @@ export class KingdomScene extends Phaser.Scene {
 
         if (placeholderTiles.has(tileKey(x, y))) {
           const ruins = this.add.image(point.x, point.y + 2, 'prop-ruins').setAlpha(0.68).setDepth(point.y - 1)
+          if (seed % 2 === 0) {
+            const beacon = this.add
+              .image(point.x + 10, point.y - 10, 'prop-beacon')
+              .setScale(0.7)
+              .setTint(theme.beacon)
+              .setAlpha(0.7)
+              .setDepth(point.y)
+            this.decorLayer.add(beacon)
+          }
           this.decorLayer.add(ruins)
           continue
         }
 
-        if (propRoll === 0 || propRoll === 1) {
+        if (propRoll <= 2) {
           const texture = propRoll === 0 ? 'prop-tree' : 'prop-stones'
           const sprite = this.add
             .image(point.x, point.y + 4, texture)
-            .setScale(0.8 + ((seed >> 3) % 4) * 0.06)
-            .setAlpha(0.4 + ((seed >> 5) % 3) * 0.12)
+            .setScale(0.78 + ((seed >> 3) % 4) * 0.05)
+            .setAlpha(0.3 + ((seed >> 5) % 3) * 0.1)
             .setDepth(point.y - 1)
           this.decorLayer.add(sprite)
         }
@@ -420,11 +521,21 @@ export class KingdomScene extends Phaser.Scene {
         if (seed % 17 === 0 || seed % 19 === 0) {
           const banner = this.add
             .image(point.x + 10, point.y - 10, 'prop-banner')
-            .setScale(0.7)
-            .setAlpha(0.48)
+            .setScale(0.68)
+            .setAlpha(0.42)
             .setTint(theme.accent)
             .setDepth(point.y)
           this.decorLayer.add(banner)
+        }
+
+        if (seed % 41 === 0) {
+          const beacon = this.add
+            .image(point.x - 6, point.y - 8, 'prop-beacon')
+            .setScale(0.64)
+            .setTint(theme.beacon)
+            .setAlpha(0.56)
+            .setDepth(point.y)
+          this.decorLayer.add(beacon)
         }
       }
     }

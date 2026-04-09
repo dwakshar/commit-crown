@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Cinzel, Cinzel_Decorative, EB_Garamond, Spectral } from 'next/font/google'
 
 import './globals.css'
+import { AdvancedCursor } from '@/src/components/ui/AdvancedCursor'
 
 const cinzelDecorative = Cinzel_Decorative({
   subsets: ['latin'],
@@ -60,7 +61,10 @@ export default function RootLayout({
       lang="en"
       className={`${cinzelDecorative.variable} ${cinzel.variable} ${ebGaramond.variable} ${spectral.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <AdvancedCursor />
+      </body>
     </html>
   )
 }

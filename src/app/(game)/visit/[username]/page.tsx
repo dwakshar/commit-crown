@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { ScoutReport } from '@/src/components/social/ScoutReport'
 import { PhaserGame } from '@/src/components/game/PhaserGame'
 import { getBuildingMetadata } from '@/src/lib/kingdom'
+import { fetchPersistedKingdomForUser } from '@/src/lib/kingdomPersistence'
 import { createClient } from '@/utils/supabase/server'
 
 import type { BuildingData, GitHubStatsData, KingdomData } from '@/src/types/game'
@@ -15,44 +16,18 @@ type VisitProfileResult = {
   avatar_url: string | null
   created_at: string | null
   raids_enabled: boolean | null
-  kingdoms:
-    | {
-        id: string
-        user_id: string
-        name: string
-        gold: number
-        prestige: number
-        population: number
-        defense_rating: number
-        attack_rating: number
-        building_slots: number
-        last_synced_at: string | null
-        theme_id: string | null
-        buildings:
-          | {
-              id: string
-              type: BuildingData['type']
-              level: number
-              position_x: number
-              position_y: number
-              skin_id: string | null
-            }[]
-          | null
-      }[]
-    | null
-  github_stats:
-    | {
-        total_commits: number
-        total_repos: number
-        total_stars: number
-        total_prs: number
-        followers: number
-        current_streak: number
-        longest_streak: number
-        languages: Record<string, number> | null
-        synced_at: string | null
-      }[]
-    | null
+}
+
+type GithubStatsRow = {
+  total_commits: number
+  total_repos: number
+  total_stars: number
+  total_prs: number
+  followers: number
+  current_streak: number
+  longest_streak: number
+  languages: Record<string, number> | null
+  synced_at: string | null
 }
 
 type RecentVisitRow = {
@@ -67,25 +42,15 @@ async function getVisitData(username: string) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const [{ data: profile }, { data: rankRows }, { data: viewerProfile }, { data: viewerKingdom }] =
-    await Promise.all([
+  const [{ data: profile }, { data: rankRows }, { data: viewerProfile }] = await Promise.all([
     supabase
       .from('profiles')
-      .select(
-        'id, username, github_username, avatar_url, created_at, raids_enabled, kingdoms(id, user_id, name, gold, prestige, population, defense_rating, attack_rating, building_slots, last_synced_at, theme_id, buildings(id, type, level, position_x, position_y, skin_id)), github_stats(total_commits, total_repos, total_stars, total_prs, followers, current_streak, longest_streak, languages, synced_at)',
-      )
+      .select('id, username, github_username, avatar_url, created_at, raids_enabled')
       .eq('username', username)
       .maybeSingle(),
     supabase.from('kingdoms').select('user_id, prestige').order('prestige', { ascending: false }),
     user
       ? supabase.from('profiles').select('username, raids_enabled').eq('id', user.id).maybeSingle()
-      : Promise.resolve({ data: null }),
-    user
-      ? supabase
-          .from('kingdoms')
-          .select('attack_rating, gold')
-          .eq('user_id', user.id)
-          .maybeSingle()
       : Promise.resolve({ data: null }),
   ])
 
@@ -94,7 +59,13 @@ async function getVisitData(username: string) {
   }
 
   const result = profile as VisitProfileResult
-  const kingdom = result.kingdoms?.[0]
+  const [kingdom, githubStatsRow, viewerKingdom] = await Promise.all([
+    fetchPersistedKingdomForUser(supabase, result.id),
+    supabase.from('github_stats').select(
+      'total_commits, total_repos, total_stars, total_prs, followers, current_streak, longest_streak, languages, synced_at',
+    ).eq('user_id', result.id).maybeSingle(),
+    user ? fetchPersistedKingdomForUser(supabase, user.id) : Promise.resolve(null),
+  ])
 
   if (!kingdom) {
     return null
@@ -117,17 +88,18 @@ async function getVisitData(username: string) {
     name: getBuildingMetadata(building.type).label,
   }))
 
-  const githubStats: GitHubStatsData | null = result.github_stats?.[0]
+  const githubStatsData = githubStatsRow.data as GithubStatsRow | null
+  const githubStats: GitHubStatsData | null = githubStatsData
     ? {
-        total_commits: result.github_stats[0].total_commits,
-        total_repos: result.github_stats[0].total_repos,
-        total_stars: result.github_stats[0].total_stars,
-        total_prs: result.github_stats[0].total_prs,
-        followers: result.github_stats[0].followers,
-        current_streak: result.github_stats[0].current_streak,
-        longest_streak: result.github_stats[0].longest_streak,
-        languages: result.github_stats[0].languages ?? {},
-        synced_at: result.github_stats[0].synced_at,
+        total_commits: githubStatsData.total_commits,
+        total_repos: githubStatsData.total_repos,
+        total_stars: githubStatsData.total_stars,
+        total_prs: githubStatsData.total_prs,
+        followers: githubStatsData.followers,
+        current_streak: githubStatsData.current_streak,
+        longest_streak: githubStatsData.longest_streak,
+        languages: githubStatsData.languages ?? {},
+        synced_at: githubStatsData.synced_at,
       }
     : null
 

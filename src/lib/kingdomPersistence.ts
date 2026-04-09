@@ -5,6 +5,8 @@ import type { BuildingData, GitHubStatsData, KingdomData } from '@/src/types/gam
 
 export const KINGDOM_WITH_BUILDINGS_SELECT =
   'id, user_id, name, gold, prestige, population, defense_rating, attack_rating, building_slots, last_synced_at, theme_id, buildings(id, type, level, position_x, position_y, skin_id)'
+export const KINGDOM_WITH_BUILDINGS_SELECT_FALLBACK =
+  'id, user_id, name, gold, prestige, population, defense_rating, attack_rating, building_slots, last_synced_at, buildings(id, type, level, position_x, position_y, skin_id)'
 
 export type PersistedKingdomRow = {
   id: string
@@ -30,36 +32,63 @@ export type PersistedKingdomRow = {
     | null
 }
 
-export async function ensureKingdomForUser(userId: string) {
-  const { error: createError } = await supabaseAdmin.from('kingdoms').upsert(
-    {
-      user_id: userId,
-      name: 'My Kingdom',
-      gold: 0,
-      prestige: 0,
-      population: 0,
-      defense_rating: 0,
-      attack_rating: 0,
-      building_slots: 5,
-    },
-    { onConflict: 'user_id' },
-  )
+type QueryableClient = {
+  from: typeof supabaseAdmin.from
+}
 
-  if (createError) {
-    throw new Error(createError.message)
-  }
-
-  const { data: kingdom, error: fetchError } = await supabaseAdmin
+export async function fetchPersistedKingdomForUser(client: QueryableClient, userId: string) {
+  const primaryQuery = await client
     .from('kingdoms')
     .select(KINGDOM_WITH_BUILDINGS_SELECT)
     .eq('user_id', userId)
     .maybeSingle()
 
-  if (fetchError) {
-    throw new Error(fetchError.message)
+  if (!primaryQuery.error) {
+    return primaryQuery.data as PersistedKingdomRow | null
   }
 
-  return (kingdom as PersistedKingdomRow | null) ?? null
+  if (!primaryQuery.error.message.includes('theme_id')) {
+    throw new Error(primaryQuery.error.message)
+  }
+
+  const fallbackQuery = await client
+    .from('kingdoms')
+    .select(KINGDOM_WITH_BUILDINGS_SELECT_FALLBACK)
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  if (fallbackQuery.error) {
+    throw new Error(fallbackQuery.error.message)
+  }
+
+  return fallbackQuery.data
+    ? ({ ...(fallbackQuery.data as Omit<PersistedKingdomRow, 'theme_id'>), theme_id: null } as PersistedKingdomRow)
+    : null
+}
+
+export async function ensureKingdomForUser(userId: string) {
+  const existingKingdom = await fetchPersistedKingdomForUser(supabaseAdmin, userId)
+
+  if (existingKingdom) {
+    return existingKingdom
+  }
+
+  const { error: insertError } = await supabaseAdmin.from('kingdoms').insert({
+    user_id: userId,
+    name: 'My Kingdom',
+    gold: 0,
+    prestige: 0,
+    population: 0,
+    defense_rating: 0,
+    attack_rating: 0,
+    building_slots: 5,
+  })
+
+  if (insertError && insertError.code !== '23505') {
+    throw new Error(insertError.message)
+  }
+
+  return await fetchPersistedKingdomForUser(supabaseAdmin, userId)
 }
 
 export async function tryEnsureKingdomForUser(userId: string) {

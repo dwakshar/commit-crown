@@ -71,21 +71,29 @@ export class Building extends Phaser.GameObjects.Container {
   private createVisual(): PhaserContainer {
     if (!this.buildingData.isPlaceholder) {
       const tint = deriveSkinTint(this.buildingData.skinId)
-      const shadow = this.scene.add.ellipse(0, -2, 82, 24, 0x060a10, 0.26)
+      const basePlate = this.scene.add.ellipse(0, 6, 86, 28, 0x09111a, 0.42)
+      const shadow = this.scene.add.ellipse(0, 0, 74, 22, 0x04080d, 0.32)
+      const underGlow = this.scene.add
+        .ellipse(0, -8, 58, 18, 0xe07030, 0.06 + this.buildingData.level * 0.012)
+        .setBlendMode(Phaser.BlendModes.SCREEN)
       const sprite = this.scene.add
-        .image(0, -24, this.buildingData.type)
-        .setDisplaySize(94, 94)
+        .image(0, -18, this.buildingData.type)
+        .setDisplaySize(104, 104)
         .setOrigin(0.5, 1)
         .setTint(tint ?? 0xffffff)
       const glow = this.scene.add
-        .ellipse(0, -54, 62, 18, 0xf8df9f, 0.06 + this.buildingData.level * 0.015)
+        .ellipse(0, -50, 76, 22, 0xf8df9f, 0.03 + this.buildingData.level * 0.012)
+        .setBlendMode(Phaser.BlendModes.SCREEN)
+      const mastLight = this.scene.add
+        .ellipse(0, -70, 18, 18, 0xf7f2d8, 0.08)
         .setBlendMode(Phaser.BlendModes.SCREEN)
 
-      return this.scene.add.container(0, 0, [shadow, glow, sprite])
+      return this.scene.add.container(0, 0, [basePlate, shadow, underGlow, glow, mastLight, sprite])
     }
 
     const ruins = this.scene.add.container(0, -10)
-    const shadow = this.scene.add.ellipse(0, 4, 84, 18, 0x05080d, 0.28)
+    const plate = this.scene.add.ellipse(0, 8, 86, 22, 0x09111a, 0.34)
+    const shadow = this.scene.add.ellipse(0, 4, 74, 18, 0x05080d, 0.32)
     const base = this.scene.add
       .image(0, -10, 'prop-ruins')
       .setOrigin(0.5, 1)
@@ -101,7 +109,7 @@ export class Building extends Phaser.GameObjects.Container {
       .setOrigin(0.5, 0)
       .setAlpha(0.84)
 
-    ruins.add([shadow, mist, base, label])
+    ruins.add([plate, shadow, mist, base, label])
 
     return ruins
   }
@@ -128,8 +136,8 @@ export class Building extends Phaser.GameObjects.Container {
 
   private drawOutline(): void {
     this.outline.clear()
-    this.outline.lineStyle(2, this.buildingData.isPlaceholder ? 0xa8b7c7 : 0xf8f2c4, 0.95)
-    this.outline.strokeRoundedRect(-34, -90, 68, 66, 10)
+    this.outline.lineStyle(2, this.buildingData.isPlaceholder ? 0x9fb4c8 : 0xf0c084, 0.92)
+    this.outline.strokeRoundedRect(-38, -94, 76, 74, 12)
   }
 
   private bindInteractions(scene: SelectableScene): void {

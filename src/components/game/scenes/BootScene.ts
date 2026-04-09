@@ -28,6 +28,18 @@ const BUILDING_COLORS = {
   monument: { top: 0xecf0f5, left: 0xc2c8d1, right: 0x949daa, accent: 0xfff3cd },
 } as const
 
+function tintColor(base: number, amount: number) {
+  const color = Phaser.Display.Color.IntegerToColor(base)
+  const mix = amount >= 0 ? 255 : 0
+  const ratio = Math.abs(amount)
+
+  return Phaser.Display.Color.GetColor(
+    Math.round(color.red + (mix - color.red) * ratio),
+    Math.round(color.green + (mix - color.green) * ratio),
+    Math.round(color.blue + (mix - color.blue) * ratio),
+  )
+}
+
 function drawIsoDiamond(
   graphics: import('phaser').GameObjects.Graphics,
   centerX: number,
@@ -56,16 +68,18 @@ function generateBuildingTexture(
 ) {
   graphics.clear()
 
-  drawIsoDiamond(graphics, 64, 100, 90, 36, 0x111827, 0.28)
-  drawIsoDiamond(graphics, 64, 76, 72, 28, palette.top)
+  drawIsoDiamond(graphics, 64, 104, 98, 34, 0x081019, 0.28)
+  drawIsoDiamond(graphics, 64, 84, 86, 28, 0x0f1c2a, 0.95)
+  drawIsoDiamond(graphics, 64, 78, 76, 30, tintColor(palette.top, -0.16), 1)
+  drawIsoDiamond(graphics, 64, 72, 72, 28, palette.top)
 
   graphics.fillStyle(palette.left, 1)
   graphics.fillPoints(
     [
-      new Phaser.Geom.Point(28, 76),
-      new Phaser.Geom.Point(64, 90),
-      new Phaser.Geom.Point(64, 34),
-      new Phaser.Geom.Point(28, 48),
+      new Phaser.Geom.Point(26, 72),
+      new Phaser.Geom.Point(64, 88),
+      new Phaser.Geom.Point(64, 26),
+      new Phaser.Geom.Point(26, 42),
     ],
     true,
   )
@@ -73,56 +87,75 @@ function generateBuildingTexture(
   graphics.fillStyle(palette.right, 1)
   graphics.fillPoints(
     [
-      new Phaser.Geom.Point(64, 90),
-      new Phaser.Geom.Point(100, 76),
-      new Phaser.Geom.Point(100, 48),
-      new Phaser.Geom.Point(64, 34),
+      new Phaser.Geom.Point(64, 88),
+      new Phaser.Geom.Point(102, 72),
+      new Phaser.Geom.Point(102, 42),
+      new Phaser.Geom.Point(64, 26),
     ],
     true,
   )
 
-  graphics.fillStyle(palette.accent, 0.95)
-  graphics.fillRect(55, 44, 18, 24)
-  graphics.fillRect(40, 56, 10, 12)
-  graphics.fillRect(78, 56, 10, 12)
-  graphics.fillTriangle(64, 12, 40, 46, 88, 46)
-  graphics.fillRect(60, 18, 8, 18)
-  graphics.fillRect(72, 28, 8, 16)
+  graphics.fillStyle(tintColor(palette.top, 0.12), 0.96)
+  graphics.fillRect(48, 38, 32, 28)
+  graphics.fillRect(54, 24, 20, 20)
+  graphics.fillRect(38, 50, 12, 16)
+  graphics.fillRect(78, 50, 12, 16)
+  graphics.fillStyle(palette.accent, 0.96)
+  graphics.fillRect(58, 44, 12, 18)
+  graphics.fillRect(57, 28, 14, 10)
+  graphics.fillStyle(0xf3f8ff, 0.65)
+  graphics.fillRect(53, 46, 4, 8)
+  graphics.fillRect(71, 46, 4, 8)
+  graphics.fillRect(60, 30, 8, 4)
+  graphics.fillStyle(tintColor(palette.accent, -0.2), 0.92)
+  graphics.fillTriangle(64, 8, 42, 34, 86, 34)
+  graphics.fillRect(61, 11, 6, 14)
+  graphics.fillStyle(tintColor(palette.accent, 0.06), 0.36)
+  graphics.fillRect(41, 51, 6, 10)
+  graphics.fillRect(81, 51, 6, 10)
 
-  graphics.lineStyle(2, 0x09111c, 0.35)
+  graphics.lineStyle(2, 0x09111c, 0.5)
   graphics.strokePoints(
     [
-      new Phaser.Geom.Point(64, 20),
-      new Phaser.Geom.Point(100, 48),
-      new Phaser.Geom.Point(100, 76),
-      new Phaser.Geom.Point(64, 90),
-      new Phaser.Geom.Point(28, 76),
-      new Phaser.Geom.Point(28, 48),
+      new Phaser.Geom.Point(64, 16),
+      new Phaser.Geom.Point(102, 42),
+      new Phaser.Geom.Point(102, 72),
+      new Phaser.Geom.Point(64, 88),
+      new Phaser.Geom.Point(26, 72),
+      new Phaser.Geom.Point(26, 42),
     ],
     true,
   )
+
+  graphics.lineStyle(1, 0xffffff, 0.08)
+  graphics.strokeLineShape(new Phaser.Geom.Line(44, 36, 82, 36))
+  graphics.strokeLineShape(new Phaser.Geom.Line(64, 16, 64, 88))
 
   graphics.generateTexture(key, 128, 128)
 }
 
 function generatePropTextures(graphics: import('phaser').GameObjects.Graphics) {
   graphics.clear()
-  graphics.fillStyle(0x0a1018, 0.24)
+  graphics.fillStyle(0x081019, 0.24)
   graphics.fillEllipse(32, 56, 40, 16)
-  graphics.fillStyle(0x315138, 1)
-  graphics.fillTriangle(20, 44, 32, 14, 44, 44)
-  graphics.fillTriangle(16, 52, 32, 24, 48, 52)
-  graphics.fillStyle(0x49341f, 1)
+  graphics.fillStyle(0x23332a, 1)
+  graphics.fillTriangle(20, 44, 32, 12, 44, 44)
+  graphics.fillTriangle(16, 52, 32, 20, 48, 52)
+  graphics.fillStyle(0x395b45, 0.9)
+  graphics.fillTriangle(22, 46, 32, 18, 42, 46)
+  graphics.fillStyle(0x4a3322, 1)
   graphics.fillRect(29, 44, 6, 12)
   graphics.generateTexture('prop-tree', 64, 64)
 
   graphics.clear()
-  graphics.fillStyle(0x0a1018, 0.2)
+  graphics.fillStyle(0x081019, 0.2)
   graphics.fillEllipse(32, 52, 40, 14)
-  graphics.fillStyle(0x6f7c89, 1)
+  graphics.fillStyle(0x53606d, 1)
   graphics.fillEllipse(24, 38, 18, 12)
   graphics.fillEllipse(36, 34, 20, 14)
   graphics.fillEllipse(44, 40, 16, 10)
+  graphics.fillStyle(0xaeb9c2, 0.2)
+  graphics.fillEllipse(39, 31, 10, 4)
   graphics.generateTexture('prop-stones', 64, 64)
 
   graphics.clear()
@@ -135,15 +168,26 @@ function generatePropTextures(graphics: import('phaser').GameObjects.Graphics) {
   graphics.generateTexture('prop-banner', 64, 64)
 
   graphics.clear()
-  graphics.fillStyle(0x0a1018, 0.25)
+  graphics.fillStyle(0x081019, 0.25)
   graphics.fillEllipse(32, 52, 46, 16)
-  graphics.fillStyle(0x6d7784, 0.9)
+  graphics.fillStyle(0x5f6974, 0.9)
   graphics.fillRect(16, 32, 10, 12)
   graphics.fillRect(28, 26, 10, 18)
   graphics.fillRect(40, 34, 8, 10)
   graphics.fillStyle(0x9aa7b4, 0.35)
   graphics.fillRect(16, 28, 32, 4)
   graphics.generateTexture('prop-ruins', 64, 64)
+
+  graphics.clear()
+  graphics.fillStyle(0x081019, 0.22)
+  graphics.fillEllipse(32, 54, 40, 14)
+  graphics.fillStyle(0x102438, 0.92)
+  graphics.fillRect(28, 22, 8, 26)
+  graphics.fillStyle(0xe07030, 0.96)
+  graphics.fillRect(30, 16, 4, 8)
+  graphics.fillStyle(0xf8c08a, 0.26)
+  graphics.fillEllipse(32, 16, 18, 10)
+  graphics.generateTexture('prop-beacon', 64, 64)
 }
 
 export class BootScene extends Phaser.Scene {

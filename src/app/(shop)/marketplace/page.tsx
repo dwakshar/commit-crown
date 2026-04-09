@@ -37,6 +37,46 @@ type KingdomRow = {
   buildings: BuildingRow[] | null
 }
 
+async function loadMarketplaceKingdom(
+  userId: string,
+  supabase: Awaited<ReturnType<typeof createClient>>,
+) {
+  const primaryQuery = await supabase
+    .from('kingdoms')
+    .select('id, theme_id, buildings(id, skin_id)')
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  if (!primaryQuery.error) {
+    return {
+      kingdom: primaryQuery.data as KingdomRow | null,
+      themeColumnAvailable: true,
+    }
+  }
+
+  if (!primaryQuery.error.message.includes('theme_id')) {
+    return {
+      kingdom: null,
+      themeColumnAvailable: true,
+      error: primaryQuery.error,
+    }
+  }
+
+  const fallbackQuery = await supabase
+    .from('kingdoms')
+    .select('id, buildings(id, skin_id)')
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  return {
+    kingdom: fallbackQuery.data
+      ? ({ ...(fallbackQuery.data as Omit<KingdomRow, 'theme_id'>), theme_id: null } as KingdomRow)
+      : null,
+    themeColumnAvailable: false,
+    error: fallbackQuery.error,
+  }
+}
+
 export default async function MarketplacePage() {
   const supabase = await createClient()
   const {
@@ -47,14 +87,18 @@ export default async function MarketplacePage() {
     redirect('/')
   }
 
-  const [{ data: items, error: itemsError }, { data: ownedItems, error: ownedItemsError }, { data: kingdom, error: kingdomError }] =
+  const [
+    { data: items, error: itemsError },
+    { data: ownedItems, error: ownedItemsError },
+    { kingdom, error: kingdomError, themeColumnAvailable },
+  ] =
     await Promise.all([
       supabase
         .from('shop_items')
         .select('id, name, type, description, price_cents, stripe_price_id, asset_key, is_free, created_at')
         .order('created_at', { ascending: false }),
       supabase.from('owned_items').select('item_id').eq('user_id', user.id),
-      supabase.from('kingdoms').select('id, theme_id, buildings(id, skin_id)').eq('user_id', user.id).maybeSingle(),
+      loadMarketplaceKingdom(user.id, supabase),
     ])
 
   if (itemsError) {
@@ -85,7 +129,7 @@ export default async function MarketplacePage() {
         targetId = firstBuildingId
         targetType = 'building'
         equipped = Boolean(kingdomRow?.buildings?.some((building) => building.skin_id === item.id))
-      } else if (itemType === 'kingdom-theme') {
+      } else if (itemType === 'kingdom-theme' && themeColumnAvailable) {
         targetId = kingdomRow?.id ?? null
         targetType = 'kingdom'
         equipped = kingdomRow?.theme_id === item.id

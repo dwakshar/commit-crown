@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { KingdomPageClient } from '@/src/app/(game)/kingdom/KingdomPageClient'
 import {
   createFallbackKingdomData,
-  KINGDOM_WITH_BUILDINGS_SELECT,
+  fetchPersistedKingdomForUser,
   type PersistedKingdomRow,
   tryEnsureKingdomForUser,
 } from '@/src/lib/kingdomPersistence'
@@ -28,13 +28,14 @@ export default async function KingdomPage({
     redirect('/')
   }
 
-  const [{ data: profile }, { data: initialKingdom }, { data: githubStats }] = await Promise.all([
+  const [{ data: profile }, kingdomResult, { data: githubStats }] = await Promise.all([
     supabase.from('profiles').select('username, avatar_url, onboarding_done').eq('id', user.id).maybeSingle(),
-    supabase
-      .from('kingdoms')
-      .select(KINGDOM_WITH_BUILDINGS_SELECT)
-      .eq('user_id', user.id)
-      .maybeSingle(),
+    fetchPersistedKingdomForUser(supabase, user.id)
+      .then((data) => ({ data, error: null }))
+      .catch((error) => ({
+        data: null,
+        error: error instanceof Error ? error : new Error('Unable to load kingdom'),
+      })),
     supabase
       .from('github_stats')
       .select(
@@ -48,7 +49,11 @@ export default async function KingdomPage({
     redirect('/onboarding')
   }
 
-  let kingdom = (initialKingdom as PersistedKingdomRow | null) ?? null
+  if (kingdomResult.error) {
+    throw kingdomResult.error
+  }
+
+  let kingdom = (kingdomResult.data as PersistedKingdomRow | null) ?? null
 
   if (!kingdom) {
     kingdom = await tryEnsureKingdomForUser(user.id)
