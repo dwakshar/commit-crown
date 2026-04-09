@@ -494,3 +494,46 @@ h4 {
 .advanced-cursor-layer.is-pressed .advanced-cursor-core {
   filter: brightness(0.92);
 }
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--b0);
+  border: 1px solid var(--b1);
+  box-shadow: 0 12px 60px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  border-radius: 24px;
+}
+
+.feature-card {
+  background: var(--steel-2);
+  padding: 42px 32px;
+  transition: background 0.3s;
+}
+
+.feature-card:hover {
+  background: var(--steel-3);
+}
+
+.feat-icon {
+  font-size: 32px;
+  margin-bottom: 20px;
+  display: block;
+}
+
+.feat-title {
+  font-family: var(--font-head);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--silver-0);
+  margin-bottom: 14px;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+}
+
+.feat-desc {
+  font-size: 16px;
+  color: var(--silver-2);
+  line-height: 1.72;
+}
