@@ -237,7 +237,7 @@ export default async function Home({
             </p>
           </div>
 
-          <div className="features-grid fade-group grid md:grid-cols-2 xl:grid-cols-3 gap-px bg-[var(--b0)] p-px rounded-3xl overflow-hidden">
+          <div className="features-grid fade-group grid md:grid-cols-2 xl:grid-cols-3 gap-px bg-[var(--b0)] p-px overflow-hidden">
             <div className="feature-card bg-[var(--steel-2)] p-10">
               <span className="feat-icon text-4xl mb-6 block">⚒️</span>
               <div className="feat-title text-xl font-semibold text-[var(--silver-0)] mb-4">
