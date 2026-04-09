@@ -257,10 +257,6 @@ h4 {
     border-color 0.24s ease, color 0.24s ease;
 }
 
-.realm-button:hover {
-  transform: translateY(-2px);
-}
-
 .realm-button-primary {
   background: linear-gradient(
     160deg,
@@ -353,6 +349,44 @@ h4 {
     opacity: 0.15;
   }
 
+  100% {
+    opacity: 0;
+    transform: translateY(-380px) translateX(var(--ember-drift, 24px))
+      scale(0.3);
+  }
+}
+
+@keyframes star-twinkle {
+  from {
+    opacity: var(--sa, 0.4);
+    transform: scale(1);
+  }
+  to {
+    opacity: calc(var(--sa, 0.4) * 0.25);
+    transform: scale(0.75);
+  }
+}
+
+@keyframes mist-drift {
+  from {
+    transform: translateX(-2.5%) scaleX(1);
+  }
+  to {
+    transform: translateX(2.5%) scaleX(1.06);
+  }
+}
+
+@keyframes ember-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(0) translateX(0) scale(1);
+  }
+  6% {
+    opacity: 0.85;
+  }
+  80% {
+    opacity: 0.15;
+  }
   100% {
     opacity: 0;
     transform: translateY(-380px) translateX(var(--ember-drift, 24px))

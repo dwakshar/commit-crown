@@ -371,19 +371,19 @@ export function HUD() {
           <div className="flex items-center justify-end gap-2 border-t border-[var(--b0)] px-4 py-3 xl:border-l xl:border-t-0">
             <Link
               href="/leaderboard"
-              className="pointer-events-auto flex h-11 items-center justify-center border border-[var(--b1)] px-4 text-[11px] uppercase tracking-[0.18em] text-[var(--silver-2)] hover:text-[var(--silver-0)]">
-              Visit
+              className="pointer-events-auto flex h-10 items-center justify-center border border-[var(--b1)] px-3.5 text-[11px] uppercase tracking-[0.18em] text-[var(--silver-2)] hover:text-[var(--silver-0)] hover:border-[var(--silver-4)]">
+              ➤
             </Link>
             <Link
               href="/raids/history"
-              className="pointer-events-auto flex h-11 items-center justify-center border border-[var(--b1)] px-4 text-[11px] uppercase tracking-[0.18em] text-[var(--silver-2)] hover:text-[var(--silver-0)]">
-              Raids
+              className="pointer-events-auto flex h-10 items-center justify-center border border-[var(--b1)] px-3 text-[11px] uppercase tracking-[0.18em] text-[var(--silver-2)] hover:text-[var(--silver-0)] hover:border-[var(--silver-4)]">
+              ⚔️
             </Link>
             <NotificationBell userId={kingdom.userId} />
             <Link
               href="/marketplace"
-              className="pointer-events-auto flex h-11 items-center justify-center border border-[var(--b1)] px-4 text-[11px] uppercase tracking-[0.18em] text-[var(--silver-2)] hover:text-[var(--silver-0)]">
-              Market
+              className="pointer-events-auto flex h-10 items-center justify-center border border-[var(--b1)] px-3 text-[11px] uppercase tracking-[0.18em] text-[var(--silver-2)] hover:text-[var(--silver-0)] hover:border-[var(--silver-4)]">
+              🛒
             </Link>
           </div>
         </div>
@@ -513,7 +513,7 @@ export function HUD() {
                 </div>
 
                 <div className="mt-5 grid grid-cols-2 gap-3">
-                  <div className="rounded-[18px] border border-[var(--b0)] bg-[rgba(255,255,255,0.02)] px-4 py-4">
+                  <div className="border border-[var(--b0)] bg-[rgba(255,255,255,0.02)] px-4 py-4">
                     <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--silver-3)]">
                       Level
                     </div>
@@ -521,7 +521,7 @@ export function HUD() {
                       {activeBuilding.level}/5
                     </div>
                   </div>
-                  <div className="rounded-[18px] border border-[var(--b0)] bg-[rgba(255,255,255,0.02)] px-4 py-4">
+                  <div className="border border-[var(--b0)] bg-[rgba(255,255,255,0.02)] px-4 py-4">
                     <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--silver-3)]">
                       Tile
                     </div>
@@ -535,7 +535,7 @@ export function HUD() {
                   type="button"
                   onClick={handleUpgrade}
                   disabled={!canUpgrade}
-                  className="mt-5 w-full border border-[rgba(200,88,26,0.58)] bg-[linear-gradient(180deg,rgba(36,16,10,0.86),rgba(24,10,6,0.92))] px-5 py-4 font-[var(--font-head)] text-[1rem] uppercase tracking-[0.18em] text-[var(--ember-hi)] transition hover:border-[var(--ember)] hover:text-[#ffd2ad] disabled:cursor-not-allowed disabled:opacity-55">
+                  className="mt-5 w-full border border-[rgba(200,88,26,0.58)] bg-[linear-gradient(180deg,rgba(36,16,10,0.86),rgba(24,10,6,0.92))] px-5 py-3.5 font-[var(--font-head)] text-[1rem] uppercase tracking-[0.18em] text-[var(--ember-hi)] transition hover:border-[var(--ember)] hover:text-[#ffd2ad] disabled:cursor-not-allowed disabled:opacity-55">
                   {activeBuilding.isPlaceholder
                     ? "Select A Structure To Reclaim"
                     : isUpgrading
@@ -570,9 +570,9 @@ export function HUD() {
               {catalog.map((entry) => (
                 <div
                   key={entry.type}
-                  className={`rounded-[20px] border px-4 py-4 ${
+                  className={`border px-4 py-4 ${
                     entry.unlocked
-                      ? "border-[var(--b0)] bg-[rgba(255,255,255,0.02)]"
+                      ? "border-[var(--b0)] bg-[rgba(255,186,186,0.02)]"
                       : "border-[rgba(120,140,160,0.12)] bg-[rgba(255,255,255,0.01)] opacity-60"
                   }`}>
                   <div className="flex items-start justify-between gap-4">
@@ -597,11 +597,11 @@ export function HUD() {
                         boardSummary.openSlots <= 0 ||
                         isPlacingBuilding
                       }
-                      className={`min-w-[120px] border px-4 py-3 text-[11px] uppercase tracking-[0.18em] transition ${
+                      className={`min-w-[120px] border px-4 py-2 text-[11px] uppercase tracking-[0.18em] transition ${
                         buildModeType === entry.type
                           ? "border-[var(--ember)] bg-[rgba(44,21,13,0.72)] text-[var(--ember-hi)]"
                           : "border-[var(--b1)] text-[var(--silver-2)] hover:text-[var(--silver-0)]"
-                      } disabled:cursor-not-allowed disabled:opacity-45`}>
+                      } disabled:cursor-not-allowed disabled:opacity-100`}>
                       {buildModeType === entry.type
                         ? "Cancel"
                         : entry.unlocked
@@ -618,7 +618,7 @@ export function HUD() {
             <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--silver-3)]">
               Advisory
             </div>
-            <div className="mt-3 rounded-[20px] border border-[var(--b0)] bg-[rgba(255,255,255,0.02)] px-4 py-4 text-sm leading-6 text-[var(--silver-2)]">
+            <div className="mt-3 border border-[var(--b0)] bg-[rgba(255,255,255,0.02)] px-4 py-4 text-sm leading-6 text-[var(--silver-2)]">
               Strong economies come from markets and town halls, pressure falls
               when walls and barracks rise, and knowledge feeds stability
               through libraries and observatories.
@@ -627,26 +627,26 @@ export function HUD() {
         </div>
 
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 border-t border-[var(--b1)] bg-[rgba(4,6,10,0.92)] px-3 py-3">
-          <div className="flex items-center gap-2 overflow-x-auto">
+          <div className="flex items-center text-center gap-2 overflow-x-auto">
             <button
               type="button"
               onClick={() => handleBuildMode(buildModeType)}
-              className="pointer-events-auto realm-button realm-button-secondary min-w-[130px] px-4 py-3">
+              className="pointer-events-auto realm-button realm-button-secondary min-w-[120px] px-4 py-2.5">
               {buildModeType ? "Cancel Build" : "Build Mode"}
             </button>
             <Link
               href="/leaderboard"
-              className="pointer-events-auto realm-button realm-button-secondary min-w-[120px] px-4 py-3">
+              className="pointer-events-auto realm-button realm-button-secondary min-w-[120px] px-4 py-2.5">
               Scout
             </Link>
             <Link
               href="/raids/history"
-              className="pointer-events-auto realm-button realm-button-secondary min-w-[120px] px-4 py-3">
+              className="pointer-events-auto realm-button realm-button-secondary min-w-[120px] px-4 py-2.5">
               Raid Log
             </Link>
             <Link
               href="/marketplace"
-              className="pointer-events-auto realm-button realm-button-secondary min-w-[140px] px-4 py-3">
+              className="pointer-events-auto realm-button realm-button-secondary min-w-[120px] px-4 py-2.5">
               Cosmetics
             </Link>
             <div className="min-w-2 grow" />
