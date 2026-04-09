@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     )
   }
 
-  const visitResult = (data?.[0] as { recorded: boolean; visited_at: string } | undefined) ?? null
+  const visitResult = (data?.[0] as { recorded: boolean; visit_timestamp: string } | undefined) ?? null
 
   if (!visitResult) {
     return NextResponse.json({ error: 'Unable to record visit' }, { status: 500 })
@@ -57,5 +57,5 @@ export async function POST(request: Request) {
     await checkAndAwardAchievements(user.id, supabaseAdmin)
   }
 
-  return NextResponse.json({ success: true, recorded: visitResult.recorded, visitedAt: visitResult.visited_at })
+  return NextResponse.json({ success: true, recorded: visitResult.recorded, visitedAt: visitResult.visit_timestamp })
 }
