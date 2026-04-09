@@ -3,9 +3,9 @@ import { redirect } from 'next/navigation'
 import { KingdomPageClient } from '@/src/app/(game)/kingdom/KingdomPageClient'
 import {
   createFallbackKingdomData,
-  ensureKingdomForUser,
   KINGDOM_WITH_BUILDINGS_SELECT,
   type PersistedKingdomRow,
+  tryEnsureKingdomForUser,
 } from '@/src/lib/kingdomPersistence'
 import { getBuildingMetadata } from '@/src/lib/kingdom'
 import { withStarterKingdomState } from '@/src/lib/onboarding'
@@ -51,14 +51,7 @@ export default async function KingdomPage({
   let kingdom = (initialKingdom as PersistedKingdomRow | null) ?? null
 
   if (!kingdom) {
-    try {
-      kingdom = await ensureKingdomForUser(user.id)
-    } catch (error) {
-      console.error('Unable to bootstrap kingdom page', {
-        userId: user.id,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      })
-    }
+    kingdom = await tryEnsureKingdomForUser(user.id)
   }
 
   if (!kingdom) {

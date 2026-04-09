@@ -62,6 +62,14 @@ export async function ensureKingdomForUser(userId: string) {
   return (kingdom as PersistedKingdomRow | null) ?? null
 }
 
+export async function tryEnsureKingdomForUser(userId: string) {
+  try {
+    return await ensureKingdomForUser(userId)
+  } catch {
+    return null
+  }
+}
+
 export function createFallbackKingdomData(options: {
   userId: string
   username: string | null
