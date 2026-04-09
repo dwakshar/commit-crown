@@ -501,7 +501,7 @@ h4 {
   gap: 1px;
   background: var(--b0);
   border: 1px solid var(--b1);
-  box-shadow: 0 12px 60px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 12px 61px rgba(0, 0, 0, 0.6);
   overflow: hidden;
 }
 
