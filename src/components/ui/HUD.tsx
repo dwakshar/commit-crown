@@ -136,6 +136,129 @@ function getBuildingMonogram(building: BuildingData) {
   return "ST";
 }
 
+function getMinimapTone(building: BuildingData) {
+  if (building.type === "town_hall") {
+    return "bg-[linear-gradient(180deg,#f0d79a,#c8882f)]";
+  }
+
+  if (building.type === "wall") {
+    return "bg-[linear-gradient(180deg,#7d8ea1,#4d5d70)]";
+  }
+
+  if (building.type === "iron_forge") {
+    return "bg-[linear-gradient(180deg,#d67436,#8f3d16)]";
+  }
+
+  if (building.type === "observatory" || building.type === "arcane_tower") {
+    return "bg-[linear-gradient(180deg,#8cb0d4,#496585)]";
+  }
+
+  return "bg-[linear-gradient(180deg,#92a96e,#5d7148)]";
+}
+
+function MinimapPanel({
+  buildings,
+  activeBuildingId,
+  onSelectBuilding,
+}: {
+  buildings: BuildingData[];
+  activeBuildingId: string | null;
+  onSelectBuilding: (building: BuildingData) => void;
+}) {
+  const gridSize = 20;
+  const occupancy = new Map<string, BuildingData>();
+
+  buildings.forEach((building) => {
+    occupancy.set(`${building.x}:${building.y}`, building);
+  });
+
+  const center = activeBuildingId
+    ? buildings.find((building) => building.id === activeBuildingId) ?? null
+    : null;
+
+  return (
+    <div className="pointer-events-auto absolute bottom-5 left-[76px] z-30 hidden w-[168px] overflow-hidden rounded-[22px] border border-[var(--b1)] bg-[linear-gradient(180deg,rgba(8,11,18,0.96),rgba(5,8,13,0.94))] shadow-[0_18px_42px_rgba(0,0,0,0.42)] xl:block">
+      <div className="border-b border-[var(--b0)] px-3 py-2.5">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-[10px] uppercase tracking-[0.24em] text-[var(--silver-3)]">
+            Realm Atlas
+          </p>
+          <span className="rounded-full border border-[rgba(200,88,26,0.24)] bg-[rgba(44,21,13,0.55)] px-2 py-0.5 text-[9px] uppercase tracking-[0.18em] text-[var(--ember-hi)]">
+            {buildings.length} sites
+          </span>
+        </div>
+        <p className="mt-1 text-[11px] text-[var(--silver-3)]">
+          {center ? `${getBuildingName(center)} selected` : "Select a structure"}
+        </p>
+      </div>
+
+      <div className="p-3">
+        <div className="relative overflow-hidden rounded-[18px] border border-[var(--b0)] bg-[radial-gradient(circle_at_50%_0%,rgba(176,196,214,0.08),transparent_38%),linear-gradient(180deg,#0b1018,#06090f)] p-2">
+          <div className="grid grid-cols-20 gap-[2px]">
+            {Array.from({ length: gridSize * gridSize }, (_, index) => {
+              const x = index % gridSize;
+              const y = Math.floor(index / gridSize);
+              const building = occupancy.get(`${x}:${y}`) ?? null;
+              const isActive = building?.id === activeBuildingId;
+
+              return building ? (
+                <button
+                  key={`${x}-${y}`}
+                  type="button"
+                  onClick={() => onSelectBuilding(building)}
+                  aria-label={`Focus ${getBuildingName(building)}`}
+                  className={`h-[5px] w-[5px] rounded-[2px] border transition ${getMinimapTone(building)} ${
+                    isActive
+                      ? "border-[#fff0d2] scale-[1.6] shadow-[0_0_10px_rgba(200,88,26,0.75)]"
+                      : "border-black/20 opacity-95 hover:scale-[1.35]"
+                  }`}
+                />
+              ) : (
+                <span
+                  key={`${x}-${y}`}
+                  className="h-[5px] w-[5px] rounded-[2px] bg-[rgba(122,150,94,0.14)]"
+                />
+              );
+            })}
+          </div>
+
+          {center ? (
+            <div
+              className="pointer-events-none absolute rounded-full border border-[rgba(255,208,160,0.4)] bg-[rgba(200,88,26,0.08)]"
+              style={{
+                width: "18px",
+                height: "18px",
+                left: `${8 + center.x * 7 - 6}px`,
+                top: `${8 + center.y * 7 - 6}px`,
+                boxShadow: "0 0 18px rgba(200,88,26,0.24)",
+              }}
+            />
+          ) : null}
+        </div>
+
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <div className="rounded-[14px] border border-[var(--b0)] bg-[rgba(255,255,255,0.03)] px-2.5 py-2">
+            <p className="text-[9px] uppercase tracking-[0.2em] text-[var(--silver-3)]">
+              Center
+            </p>
+            <p className="mt-1 font-[var(--font-head)] text-[13px] text-[var(--silver-0)]">
+              {center ? `${center.x},${center.y}` : "--"}
+            </p>
+          </div>
+          <div className="rounded-[14px] border border-[var(--b0)] bg-[rgba(255,255,255,0.03)] px-2.5 py-2">
+            <p className="text-[9px] uppercase tracking-[0.2em] text-[var(--silver-3)]">
+              Grid
+            </p>
+            <p className="mt-1 font-[var(--font-head)] text-[13px] text-[var(--silver-0)]">
+              20 x 20
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function HUD() {
   const kingdom = useKingdomStore((state) => state.kingdom);
   const selectedBuilding = useKingdomStore((state) => state.selectedBuilding);
@@ -342,20 +465,11 @@ export function HUD() {
           ))}
         </div>
 
-        <div className="pointer-events-none absolute bottom-6 left-[76px] z-30 hidden w-[136px] border border-[var(--b1)] bg-[rgba(5,8,14,0.88)] p-3 xl:block">
-          <p className="mb-2 text-[10px] uppercase tracking-[0.24em] text-[var(--silver-3)]">
-            Realm
-          </p>
-          <div className="relative h-[84px] border border-[var(--b0)] bg-[linear-gradient(180deg,#0c1018,#06080e)]">
-            <div className="absolute inset-x-1/2 top-0 h-full w-px -translate-x-1/2 bg-[var(--steel-4)]" />
-            <div className="absolute inset-y-1/2 left-0 h-px w-full -translate-y-1/2 bg-[var(--steel-4)]" />
-            <div className="absolute left-[44px] top-[18px] h-9 w-12 bg-[var(--steel-3)] opacity-80" />
-            <div className="absolute left-[18px] top-[34px] h-5 w-6 bg-[var(--steel-2)]" />
-            <div className="absolute right-[18px] top-[30px] h-5 w-6 bg-[var(--steel-2)]" />
-            <div className="absolute bottom-[10px] left-[42px] h-4 w-12 bg-[var(--steel-2)]" />
-            <div className="absolute left-1/2 top-[40px] h-2.5 w-2.5 -translate-x-1/2 rounded-full bg-[var(--ember)] shadow-[0_0_10px_rgba(200,88,26,0.7)]" />
-          </div>
-        </div>
+        <MinimapPanel
+          buildings={structures}
+          activeBuildingId={activeBuilding?.id ?? null}
+          onSelectBuilding={handleSelectBuilding}
+        />
 
         <div className="pointer-events-auto absolute right-0 top-0 z-30 hidden h-full w-[300px] overflow-y-auto border-l border-[var(--b1)] bg-[linear-gradient(180deg,rgba(4,6,10,0.96),rgba(4,6,10,0.88))] xl:block">
           <div className="border-b border-[var(--b1)] px-5 py-6">
