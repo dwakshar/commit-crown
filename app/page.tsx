@@ -237,69 +237,72 @@ export default async function Home({
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
-            <div className="realm-panel group rounded-3xl p-8 transition-all hover:-translate-y-1">
-              <div className="text-4xl mb-6">⚒️</div>
-              <h3 className="text-xl font-semibold text-[var(--silver-0)] mb-3 tracking-wide">
+          <div className="features-grid fade-group grid md:grid-cols-2 xl:grid-cols-3 gap-px bg-[var(--b0)] p-px rounded-3xl overflow-hidden">
+            <div className="feature-card bg-[var(--steel-2)] p-10">
+              <span className="feat-icon text-4xl mb-6 block">⚒️</span>
+              <div className="feat-title text-xl font-semibold text-[var(--silver-0)] mb-4">
                 GitHub Forges Your Keep
-              </h3>
-              <p className="text-[var(--silver-2)] leading-relaxed">
+              </div>
+              <p className="feat-desc text-[var(--silver-2)] leading-relaxed">
                 Each commit adds stone. Each repository raises a new district.
                 Every streak strengthens your walls against the siege of time.
               </p>
             </div>
 
-            <div className="bg-[var(--steel-2)] p-8 group relative">
-              <div className="text-4xl mb-6">🏰</div>
-              <h3 className="font-[var(--font-head)] text-xl tracking-wide text-[var(--silver-0)] mb-4">
-                BUILD WITHOUT LIMIT
-              </h3>
-              <p className="text-[var(--silver-2)] leading-relaxed">
+            <div className="feature-card bg-[var(--steel-2)] p-10">
+              <span className="feat-icon text-4xl mb-6 block">⚔️</span>
+              <div className="feat-title text-xl font-semibold text-[var(--silver-0)] mb-4">
+                Wage War on Rivals
+              </div>
+              <p className="feat-desc text-[var(--silver-2)] leading-relaxed">
+                Challenge kingdoms with equivalent code output. The battle lasts
+                seven days. Only consistent commits determine the victor.
+              </p>
+            </div>
+
+            <div className="feature-card bg-[var(--steel-2)] p-10">
+              <span className="feat-icon text-4xl mb-6 block">🏰</span>
+              <div className="feat-title text-xl font-semibold text-[var(--silver-0)] mb-4">
+                Build Without Limit
+              </div>
+              <p className="feat-desc text-[var(--silver-2)] leading-relaxed">
                 Forge towers, granaries, training grounds, and observatories.
                 Each structure grants prestige bonuses and passive abilities.
               </p>
-              <div className="absolute top-4 right-4 w-1.5 h-1.5 bg-[var(--steel-5)] rounded-full" />
-              <div className="absolute bottom-4 left-4 w-1.5 h-1.5 bg-[var(--steel-5)] rounded-full" />
             </div>
 
-            <div className="bg-[var(--steel-2)] p-8 group relative">
-              <div className="text-4xl mb-6">📜</div>
-              <h3 className="font-[var(--font-head)] text-xl tracking-wide text-[var(--silver-0)] mb-4">
-                THE CHRONICLE
-              </h3>
-              <p className="text-[var(--silver-2)] leading-relaxed">
+            <div className="feature-card bg-[var(--steel-2)] p-10">
+              <span className="feat-icon text-4xl mb-6 block">📜</span>
+              <div className="feat-title text-xl font-semibold text-[var(--silver-0)] mb-4">
+                The Chronicle
+              </div>
+              <p className="feat-desc text-[var(--silver-2)] leading-relaxed">
                 An unbroken record of every language wielded, every milestone
                 crossed. Your history cannot be erased — only extended.
               </p>
-              <div className="absolute top-4 right-4 w-1.5 h-1.5 bg-[var(--steel-5)] rounded-full" />
-              <div className="absolute bottom-4 left-4 w-1.5 h-1.5 bg-[var(--steel-5)] rounded-full" />
             </div>
 
-            <div className="bg-[var(--steel-2)] p-8 group relative">
-              <div className="text-4xl mb-6">🌍</div>
-              <h3 className="font-[var(--font-head)] text-xl tracking-wide text-[var(--silver-0)] mb-4">
-                EXPLORE OTHER REALMS
-              </h3>
-              <p className="text-[var(--silver-2)] leading-relaxed">
+            <div className="feature-card bg-[var(--steel-2)] p-10">
+              <span className="feat-icon text-4xl mb-6 block">🌍</span>
+              <div className="feat-title text-xl font-semibold text-[var(--silver-0)] mb-4">
+                Explore Other Realms
+              </div>
+              <p className="feat-desc text-[var(--silver-2)] leading-relaxed">
                 Traverse the world map and visit allied kingdoms. Study their
                 architecture. Challenge them. Forge pacts. Compete for
                 dominance.
               </p>
-              <div className="absolute top-4 right-4 w-1.5 h-1.5 bg-[var(--steel-5)] rounded-full" />
-              <div className="absolute bottom-4 left-4 w-1.5 h-1.5 bg-[var(--steel-5)] rounded-full" />
             </div>
 
-            <div className="bg-[var(--steel-2)] p-8 group relative">
-              <div className="text-4xl mb-6">🏆</div>
-              <h3 className="font-[var(--font-head)] text-xl tracking-wide text-[var(--silver-0)] mb-4">
-                HALL OF LEGEND
-              </h3>
-              <p className="text-[var(--silver-2)] leading-relaxed">
+            <div className="feature-card bg-[var(--steel-2)] p-10">
+              <span className="feat-icon text-4xl mb-6 block">🏆</span>
+              <div className="feat-title text-xl font-semibold text-[var(--silver-0)] mb-4">
+                Hall of Legend
+              </div>
+              <p className="feat-desc text-[var(--silver-2)] leading-relaxed">
                 The mightiest realms inscribed in the Hall of Legend. Weekly
                 conquest. Seasonal campaigns. Your name carved in iron.
               </p>
-              <div className="absolute top-4 right-4 w-1.5 h-1.5 bg-[var(--steel-5)] rounded-full" />
-              <div className="absolute bottom-4 left-4 w-1.5 h-1.5 bg-[var(--steel-5)] rounded-full" />
             </div>
           </div>
         </div>
