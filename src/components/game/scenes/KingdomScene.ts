@@ -30,6 +30,9 @@ type ThemePalette = {
   background: string
   grassColors: [number, number]
   gridLine: number
+  accent: number
+  road: number
+  water: number
 }
 
 function hashString(value: string) {
@@ -46,12 +49,19 @@ function toHexColor(value: number) {
   return `#${value.toString(16).padStart(6, '0')}`
 }
 
+function tileKey(x: number, y: number) {
+  return `${x}:${y}`
+}
+
 function deriveThemePalette(themeId: string | null | undefined): ThemePalette {
   if (!themeId) {
     return {
       background: '#0d0d1a',
       grassColors: [0x3f7d3a, 0x4b8f43],
       gridLine: 0x20361f,
+      accent: 0xd1b06a,
+      road: 0x7b6444,
+      water: 0x274764,
     }
   }
 
@@ -68,11 +78,17 @@ function deriveThemePalette(themeId: string | null | undefined): ThemePalette {
   ).color
   const background = Phaser.Display.Color.HSLToColor(hue / 360, 0.32, 0.1).color
   const gridLine = Phaser.Display.Color.HSLToColor(hue / 360, 0.35, 0.16).color
+  const accent = Phaser.Display.Color.HSLToColor(((hue + 28) % 360) / 360, 0.72, 0.68).color
+  const road = Phaser.Display.Color.HSLToColor(((hue + 12) % 360) / 360, 0.26, 0.36).color
+  const water = Phaser.Display.Color.HSLToColor(((hue + 180) % 360) / 360, 0.44, 0.26).color
 
   return {
     background: toHexColor(background),
     grassColors: [grassPrimary, grassSecondary],
     gridLine,
+    accent,
+    road,
+    water,
   }
 }
 
@@ -85,8 +101,12 @@ export class KingdomScene extends Phaser.Scene {
   private originX = 0
   private originY = 120
   private buildingLayer?: PhaserContainer
+  private terrainLayer?: PhaserGraphics
+  private decorLayer?: PhaserContainer
   private selectionMarker?: PhaserGraphics
+  private placementMarker?: PhaserGraphics
   private buildingMap = new Map<string, Building>()
+  private buildModeType: BuildingData['type'] | null = null
   private isDraggingCamera = false
   private didCameraDrag = false
   private dragStartPointerX = 0
@@ -106,11 +126,14 @@ export class KingdomScene extends Phaser.Scene {
     this.configureCamera()
 
     this.drawGrid()
-    this.renderBuildings(kingdomData)
+    this.renderWorld(kingdomData)
     this.registerCameraDrag()
+    this.registerBuildMode()
+    this.input.on(Phaser.Input.Events.POINTER_WHEEL, this.handleMouseWheel, this)
 
     this.game.events.on('kingdom-updated', this.handleKingdomUpdated, this)
     this.game.events.on('focus-building', this.selectBuilding, this)
+    this.game.events.on('build-mode-changed', this.handleBuildModeChanged, this)
     this.scale.on('resize', this.handleResize, this)
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.handleShutdown, this)
   }
@@ -174,6 +197,9 @@ export class KingdomScene extends Phaser.Scene {
   }
 
   private drawGrid(): void {
+    this.terrainLayer?.destroy()
+    this.placementMarker?.destroy()
+
     const grid = this.add.graphics()
     const themePalette = deriveThemePalette(this.getKingdomData().themeId)
     const grassColors = themePalette.grassColors
@@ -181,7 +207,8 @@ export class KingdomScene extends Phaser.Scene {
     for (let y = 0; y < this.gridSize; y += 1) {
       for (let x = 0; x < this.gridSize; x += 1) {
         const point = this.isoToScreen(x, y)
-        const color = grassColors[(x + y) % grassColors.length]
+        const isWaterEdge = x === 0 || y === 0 || x === this.gridSize - 1 || y === this.gridSize - 1
+        const color = isWaterEdge ? themePalette.water : grassColors[(x + y) % grassColors.length]
 
         grid.fillStyle(color, 1)
         grid.lineStyle(1, themePalette.gridLine, 0.45)
@@ -206,7 +233,9 @@ export class KingdomScene extends Phaser.Scene {
       }
     }
 
+    this.terrainLayer = grid
     this.selectionMarker = this.add.graphics().setVisible(false)
+    this.placementMarker = this.add.graphics().setVisible(false)
   }
 
   private configureCamera(): void {
@@ -250,6 +279,10 @@ export class KingdomScene extends Phaser.Scene {
     this.input.on(Phaser.Input.Events.GAME_OUT, this.handlePointerUp, this)
   }
 
+  private registerBuildMode(): void {
+    this.input.on(Phaser.Input.Events.POINTER_MOVE, this.handlePlacementPointerMove, this)
+  }
+
   private handlePointerDown(pointer: import('phaser').Input.Pointer): void {
     if (!pointer.leftButtonDown()) {
       return
@@ -281,9 +314,17 @@ export class KingdomScene extends Phaser.Scene {
     this.cameras.main.setScroll(this.dragStartScrollX - deltaX, this.dragStartScrollY - deltaY)
   }
 
-  private handlePointerUp(): void {
+  private handlePointerUp(pointer?: import('phaser').Input.Pointer): void {
     this.isDraggingCamera = false
     this.input.setDefaultCursor('default')
+
+    if (this.buildModeType && pointer && !this.didCameraDrag) {
+      const tile = this.screenToTile(pointer.worldX, pointer.worldY)
+
+      if (tile && this.isTileAvailable(tile.x, tile.y)) {
+        this.game.events.emit('tile-selected', tile)
+      }
+    }
 
     if (!this.didCameraDrag) {
       return
@@ -293,6 +334,11 @@ export class KingdomScene extends Phaser.Scene {
       this.didCameraDrag = false
       this.dragDistance = 0
     })
+  }
+
+  private renderWorld(kingdomData: KingdomData): void {
+    this.renderDecor(kingdomData)
+    this.renderBuildings(kingdomData)
   }
 
   private renderBuildings(kingdomData: KingdomData): void {
@@ -313,10 +359,81 @@ export class KingdomScene extends Phaser.Scene {
     })
   }
 
+  private renderDecor(kingdomData: KingdomData): void {
+    this.decorLayer?.destroy(true)
+    this.decorLayer = this.add.container()
+
+    const occupiedTiles = new Set(
+      kingdomData.buildings.filter((building) => !building.isPlaceholder).map((building) => tileKey(building.x, building.y)),
+    )
+    const placeholderTiles = new Set(
+      kingdomData.buildings.filter((building) => building.isPlaceholder).map((building) => tileKey(building.x, building.y)),
+    )
+    const theme = deriveThemePalette(kingdomData.themeId)
+    const roadGraphics = this.add.graphics()
+    const townHall = kingdomData.buildings.find((building) => building.type === 'town_hall')
+
+    if (townHall) {
+      roadGraphics.lineStyle(6, theme.road, 0.42)
+
+      kingdomData.buildings
+        .filter((building) => !building.isPlaceholder && building.id !== townHall.id)
+        .forEach((building) => {
+          const path = this.getRoadPath(townHall, building)
+          const points = path.map(({ x, y }) => {
+            const point = this.isoToScreen(x, y)
+            return new Phaser.Geom.Point(point.x, point.y)
+          })
+
+          roadGraphics.strokePoints(points, false)
+        })
+    }
+
+    this.decorLayer.add(roadGraphics)
+
+    for (let y = 1; y < this.gridSize - 1; y += 1) {
+      for (let x = 1; x < this.gridSize - 1; x += 1) {
+        if (occupiedTiles.has(tileKey(x, y))) {
+          continue
+        }
+
+        const point = this.isoToScreen(x, y)
+        const seed = hashString(`${kingdomData.themeId ?? 'realm'}:${x}:${y}`)
+        const propRoll = seed % 9
+
+        if (placeholderTiles.has(tileKey(x, y))) {
+          const ruins = this.add.image(point.x, point.y + 2, 'prop-ruins').setAlpha(0.68).setDepth(point.y - 1)
+          this.decorLayer.add(ruins)
+          continue
+        }
+
+        if (propRoll === 0 || propRoll === 1) {
+          const texture = propRoll === 0 ? 'prop-tree' : 'prop-stones'
+          const sprite = this.add
+            .image(point.x, point.y + 4, texture)
+            .setScale(0.8 + ((seed >> 3) % 4) * 0.06)
+            .setAlpha(0.4 + ((seed >> 5) % 3) * 0.12)
+            .setDepth(point.y - 1)
+          this.decorLayer.add(sprite)
+        }
+
+        if (seed % 17 === 0 || seed % 19 === 0) {
+          const banner = this.add
+            .image(point.x + 10, point.y - 10, 'prop-banner')
+            .setScale(0.7)
+            .setAlpha(0.48)
+            .setTint(theme.accent)
+            .setDepth(point.y)
+          this.decorLayer.add(banner)
+        }
+      }
+    }
+  }
+
   private handleKingdomUpdated(updatedKingdom?: KingdomData): void {
     const kingdomData = updatedKingdom ?? this.getKingdomData()
     this.cameras.main.setBackgroundColor(deriveThemePalette(kingdomData.themeId).background)
-    this.renderBuildings(kingdomData)
+    this.renderWorld(kingdomData)
   }
 
   private handleResize(gameSize: { width: number }): void {
@@ -324,18 +441,127 @@ export class KingdomScene extends Phaser.Scene {
     this.configureCamera()
     this.children.removeAll(true)
     this.buildingLayer = undefined
+    this.decorLayer = undefined
     this.selectionMarker = undefined
+    this.placementMarker = undefined
     this.drawGrid()
-    this.renderBuildings(this.getKingdomData())
+    this.renderWorld(this.getKingdomData())
   }
 
   private handleShutdown(): void {
     this.game.events.off('kingdom-updated', this.handleKingdomUpdated, this)
     this.game.events.off('focus-building', this.selectBuilding, this)
+    this.game.events.off('build-mode-changed', this.handleBuildModeChanged, this)
     this.scale.off('resize', this.handleResize, this)
     this.input.off(Phaser.Input.Events.POINTER_DOWN, this.handlePointerDown, this)
     this.input.off(Phaser.Input.Events.POINTER_MOVE, this.handlePointerMove, this)
+    this.input.off(Phaser.Input.Events.POINTER_MOVE, this.handlePlacementPointerMove, this)
     this.input.off(Phaser.Input.Events.POINTER_UP, this.handlePointerUp, this)
     this.input.off(Phaser.Input.Events.GAME_OUT, this.handlePointerUp, this)
+    this.input.off(Phaser.Input.Events.POINTER_WHEEL, this.handleMouseWheel, this)
+  }
+
+  private handleBuildModeChanged(buildModeType: BuildingData['type'] | null) {
+    this.buildModeType = buildModeType
+    this.placementMarker?.setVisible(false)
+  }
+
+  private handlePlacementPointerMove(pointer: import('phaser').Input.Pointer) {
+    if (!this.buildModeType || this.isDraggingCamera) {
+      this.placementMarker?.setVisible(false)
+      return
+    }
+
+    const tile = this.screenToTile(pointer.worldX, pointer.worldY)
+
+    if (!tile) {
+      this.placementMarker?.setVisible(false)
+      return
+    }
+
+    this.drawPlacementMarker(tile.x, tile.y, this.isTileAvailable(tile.x, tile.y))
+  }
+
+  private handleMouseWheel(
+    _pointer: import('phaser').Input.Pointer,
+    _gameObjects: unknown,
+    _deltaX: number,
+    deltaY: number,
+  ) {
+    const nextZoom = Phaser.Math.Clamp(this.cameras.main.zoom - deltaY * 0.001, 0.78, 1.32)
+    this.cameras.main.setZoom(nextZoom)
+  }
+
+  private drawPlacementMarker(x: number, y: number, isValid: boolean) {
+    const marker = this.placementMarker
+
+    if (!marker) {
+      return
+    }
+
+    const point = this.isoToScreen(x, y)
+    marker
+      .clear()
+      .lineStyle(3, isValid ? 0x8fd694 : 0xff8f8f, 0.98)
+      .fillStyle(isValid ? 0x8fd694 : 0xff8f8f, 0.16)
+      .fillPoints(
+        [
+          new Phaser.Geom.Point(point.x, point.y - this.tileHeight / 2),
+          new Phaser.Geom.Point(point.x + this.tileWidth / 2, point.y),
+          new Phaser.Geom.Point(point.x, point.y + this.tileHeight / 2),
+          new Phaser.Geom.Point(point.x - this.tileWidth / 2, point.y),
+        ],
+        true,
+      )
+      .strokePoints(
+        [
+          new Phaser.Geom.Point(point.x, point.y - this.tileHeight / 2),
+          new Phaser.Geom.Point(point.x + this.tileWidth / 2, point.y),
+          new Phaser.Geom.Point(point.x, point.y + this.tileHeight / 2),
+          new Phaser.Geom.Point(point.x - this.tileWidth / 2, point.y),
+        ],
+        true,
+      )
+      .setDepth(point.y + 2)
+      .setVisible(true)
+  }
+
+  private screenToTile(worldX: number, worldY: number) {
+    const rawX = ((worldX - this.originX) / (this.tileWidth / 2) + (worldY - this.originY) / (this.tileHeight / 2)) / 2
+    const rawY = ((worldY - this.originY) / (this.tileHeight / 2) - (worldX - this.originX) / (this.tileWidth / 2)) / 2
+    const x = Math.round(rawX)
+    const y = Math.round(rawY)
+
+    if (x < 0 || y < 0 || x >= this.gridSize || y >= this.gridSize) {
+      return null
+    }
+
+    return { x, y }
+  }
+
+  private isTileAvailable(x: number, y: number) {
+    return !this.getKingdomData().buildings.some(
+      (building) => !building.isPlaceholder && building.x === x && building.y === y,
+    )
+  }
+
+  private getRoadPath(from: BuildingData, to: BuildingData) {
+    const path: Array<{ x: number; y: number }> = []
+    let currentX = from.x
+    let currentY = from.y
+
+    path.push({ x: currentX, y: currentY })
+
+    while (currentX !== to.x) {
+      currentX += currentX < to.x ? 1 : -1
+      path.push({ x: currentX, y: currentY })
+    }
+
+    while (currentY !== to.y) {
+      currentY += currentY < to.y ? 1 : -1
+      path.push({ x: currentX, y: currentY })
+    }
+
+    return path
   }
 }

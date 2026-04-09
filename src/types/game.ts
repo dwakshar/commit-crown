@@ -17,6 +17,7 @@ export interface BuildingData {
   level: 1 | 2 | 3 | 4 | 5
   skinId?: string | null
   name?: string
+  builtAt?: string | null
   isPlaceholder?: boolean
   placeholderLabel?: string
 }

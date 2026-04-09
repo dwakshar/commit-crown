@@ -54,56 +54,54 @@ export class Building extends Phaser.GameObjects.Container {
     super(scene, x, y)
 
     this.buildingData = buildingData
-
     this.outline = scene.add.graphics().setVisible(false)
 
     this.add(this.createVisual())
     this.add(this.outline)
     this.add(this.createLevelDots())
 
-    this.setSize(64, 96)
-    if (!buildingData.isPlaceholder) {
-      this.setInteractive(
-        new Phaser.Geom.Rectangle(-32, -96, 64, 96),
-        Phaser.Geom.Rectangle.Contains,
-      )
-    }
+    this.setSize(72, 96)
+    this.setInteractive(new Phaser.Geom.Rectangle(-36, -96, 72, 96), Phaser.Geom.Rectangle.Contains)
 
     this.drawOutline()
-    if (!buildingData.isPlaceholder) {
-      this.bindInteractions(scene as SelectableScene)
-    }
+    this.bindInteractions(scene as SelectableScene)
     scene.add.existing(this)
   }
 
   private createVisual(): PhaserContainer {
     if (!this.buildingData.isPlaceholder) {
       const tint = deriveSkinTint(this.buildingData.skinId)
-      return this.scene.add.container(0, 0, [
-        this.scene.add
-          .image(0, -32, this.buildingData.type)
-          .setOrigin(0.5, 1)
-          .setTint(tint ?? 0xffffff),
-      ])
+      const shadow = this.scene.add.ellipse(0, -2, 82, 24, 0x060a10, 0.26)
+      const sprite = this.scene.add
+        .image(0, -24, this.buildingData.type)
+        .setDisplaySize(94, 94)
+        .setOrigin(0.5, 1)
+        .setTint(tint ?? 0xffffff)
+      const glow = this.scene.add
+        .ellipse(0, -54, 62, 18, 0xf8df9f, 0.06 + this.buildingData.level * 0.015)
+        .setBlendMode(Phaser.BlendModes.SCREEN)
+
+      return this.scene.add.container(0, 0, [shadow, glow, sprite])
     }
 
-    const ruins = this.scene.add.container(0, -18)
+    const ruins = this.scene.add.container(0, -10)
+    const shadow = this.scene.add.ellipse(0, 4, 84, 18, 0x05080d, 0.28)
     const base = this.scene.add
-      .image(0, -14, 'wall')
+      .image(0, -10, 'prop-ruins')
       .setOrigin(0.5, 1)
-      .setTint(0x74808d)
-      .setAlpha(0.42)
-    const mist = this.scene.add.ellipse(0, 12, 72, 18, 0x090c11, 0.45)
+      .setTint(0xa0acb8)
+      .setAlpha(0.92)
+    const mist = this.scene.add.ellipse(0, 8, 72, 18, 0x090c11, 0.4)
     const label = this.scene.add
-      .text(0, 18, this.buildingData.placeholderLabel ?? 'Code more to unlock', {
-        color: '#b9c1cb',
+      .text(0, 14, this.buildingData.placeholderLabel ?? 'Recover district', {
+        color: '#d2d9e2',
         fontSize: '10px',
         align: 'center',
       })
       .setOrigin(0.5, 0)
-      .setAlpha(0.9)
+      .setAlpha(0.84)
 
-    ruins.add([mist, base, label])
+    ruins.add([shadow, mist, base, label])
 
     return ruins
   }
@@ -129,13 +127,9 @@ export class Building extends Phaser.GameObjects.Container {
   }
 
   private drawOutline(): void {
-    if (this.buildingData.isPlaceholder) {
-      return
-    }
-
     this.outline.clear()
-    this.outline.lineStyle(2, 0xf8f2c4, 0.95)
-    this.outline.strokeRoundedRect(-30, -92, 60, 62, 8)
+    this.outline.lineStyle(2, this.buildingData.isPlaceholder ? 0xa8b7c7 : 0xf8f2c4, 0.95)
+    this.outline.strokeRoundedRect(-34, -90, 68, 66, 10)
   }
 
   private bindInteractions(scene: SelectableScene): void {

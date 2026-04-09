@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
 import { BUILDING_UNLOCK_REQUIREMENTS, type GitHubStats } from '@/src/lib/gameEngine'
+import { ensureKingdomForUser } from '@/src/lib/kingdomPersistence'
 import type { BuildingType } from '@/src/types/game'
 import { createClient } from '@/utils/supabase/server'
 
@@ -49,6 +50,19 @@ type ProfileQueryResult = {
     | null
 }
 
+type EnsuredKingdom = {
+  id: string
+  building_slots: number
+  buildings:
+    | {
+        id: string
+        type: BuildingType
+        position_x: number
+        position_y: number
+      }[]
+    | null
+}
+
 export async function POST(request: Request) {
   const supabase = await createClient()
   const {
@@ -82,10 +96,34 @@ export async function POST(request: Request) {
   }
 
   const result = profile as ProfileQueryResult
-  const kingdom = result.kingdoms?.[0]
+  let kingdom = result.kingdoms?.[0] ?? null
 
   if (!kingdom) {
-    return NextResponse.json({ error: 'Kingdom not found' }, { status: 404 })
+    try {
+      const ensuredKingdom = await ensureKingdomForUser(user.id)
+
+      if (!ensuredKingdom) {
+        return NextResponse.json({ error: 'Kingdom not found' }, { status: 404 })
+      }
+
+      kingdom = {
+        id: ensuredKingdom.id,
+        building_slots: ensuredKingdom.building_slots,
+        buildings: (ensuredKingdom.buildings ?? []).map((building) => ({
+          id: building.id,
+          type: building.type,
+          position_x: building.position_x,
+          position_y: building.position_y,
+        })),
+      } satisfies EnsuredKingdom
+    } catch (error) {
+      return NextResponse.json(
+        {
+          error: error instanceof Error ? error.message : 'Unable to initialize kingdom',
+        },
+        { status: 500 },
+      )
+    }
   }
 
   const buildings = kingdom.buildings ?? []

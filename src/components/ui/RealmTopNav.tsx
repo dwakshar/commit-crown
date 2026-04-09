@@ -1,11 +1,11 @@
-'use client'
+"use client";
 
-import Link from 'next/link'
+import Link from "next/link";
 
 export function RealmTopNav({
   active,
 }: {
-  active: 'kingdom' | 'marketplace' | 'leaderboard'
+  active: "kingdom" | "marketplace" | "leaderboard";
 }) {
   return (
     <div className="border-b border-[var(--b1)] bg-[linear-gradient(180deg,rgba(3,4,6,0.98),rgba(8,11,16,0.94))]">
@@ -19,20 +19,29 @@ export function RealmTopNav({
         <div className="hidden items-center gap-12 md:flex">
           <Link
             href="/kingdom"
-            className={active === 'kingdom' ? 'text-[var(--silver-0)]' : 'transition hover:text-[var(--silver-0)]'}
-          >
+            className={
+              active === "kingdom"
+                ? "text-[var(--silver-0)]"
+                : "transition hover:text-[var(--silver-0)]"
+            }>
             Game
           </Link>
           <Link
             href="/marketplace"
-            className={active === 'marketplace' ? 'text-[var(--silver-0)]' : 'transition hover:text-[var(--silver-0)]'}
-          >
+            className={
+              active === "marketplace"
+                ? "text-[var(--silver-0)]"
+                : "transition hover:text-[var(--silver-0)]"
+            }>
             Marketplace
           </Link>
           <Link
             href="/leaderboard"
-            className={active === 'leaderboard' ? 'text-[var(--silver-0)]' : 'transition hover:text-[var(--silver-0)]'}
-          >
+            className={
+              active === "leaderboard"
+                ? "text-[var(--silver-0)]"
+                : "transition hover:text-[var(--silver-0)]"
+            }>
             Leaderboard
           </Link>
         </div>
@@ -44,5 +53,5 @@ export function RealmTopNav({
         </div>
       </div>
     </div>
-  )
+  );
 }

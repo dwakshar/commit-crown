@@ -73,8 +73,16 @@ export function PhaserGame({ kingdomData, userId, isOwner }: PhaserGameProps) {
           }),
         )
       }
+      const handleTileSelected = (tile: { x: number; y: number }) => {
+        window.dispatchEvent(
+          new CustomEvent<{ x: number; y: number }>('codekingdom:tile-selected', {
+            detail: tile,
+          }),
+        )
+      }
 
       game.events.on('building-selected', handleBuildingSelected)
+      game.events.on('tile-selected', handleTileSelected)
       gameRef.current = game
     }
 
@@ -95,11 +103,20 @@ export function PhaserGame({ kingdomData, userId, isOwner }: PhaserGameProps) {
       const customEvent = event as CustomEvent<BuildingData>
       gameRef.current?.events.emit('focus-building', customEvent.detail)
     }
+    const handleBuildModeChanged = (event: Event) => {
+      const customEvent = event as CustomEvent<BuildingData['type'] | null>
+      gameRef.current?.events.emit('build-mode-changed', customEvent.detail)
+    }
 
     window.addEventListener('codekingdom:focus-building', handleFocusBuilding as EventListener)
+    window.addEventListener('codekingdom:build-mode-changed', handleBuildModeChanged as EventListener)
 
     return () => {
       window.removeEventListener('codekingdom:focus-building', handleFocusBuilding as EventListener)
+      window.removeEventListener(
+        'codekingdom:build-mode-changed',
+        handleBuildModeChanged as EventListener,
+      )
     }
   }, [])
 
@@ -116,5 +133,5 @@ export function PhaserGame({ kingdomData, userId, isOwner }: PhaserGameProps) {
     game.events.emit('kingdom-updated', kingdomData)
   }, [isOwner, kingdomData, userId])
 
-  return <div ref={containerRef} className="w-full h-full" />
+  return <div ref={containerRef} className="h-full w-full" />
 }
