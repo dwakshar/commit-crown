@@ -1,12 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { createClient } from '@/lib/supabase'
 
-export function GitHubSignInButton() {
+export function GitHubSignInButton({ initialError }: { initialError?: string | null } = {}) {
   const [isLoading, setIsLoading] = useState(false)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(initialError ?? null)
+
+  useEffect(() => {
+    setErrorMessage(initialError ?? null)
+  }, [initialError])
 
   const handleSignIn = async () => {
     setIsLoading(true)

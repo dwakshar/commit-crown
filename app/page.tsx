@@ -4,7 +4,12 @@ import Link from 'next/link'
 import { GitHubSignInButton } from '@/src/components/auth/GitHubSignInButton'
 import { createClient } from '@/utils/supabase/server'
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string; reason?: string }>
+}) {
+  const { error, reason } = await searchParams
   const supabase = await createClient()
   const {
     data: { user },
@@ -39,6 +44,21 @@ export default async function Home() {
 
     return { left, bottom, size, duration, delay, drift }
   })
+
+  const authErrorMessage =
+    error === 'no_code'
+      ? 'GitHub sign-in did not return an authorization code.'
+      : error === 'auth_failed'
+        ? reason ?? 'GitHub sign-in failed. Please try again.'
+        : error === 'invalid_profile'
+          ? 'Your GitHub profile data could not be read.'
+          : error === 'profile_lookup_failed'
+            ? 'We could not prepare your kingdom profile.'
+            : error === 'profile_create_failed'
+              ? 'We could not save your profile.'
+              : error === 'token_store_failed'
+                ? 'We could not store your GitHub access token.'
+                : null
 
   return (
     <main className="min-h-screen text-[var(--silver-1)]">
@@ -153,7 +173,7 @@ export default async function Home() {
 
             <div id="enlist" className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <div className="min-w-[260px]">
-                <GitHubSignInButton />
+                <GitHubSignInButton initialError={authErrorMessage} />
               </div>
               <Link href="#chronicle" className="realm-button realm-button-secondary rounded-[18px] px-8 py-3">
                 Witness the Realm
@@ -250,7 +270,7 @@ export default async function Home() {
               Bring your GitHub account into CodeKingdom and see your real coding history become your territory.
             </p>
             <div className="mt-6">
-              <GitHubSignInButton />
+              <GitHubSignInButton initialError={authErrorMessage} />
             </div>
           </div>
         </div>

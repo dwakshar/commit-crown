@@ -110,6 +110,7 @@ export class KingdomScene extends Phaser.Scene {
     this.registerCameraDrag()
 
     this.game.events.on('kingdom-updated', this.handleKingdomUpdated, this)
+    this.game.events.on('focus-building', this.selectBuilding, this)
     this.scale.on('resize', this.handleResize, this)
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.handleShutdown, this)
   }
@@ -330,6 +331,7 @@ export class KingdomScene extends Phaser.Scene {
 
   private handleShutdown(): void {
     this.game.events.off('kingdom-updated', this.handleKingdomUpdated, this)
+    this.game.events.off('focus-building', this.selectBuilding, this)
     this.scale.off('resize', this.handleResize, this)
     this.input.off(Phaser.Input.Events.POINTER_DOWN, this.handlePointerDown, this)
     this.input.off(Phaser.Input.Events.POINTER_MOVE, this.handlePointerMove, this)

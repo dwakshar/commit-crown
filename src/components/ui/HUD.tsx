@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { formatDistanceToNowStrict } from "date-fns";
+import Link from "next/link";
 
 import { AchievementToast } from "@/src/components/ui/AchievementToast";
 import { NotificationBell } from "@/src/components/ui/NotificationBell";
@@ -10,6 +11,7 @@ import { RealmTopNav } from "@/src/components/ui/RealmTopNav";
 import {
   getBuildingMetadata,
   getBuildingName,
+  getUpgradeCost,
   getSyncCooldownRemaining,
 } from "@/src/lib/kingdom";
 import { hasStarterKingdomState } from "@/src/lib/onboarding";
@@ -118,15 +120,6 @@ function getBuildingSubtitle(building: BuildingData) {
   return getBuildingMetadata(building.type).effect;
 }
 
-function getPseudoUpgradeCost(building: BuildingData) {
-  const base = 180 + building.level * 60;
-
-  return {
-    stone: base,
-    iron: Math.round(base * 0.42),
-  };
-}
-
 function getBuildingMonogram(building: BuildingData) {
   if (building.type === "town_hall") {
     return "GH";
@@ -147,10 +140,14 @@ export function HUD() {
   const kingdom = useKingdomStore((state) => state.kingdom);
   const selectedBuilding = useKingdomStore((state) => state.selectedBuilding);
   const selectBuilding = useKingdomStore((state) => state.selectBuilding);
+  const setBuildings = useKingdomStore((state) => state.setBuildings);
+  const updateGold = useKingdomStore((state) => state.updateGold);
   const isSyncing = useKingdomStore((state) => state.isSyncing);
   const syncError = useKingdomStore((state) => state.syncError);
   const clearSyncError = useKingdomStore((state) => state.clearSyncError);
   const syncKingdom = useKingdomStore((state) => state.syncKingdom);
+  const [isUpgrading, setIsUpgrading] = useState(false);
+  const [upgradeError, setUpgradeError] = useState<string | null>(null);
   const cooldownRemaining = useMemo(
     () => getSyncCooldownRemaining(kingdom?.last_synced_at ?? null),
     [kingdom?.last_synced_at]
@@ -168,9 +165,12 @@ export function HUD() {
   const showStarterMessage = hasStarterKingdomState(kingdom);
   const structures = kingdom.buildings;
   const activeBuilding = selectedBuilding ?? structures[0] ?? null;
-  const upgradeCost = activeBuilding
-    ? getPseudoUpgradeCost(activeBuilding)
-    : null;
+  const upgradeCost = activeBuilding ? getUpgradeCost(activeBuilding) : null;
+  const canUpgrade =
+    Boolean(activeBuilding) &&
+    activeBuilding.level < 5 &&
+    kingdom.gold >= (upgradeCost ?? 0) &&
+    !isUpgrading;
 
   const handleSync = async () => {
     clearSyncError();
@@ -178,6 +178,68 @@ export function HUD() {
     try {
       await syncKingdom();
     } catch {}
+  };
+
+  const handleSelectBuilding = (building: BuildingData) => {
+    setUpgradeError(null);
+    selectBuilding(building);
+    window.dispatchEvent(
+      new CustomEvent<BuildingData>("codekingdom:focus-building", {
+        detail: building,
+      })
+    );
+  };
+
+  const handleUpgrade = async () => {
+    if (!activeBuilding || !canUpgrade) {
+      return;
+    }
+
+    setIsUpgrading(true);
+    setUpgradeError(null);
+
+    try {
+      const response = await fetch("/api/kingdom/upgrade-building", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ buildingId: activeBuilding.id }),
+      });
+
+      const payload = (await response.json()) as {
+        error?: string;
+        building?: { id: string; level: number };
+        gold?: number;
+      };
+
+      if (!response.ok || !payload.building || typeof payload.gold !== "number") {
+        throw new Error(payload.error ?? "Upgrade failed");
+      }
+
+      const nextBuildings = kingdom.buildings.map((building) =>
+        building.id === payload.building?.id
+          ? {
+              ...building,
+              level: payload.building.level as 1 | 2 | 3 | 4 | 5,
+            }
+          : building
+      );
+      const nextSelectedBuilding = nextBuildings.find(
+        (building) => building.id === payload.building?.id
+      );
+
+      setBuildings(nextBuildings);
+      updateGold(payload.gold);
+
+      if (nextSelectedBuilding) {
+        handleSelectBuilding(nextSelectedBuilding);
+      }
+    } catch (error) {
+      setUpgradeError(error instanceof Error ? error.message : "Upgrade failed");
+    } finally {
+      setIsUpgrading(false);
+    }
   };
 
   return (
@@ -231,16 +293,22 @@ export function HUD() {
           </div>
 
           <div className="flex items-center gap-2 px-4">
-            <button className="pointer-events-auto flex h-11 w-11 items-center justify-center border border-[var(--b1)] bg-[rgba(12,16,24,0.86)] text-[11px] uppercase tracking-[0.18em] text-[var(--silver-1)]">
+            <Link
+              href="/leaderboard"
+              className="pointer-events-auto flex h-11 w-11 items-center justify-center border border-[var(--b1)] bg-[rgba(12,16,24,0.86)] text-[11px] uppercase tracking-[0.18em] text-[var(--silver-1)]">
               Map
-            </button>
-            <button className="pointer-events-auto flex h-11 w-11 items-center justify-center border border-[var(--b1)] bg-[rgba(12,16,24,0.86)] text-[11px] uppercase tracking-[0.18em] text-[var(--silver-1)]">
+            </Link>
+            <Link
+              href="/raids/history"
+              className="pointer-events-auto flex h-11 w-11 items-center justify-center border border-[var(--b1)] bg-[rgba(12,16,24,0.86)] text-[11px] uppercase tracking-[0.18em] text-[var(--silver-1)]">
               Log
-            </button>
+            </Link>
             <NotificationBell userId={kingdom.userId} />
-            <button className="pointer-events-auto flex h-11 w-11 items-center justify-center border border-[var(--b1)] bg-[rgba(12,16,24,0.86)] text-[11px] uppercase tracking-[0.18em] text-[var(--silver-1)]">
+            <Link
+              href="/marketplace"
+              className="pointer-events-auto flex h-11 w-11 items-center justify-center border border-[var(--b1)] bg-[rgba(12,16,24,0.86)] text-[11px] uppercase tracking-[0.18em] text-[var(--silver-1)]">
               Set
-            </button>
+            </Link>
           </div>
         </div>
       </div>
@@ -334,8 +402,8 @@ export function HUD() {
                 </span>
                 <span className="text-right font-[var(--font-head)] text-[1.15rem] leading-6 text-[var(--silver-0)]">
                   {upgradeCost
-                    ? `${upgradeCost.stone} Stone / ${upgradeCost.iron} Iron`
-                    : "420 Stone / 180 Iron"}
+                    ? `${upgradeCost.toLocaleString()} Gold`
+                    : "Unavailable"}
                 </span>
               </div>
               <div className="flex items-start justify-between gap-4 text-sm">
@@ -348,10 +416,20 @@ export function HUD() {
               </div>
             </div>
 
-            <button className="pointer-events-auto mt-8 w-full border border-[rgba(200,88,26,0.58)] bg-[linear-gradient(180deg,rgba(36,16,10,0.86),rgba(24,10,6,0.92))] px-5 py-4 text-center font-[var(--font-head)] text-[1rem] uppercase tracking-[0.18em] text-[var(--ember-hi)] transition hover:border-[var(--ember)] hover:text-[#ffd2ad]">
-              Upgrade to Level{" "}
-              {activeBuilding ? Math.min(5, activeBuilding.level + 1) : "V"}
+            <button
+              type="button"
+              onClick={handleUpgrade}
+              disabled={!canUpgrade}
+              className="pointer-events-auto mt-8 w-full border border-[rgba(200,88,26,0.58)] bg-[linear-gradient(180deg,rgba(36,16,10,0.86),rgba(24,10,6,0.92))] px-5 py-4 text-center font-[var(--font-head)] text-[1rem] uppercase tracking-[0.18em] text-[var(--ember-hi)] transition hover:border-[var(--ember)] hover:text-[#ffd2ad] disabled:cursor-not-allowed disabled:opacity-55">
+              {isUpgrading
+                ? "Upgrading..."
+                : activeBuilding?.level >= 5
+                  ? "Max Level"
+                  : `Upgrade to Level ${activeBuilding ? Math.min(5, activeBuilding.level + 1) : "V"}`}
             </button>
+            {upgradeError ? (
+              <p className="mt-3 text-sm text-[#ff8e8e]">{upgradeError}</p>
+            ) : null}
           </div>
 
           <div className="space-y-4 px-5 py-5">
@@ -359,7 +437,7 @@ export function HUD() {
               <button
                 key={building.id}
                 type="button"
-                onClick={() => selectBuilding(building)}
+                onClick={() => handleSelectBuilding(building)}
                 className={`pointer-events-auto flex w-full items-center gap-4 border px-4 py-4 text-left transition ${
                   activeBuilding?.id === building.id
                     ? "border-[var(--ember)] bg-[rgba(44,21,13,0.52)] shadow-[inset_0_0_0_1px_rgba(200,88,26,0.15)]"
@@ -400,18 +478,26 @@ export function HUD() {
 
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 border-t border-[var(--b1)] bg-[rgba(4,6,10,0.9)] px-3 py-3">
           <div className="flex items-center gap-2 overflow-x-auto">
-            <button className="pointer-events-auto realm-button realm-button-secondary min-w-[120px] px-4 py-3">
+            <Link
+              href="/marketplace"
+              className="pointer-events-auto realm-button realm-button-secondary min-w-[120px] px-4 py-3">
               Build
-            </button>
-            <button className="pointer-events-auto realm-button realm-button-secondary min-w-[120px] px-4 py-3">
+            </Link>
+            <Link
+              href="/raids/history"
+              className="pointer-events-auto realm-button realm-button-secondary min-w-[120px] px-4 py-3">
               Raid
-            </button>
-            <button className="pointer-events-auto realm-button realm-button-secondary min-w-[120px] px-4 py-3">
+            </Link>
+            <Link
+              href="/leaderboard"
+              className="pointer-events-auto realm-button realm-button-secondary min-w-[120px] px-4 py-3">
               Visit
-            </button>
-            <button className="pointer-events-auto realm-button realm-button-secondary min-w-[170px] px-4 py-3 text-[var(--ember-hi)]">
+            </Link>
+            <Link
+              href="/leaderboard"
+              className="pointer-events-auto realm-button realm-button-secondary min-w-[170px] px-4 py-3 text-[var(--ember-hi)]">
               Declare War
-            </button>
+            </Link>
             <div className="min-w-2 grow" />
             <button
               type="button"

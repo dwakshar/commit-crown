@@ -91,6 +91,19 @@ export function PhaserGame({ kingdomData, userId, isOwner }: PhaserGameProps) {
   }, [])
 
   useEffect(() => {
+    const handleFocusBuilding = (event: Event) => {
+      const customEvent = event as CustomEvent<BuildingData>
+      gameRef.current?.events.emit('focus-building', customEvent.detail)
+    }
+
+    window.addEventListener('codekingdom:focus-building', handleFocusBuilding as EventListener)
+
+    return () => {
+      window.removeEventListener('codekingdom:focus-building', handleFocusBuilding as EventListener)
+    }
+  }, [])
+
+  useEffect(() => {
     const game = gameRef.current
 
     if (!game) {

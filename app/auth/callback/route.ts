@@ -58,7 +58,7 @@ export async function GET(request: Request) {
     const url = new URL(request.url)
     const { searchParams, origin } = url
     const code = searchParams.get('code')
-    if (!code) return NextResponse.redirect(new URL('/login?error=no_code', origin))
+    if (!code) return NextResponse.redirect(new URL('/?error=no_code', origin))
 
     const supabase = await createClient()
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
@@ -70,19 +70,19 @@ export async function GET(request: Request) {
             origin,
         })
 
-        const redirectUrl = new URL('/login', origin)
+        const redirectUrl = new URL('/', origin)
         redirectUrl.searchParams.set('error', 'auth_failed')
         redirectUrl.searchParams.set('reason', error.message.slice(0, 180))
         return NextResponse.redirect(redirectUrl)
     }
 
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.redirect(new URL('/login', origin))
+    if (!user) return NextResponse.redirect(new URL('/?error=auth_failed', origin))
 
     const metadataResult = githubMetadataSchema.safeParse(user.user_metadata)
 
     if (!metadataResult.success) {
-        return NextResponse.redirect(new URL('/login?error=invalid_profile', origin))
+        return NextResponse.redirect(new URL('/?error=invalid_profile', origin))
     }
 
     const metadata = metadataResult.data
@@ -95,7 +95,7 @@ export async function GET(request: Request) {
             githubUsername,
         )
     } catch {
-        return NextResponse.redirect(new URL('/login?error=profile_lookup_failed', origin))
+        return NextResponse.redirect(new URL('/?error=profile_lookup_failed', origin))
     }
 
     // Create profile if first login
@@ -108,7 +108,7 @@ export async function GET(request: Request) {
     }, { onConflict: 'id' })
 
     if (profileError) {
-        return NextResponse.redirect(new URL('/login?error=profile_create_failed', origin))
+        return NextResponse.redirect(new URL('/?error=profile_create_failed', origin))
     }
 
     const session = data.session as AuthSessionWithProviderToken | null
@@ -122,7 +122,7 @@ export async function GET(request: Request) {
         }, { onConflict: 'user_id' })
 
         if (tokenError) {
-            return NextResponse.redirect(new URL('/login?error=token_store_failed', origin))
+            return NextResponse.redirect(new URL('/?error=token_store_failed', origin))
         }
     }
 
