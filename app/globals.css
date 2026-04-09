@@ -1,12 +1,41 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --font-geist-sans:
-    "Segoe UI", "Helvetica Neue", Helvetica, Arial, ui-sans-serif, system-ui, sans-serif;
-  --font-geist-mono:
-    "Cascadia Code", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  --background: #080b12;
+  --foreground: #dce5ee;
+  --font-geist-sans: var(--font-body), Georgia, serif;
+  --font-geist-mono: "Cascadia Code", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  --abyss: #030406;
+  --forge-dark: #08090e;
+  --steel-0: #0c0f16;
+  --steel-1: #10141e;
+  --steel-2: #161c28;
+  --steel-3: #1e2636;
+  --steel-4: #273040;
+  --steel-5: #32404e;
+  --steel-6: #445260;
+  --plate-hi: #6a7e92;
+  --plate-sheen: #8fa4b8;
+  --plate-gleam: #b0c4d6;
+  --silver-0: #f0f4f8;
+  --silver-1: #dce5ee;
+  --silver-2: #a8b8c8;
+  --silver-3: #6a7e8e;
+  --silver-4: #3a4a58;
+  --wood-1: #1c1408;
+  --wood-2: #2a1e0e;
+  --wood-3: #3e2c18;
+  --ember: #c8581a;
+  --ember-lo: #7a3010;
+  --ember-hi: #e07030;
+  --ember-glow: rgba(200, 88, 26, 0.18);
+  --ember-mist: rgba(200, 88, 26, 0.08);
+  --steel-glow: rgba(100, 130, 160, 0.1);
+  --steel-light-glow: rgba(140, 170, 200, 0.06);
+  --b0: rgba(80, 105, 130, 0.12);
+  --b1: rgba(100, 130, 160, 0.22);
+  --b2: rgba(130, 160, 190, 0.4);
+  --b3: rgba(160, 190, 220, 0.6);
 }
 
 @theme inline {
@@ -16,17 +45,156 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body), Georgia, serif;
+  line-height: 1.7;
+  background-image:
+    radial-gradient(ellipse at top, rgba(24, 34, 52, 0.78) 0%, transparent 54%),
+    radial-gradient(ellipse at bottom right, rgba(200, 88, 26, 0.06) 0%, transparent 34%),
+    linear-gradient(180deg, var(--abyss) 0%, var(--steel-0) 48%, #080a10 100%);
+  min-height: 100vh;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.32;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    180deg,
+    transparent,
+    transparent 3px,
+    rgba(100, 130, 160, 0.018) 3px,
+    rgba(100, 130, 160, 0.018) 4px
+  );
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-head), serif;
+}
+
+.realm-display {
+  font-family: var(--font-display), serif;
+  color: var(--silver-0);
+  letter-spacing: 0.03em;
+}
+
+.realm-page-title {
+  font-family: var(--font-display), serif;
+  color: var(--silver-0);
+  line-height: 1.05;
+}
+
+.realm-lore {
+  font-family: var(--font-lore), Georgia, serif;
+  font-style: italic;
+  color: var(--silver-2);
+  line-height: 1.8;
+}
+
+.realm-label {
+  font-family: var(--font-head), serif;
+  font-size: 12px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--silver-3);
+}
+
+.realm-panel {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--b1);
+  background:
+    linear-gradient(180deg, rgba(22, 28, 40, 0.96) 0%, rgba(9, 12, 18, 0.98) 100%);
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.48),
+    inset 0 1px 0 rgba(176, 196, 214, 0.06);
+}
+
+.realm-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(135deg, rgba(176, 196, 214, 0.05) 0%, transparent 36%),
+    linear-gradient(315deg, rgba(0, 0, 0, 0.16) 0%, transparent 34%);
+}
+
+.realm-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--b2), transparent);
+}
+
+.realm-button {
+  font-family: var(--font-head), serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  transition:
+    transform 0.24s ease,
+    box-shadow 0.24s ease,
+    background 0.24s ease,
+    border-color 0.24s ease,
+    color 0.24s ease;
+}
+
+.realm-button:hover {
+  transform: translateY(-2px);
+}
+
+.realm-button-primary {
+  background: linear-gradient(160deg, var(--ember-hi) 0%, var(--ember) 50%, var(--ember-lo) 100%);
+  color: var(--silver-0);
+  border: 1px solid rgba(200, 88, 26, 0.55);
+  box-shadow: 0 8px 30px rgba(200, 88, 26, 0.28);
+}
+
+.realm-button-primary:hover {
+  box-shadow: 0 12px 42px rgba(200, 88, 26, 0.4);
+}
+
+.realm-button-secondary {
+  background: rgba(16, 20, 30, 0.78);
+  color: var(--silver-1);
+  border: 1px solid var(--b2);
+}
+
+.realm-button-secondary:hover {
+  background: var(--steel-glow);
+  border-color: var(--b3);
+}
+
+.realm-orb {
+  background:
+    radial-gradient(circle at 35% 35%, var(--plate-hi) 0%, var(--steel-5) 58%, var(--steel-3) 100%);
+  box-shadow: inset 0 1px 0 rgba(220, 229, 238, 0.18);
+}
+
+.realm-sheen {
+  background:
+    linear-gradient(180deg, rgba(176, 196, 214, 0.14) 0%, transparent 55%);
 }
 
 @keyframes toast-in {

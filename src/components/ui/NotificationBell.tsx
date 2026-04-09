@@ -34,28 +34,28 @@ export function NotificationBell({ userId }: { userId: string }) {
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="relative flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-white/85 transition hover:bg-white/10"
+        className="realm-button realm-button-secondary relative flex h-12 min-w-12 items-center justify-center rounded-[16px] px-4 text-[var(--silver-1)]"
         aria-label="Open notifications"
       >
-        <span className="text-lg">Bell</span>
+        <span className="text-xs uppercase tracking-[0.22em]">Bell</span>
         {unreadCount > 0 ? (
-          <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#C9A84C] px-1 text-[11px] font-bold text-[#1b1508]">
+          <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--ember)] px-1 text-[11px] font-bold text-[var(--silver-0)]">
             {unreadCount}
           </span>
         ) : null}
       </button>
 
       {open ? (
-        <div className="absolute right-0 top-14 z-50 w-[360px] rounded-[26px] border border-white/10 bg-[linear-gradient(180deg,rgba(20,15,30,0.98),rgba(10,7,16,0.97))] p-4 text-[#f7f1e4] shadow-[0_24px_80px_rgba(0,0,0,0.5)] backdrop-blur-md">
+        <div className="realm-panel absolute right-0 top-14 z-50 w-[360px] rounded-[26px] p-4 text-[var(--silver-1)]">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs uppercase tracking-[0.24em] text-[#C9A84C]/75">Notifications</p>
-              <p className="mt-1 text-sm text-white/60">Last 10 kingdom events</p>
+              <p className="realm-label text-[var(--plate-hi)]">Notifications</p>
+              <p className="mt-1 text-sm text-[var(--silver-2)]">Last 10 kingdom events</p>
             </div>
             <button
               type="button"
               onClick={handleMarkAllRead}
-              className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/75 transition hover:bg-white/10"
+              className="realm-button realm-button-secondary rounded-[14px] px-3 py-2 text-[11px]"
             >
               Mark all as read
             </button>
@@ -68,21 +68,21 @@ export function NotificationBell({ userId }: { userId: string }) {
               notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`rounded-2xl border border-white/10 border-l-4 p-3 ${NOTIFICATION_STYLES[notification.type]}`}
+                  className={`rounded-2xl border border-[var(--b0)] border-l-4 p-3 ${NOTIFICATION_STYLES[notification.type]}`}
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <p className="text-xs uppercase tracking-[0.2em] text-white/55">
+                    <p className="text-xs uppercase tracking-[0.2em] text-[var(--silver-3)]">
                       {notification.type.replaceAll('_', ' ')}
                     </p>
-                    <span className="text-[11px] text-white/45">
+                    <span className="text-[11px] text-[var(--silver-3)]">
                       {formatDistanceToNowStrict(new Date(notification.created_at), { addSuffix: true })}
                     </span>
                   </div>
-                  <p className="mt-2 text-sm text-white/85">{notification.message}</p>
+                  <p className="mt-2 text-sm text-[var(--silver-1)]">{notification.message}</p>
                 </div>
               ))
             ) : (
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/60">
+              <div className="rounded-2xl border border-[var(--b0)] bg-[rgba(255,255,255,0.03)] p-4 text-sm text-[var(--silver-2)]">
                 No messages from the realm yet.
               </div>
             )}

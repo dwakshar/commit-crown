@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 
 import { formatDistanceToNowStrict } from 'date-fns'
 import Image from 'next/image'
+import Link from 'next/link'
 
 import { AchievementToast } from '@/src/components/ui/AchievementToast'
 import { NotificationBell } from '@/src/components/ui/NotificationBell'
@@ -46,11 +47,11 @@ function ResourceCard({
   value: number
 }) {
   return (
-    <div className="flex min-w-[84px] flex-col items-center rounded-2xl border border-white/10 bg-black/25 px-3 py-2 text-center md:min-w-[132px] md:flex-row md:justify-start md:gap-3 md:px-4">
-      <span className="text-sm font-semibold uppercase tracking-[0.18em] text-[#C9A84C]">{icon}</span>
+    <div className="realm-panel flex min-w-[108px] flex-col items-center rounded-[20px] px-3 py-3 text-center md:min-w-[148px] md:flex-row md:justify-start md:gap-3 md:px-4">
+      <span className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--ember-hi)]">{icon}</span>
       <div>
-        <p className="hidden text-[11px] uppercase tracking-[0.24em] text-white/45 md:block">{label}</p>
-        <p className="mt-1 text-sm font-semibold text-[#C9A84C] md:text-base">
+        <p className="hidden text-[11px] uppercase tracking-[0.24em] text-[var(--silver-3)] md:block">{label}</p>
+        <p className="mt-1 text-sm font-semibold text-[var(--silver-0)] md:text-base">
           <CountUpValue value={value} />
         </p>
       </div>
@@ -77,6 +78,8 @@ export function HUD() {
     ? formatDistanceToNowStrict(new Date(kingdom.last_synced_at), { addSuffix: true })
     : 'Never synced'
   const showStarterMessage = hasStarterKingdomState(kingdom)
+  const totalStructures = kingdom.buildings.length
+  const developedStructures = kingdom.buildings.filter((building) => !building.isPlaceholder).length
 
   const handleSync = async () => {
     clearSyncError()
@@ -87,87 +90,138 @@ export function HUD() {
   }
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-20 flex flex-col justify-between p-3 text-[#f7f1e4] md:p-6">
-      <div className="pointer-events-auto rounded-[28px] border border-white/10 bg-[linear-gradient(135deg,rgba(9,7,16,0.92),rgba(26,18,35,0.88))] p-4 shadow-[0_24px_80px_rgba(0,0,0,0.45)] backdrop-blur-md">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div className="pointer-events-none absolute inset-0 z-20 flex flex-col justify-between p-3 text-[var(--silver-1)] md:p-5">
+      <div className="pointer-events-auto realm-panel rounded-[30px] p-4 md:p-5">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex items-center gap-4">
             {kingdom.ownerAvatarUrl ? (
               <Image
                 src={kingdom.ownerAvatarUrl}
                 alt={kingdom.ownerName}
-                className="h-14 w-14 rounded-2xl border border-[#C9A84C]/50 object-cover shadow-[0_0_0_4px_rgba(201,168,76,0.14)]"
+                className="h-16 w-16 rounded-[20px] border border-[var(--b2)] object-cover shadow-[0_0_0_4px_rgba(143,164,184,0.08)]"
                 width={56}
                 height={56}
               />
             ) : (
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[#C9A84C]/50 bg-[#241d11] text-lg font-semibold text-[#C9A84C]">
+              <div className="realm-panel flex h-16 w-16 items-center justify-center rounded-[20px] text-lg font-semibold text-[var(--silver-0)]">
                 {kingdom.ownerName.slice(0, 1).toUpperCase()}
               </div>
             )}
-            <div>
-              <p className="text-xs uppercase tracking-[0.28em] text-white/45">CodeKingdom</p>
-              <h1 className="mt-1 text-2xl font-semibold tracking-tight md:text-3xl">{kingdom.name}</h1>
+            <div className="min-w-0">
+              <p className="realm-label">The Iron Dominion</p>
+              <h1 className="realm-page-title mt-1 text-[clamp(1.7rem,3vw,2.9rem)]">{kingdom.name}</h1>
+              <p className="realm-lore mt-1 text-sm md:text-base">
+                {showStarterMessage
+                  ? 'The first keep stands. Ship code to awaken the rest of the realm.'
+                  : 'Your realm now breathes with forged structures, prestige, and momentum.'}
+              </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-4 gap-2 md:flex md:flex-wrap md:justify-end">
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-4 xl:flex xl:flex-wrap xl:justify-end">
             <ResourceCard icon="Gold" label="Gold" value={kingdom.gold} />
             <ResourceCard icon="Star" label="Prestige" value={kingdom.prestige} />
             <ResourceCard icon="Pop" label="Population" value={kingdom.population} />
             <ResourceCard icon="Def" label="Defense" value={kingdom.defense_rating} />
           </div>
         </div>
+
+        <div className="realm-divider my-4" />
+
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-wrap gap-2">
+            <Link href="/leaderboard" className="realm-button realm-button-secondary rounded-[16px] px-4 py-3">
+              Hall of Legend
+            </Link>
+            <Link href="/marketplace" className="realm-button realm-button-secondary rounded-[16px] px-4 py-3">
+              Royal Market
+            </Link>
+            <Link href={`/visit/${kingdom.ownerName.toLowerCase().replace(/\s+/g, '-')}`} className="realm-button realm-button-secondary rounded-[16px] px-4 py-3 opacity-60 pointer-events-none">
+              Realm Banner
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 text-sm md:flex md:flex-wrap">
+            <div className="realm-panel rounded-[18px] px-4 py-3">
+              <p className="realm-label">Structures</p>
+              <p className="mt-1 font-semibold text-[var(--silver-0)]">{developedStructures}/{Math.max(totalStructures, kingdom.building_slots)}</p>
+            </div>
+            <div className="realm-panel rounded-[18px] px-4 py-3">
+              <p className="realm-label">Last Sync</p>
+              <p className="mt-1 font-semibold text-[var(--silver-0)]">{lastSyncedLabel}</p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="pointer-events-none flex items-end justify-between gap-4">
-        <div className="pointer-events-auto max-w-sm">
+      <div className="pointer-events-none grid gap-4 xl:grid-cols-[320px,1fr,420px] xl:items-end">
+        <div className="pointer-events-auto hidden xl:block">
+          <div className="realm-panel rounded-[28px] p-5">
+            <p className="realm-label">Realm Objectives</p>
+            <h2 className="mt-2 text-2xl font-semibold text-[var(--silver-0)]">Forge the capital</h2>
+            <p className="realm-lore mt-2 text-sm">
+              Every commit raises your standing. Sync often, unlock stronger structures, and push the frontier beyond the first wall.
+            </p>
+            <div className="mt-5 space-y-3">
+              <div className="rounded-[18px] border border-[var(--b0)] bg-[rgba(255,255,255,0.02)] px-4 py-3">
+                <p className="realm-label">Primary Quest</p>
+                <p className="mt-1 text-sm text-[var(--silver-1)]">Reach your next sync and expand the keep with fresh GitHub activity.</p>
+              </div>
+              <div className="rounded-[18px] border border-[var(--b0)] bg-[rgba(255,255,255,0.02)] px-4 py-3">
+                <p className="realm-label">Current Mood</p>
+                <p className="mt-1 text-sm text-[var(--silver-1)]">{showStarterMessage ? 'Founding age' : 'Expansion age'}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div />
+
+        <div className="pointer-events-auto">
           {showStarterMessage ? (
-            <div className="mb-3 rounded-2xl border border-[#C9A84C]/25 bg-[#1d1620]/88 px-4 py-3 text-sm text-[#f3dfae] backdrop-blur-md">
-              Start committing to grow your kingdom
+            <div className="mb-3 rounded-[22px] border border-[rgba(200,88,26,0.35)] bg-[rgba(44,21,13,0.9)] px-4 py-3 text-sm text-[#f3c3a5]">
+              The realm is in its founding age. Your first commit surge will awaken new districts.
             </div>
           ) : null}
           {syncError ? (
-            <div className="rounded-2xl border border-[#a84d4d] bg-[#2a1111]/90 px-4 py-3 text-sm text-[#ffc5c5] backdrop-blur-md">
+            <div className="rounded-[22px] border border-[#a84d4d] bg-[#2a1111]/90 px-4 py-3 text-sm text-[#ffc5c5]">
               {syncError}
             </div>
           ) : null}
-        </div>
 
-        <div className="pointer-events-auto rounded-[26px] border border-white/10 bg-[linear-gradient(135deg,rgba(9,7,16,0.92),rgba(26,18,35,0.88))] p-3 shadow-[0_24px_80px_rgba(0,0,0,0.45)] backdrop-blur-md">
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={handleSync}
-              disabled={isSyncing || cooldownRemaining > 0}
-              className="flex min-w-[220px] items-center justify-center gap-3 rounded-2xl bg-[#C9A84C] px-4 py-3 text-sm font-semibold text-[#22190b] transition hover:bg-[#d7b864] disabled:cursor-not-allowed disabled:bg-[#6e5b25] disabled:text-[#d2c7a3]"
-            >
-              <span
-                className={`inline-block h-4 w-4 rounded-full border-2 border-current border-t-transparent ${
-                  isSyncing ? 'animate-spin' : 'hidden'
-                }`}
-              />
-              <span>{isSyncing ? 'Syncing Kingdom...' : 'Sync With GitHub'}</span>
-            </button>
+          <div className="realm-panel rounded-[28px] p-3">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center">
+              <button
+                type="button"
+                onClick={handleSync}
+                disabled={isSyncing || cooldownRemaining > 0}
+                className="realm-button realm-button-primary flex min-w-[220px] items-center justify-center gap-3 rounded-[18px] px-5 py-4 disabled:cursor-not-allowed disabled:opacity-55"
+              >
+                <span
+                  className={`inline-block h-4 w-4 rounded-full border-2 border-current border-t-transparent ${
+                    isSyncing ? 'animate-spin' : 'hidden'
+                  }`}
+                />
+                <span>{isSyncing ? 'Forging Sync...' : 'Sync With GitHub'}</span>
+              </button>
 
-            <div className="hidden text-right text-xs text-white/60 md:block">
-              <p>Last synced {lastSyncedLabel}</p>
-              <p>{cooldownRemaining > 0 ? `Ready in ${cooldownRemaining}m` : 'Sync available now'}</p>
+              <div className="grow text-xs text-[var(--silver-2)]">
+                <p>Last synced {lastSyncedLabel}</p>
+                <p>{cooldownRemaining > 0 ? `Ready again in ${cooldownRemaining} minutes` : 'Forge pulse available now'}</p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <NotificationBell userId={kingdom.userId} />
+
+                <button
+                  type="button"
+                  className="realm-button realm-button-secondary flex h-12 items-center justify-center rounded-[16px] px-4"
+                  aria-label="Kingdom settings"
+                >
+                  Set
+                </button>
+              </div>
             </div>
-
-            <NotificationBell userId={kingdom.userId} />
-
-            <button
-              type="button"
-              className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-xs font-semibold uppercase tracking-[0.18em] text-white/80 transition hover:bg-white/10"
-              aria-label="Kingdom settings"
-            >
-              Set
-            </button>
-          </div>
-
-          <div className="mt-2 text-center text-xs text-white/60 md:hidden">
-            <p>Last synced {lastSyncedLabel}</p>
-            <p>{cooldownRemaining > 0 ? `Ready in ${cooldownRemaining}m` : 'Sync available now'}</p>
           </div>
         </div>
       </div>

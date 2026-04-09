@@ -212,16 +212,16 @@ export function ShopItemCard({
   }
 
   return (
-    <article className="group relative overflow-hidden rounded-[28px] border border-[#C9A84C]/15 bg-[linear-gradient(180deg,rgba(31,23,39,0.98),rgba(14,11,19,0.98))] p-4 shadow-[0_20px_60px_rgba(0,0,0,0.35)] transition hover:-translate-y-1 hover:border-[#C9A84C]/35">
+    <article className="realm-panel group relative overflow-hidden rounded-[28px] p-4 transition hover:-translate-y-1 hover:border-[var(--b3)]">
       {item.owned ? (
-        <div className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-[#f3d47f]/35 bg-[#C9A84C] text-[#24180a] shadow-[0_0_24px_rgba(201,168,76,0.35)]">
+        <div className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(200,88,26,0.45)] bg-[var(--ember)] text-[var(--silver-0)] shadow-[0_0_24px_rgba(200,88,26,0.35)]">
           <svg viewBox="0 0 20 20" aria-hidden="true" className="h-4 w-4 fill-current">
             <path d="M7.7 13.6 4.5 10.4l-1.4 1.4 4.6 4.6L17 7.1l-1.4-1.4z" />
           </svg>
         </div>
       ) : null}
 
-      <div className="relative overflow-hidden rounded-[22px] border border-white/10 bg-[radial-gradient(circle_at_top,rgba(201,168,76,0.2),transparent_35%),linear-gradient(135deg,#2b2136_0%,#17111f_50%,#0e0b14_100%)]">
+      <div className="relative overflow-hidden rounded-[22px] border border-[var(--b1)] bg-[radial-gradient(circle_at_top,rgba(200,88,26,0.14),transparent_34%),linear-gradient(135deg,var(--steel-3)_0%,var(--steel-1)_48%,#0b1017_100%)]">
         {isPreviewImage(item.assetKey) ? (
           <Image
             src={item.assetKey ?? ''}
@@ -234,8 +234,8 @@ export function ShopItemCard({
         ) : (
           <div className="flex h-52 items-center justify-center px-6 text-center">
             <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-[#C9A84C]/70">{getShopItemLabel(item.type)}</p>
-              <p className="mt-3 text-2xl font-semibold text-[#f7f1e4]">{item.name}</p>
+              <p className="realm-label text-[var(--plate-hi)]">{getShopItemLabel(item.type)}</p>
+              <p className="realm-page-title mt-3 text-2xl">{item.name}</p>
             </div>
           </div>
         )}
@@ -243,10 +243,10 @@ export function ShopItemCard({
 
       <div className="mt-5 flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-[#f7f1e4]">{item.name}</h2>
-          <p className="mt-2 text-sm text-white/65">{item.description ?? 'A handcrafted reward for your kingdom.'}</p>
+          <h2 className="text-xl font-semibold text-[var(--silver-0)]">{item.name}</h2>
+          <p className="realm-lore mt-2 text-sm">{item.description ?? 'A handcrafted reward for your kingdom.'}</p>
         </div>
-        <span className="shrink-0 rounded-full border border-[#C9A84C]/25 bg-[#1e1710] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#d8bc74]">
+        <span className="shrink-0 rounded-full border border-[var(--b1)] bg-[rgba(255,255,255,0.03)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--silver-2)]">
           {getShopItemLabel(item.type)}
         </span>
       </div>

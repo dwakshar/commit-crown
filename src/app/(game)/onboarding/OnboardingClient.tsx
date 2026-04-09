@@ -191,21 +191,35 @@ export function OnboardingClient({
   }
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,rgba(201,168,76,0.2),transparent_28%),linear-gradient(180deg,#17111e_0%,#09070d_100%)] px-4 py-10 text-[#f5efe1] sm:px-6">
-      <div className="mx-auto max-w-5xl">
+    <main className="relative min-h-screen overflow-hidden px-4 py-10 text-[var(--silver-1)] sm:px-6">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(120,145,170,0.18),transparent_45%),radial-gradient(ellipse_at_bottom,rgba(200,88,26,0.08),transparent_35%),linear-gradient(180deg,#030406_0%,#090d15_42%,#05070b_100%)]" />
+        <div className="absolute left-[8%] top-[12%] h-64 w-64 rounded-full bg-[radial-gradient(circle,rgba(200,88,26,0.12),transparent_70%)] blur-3xl" />
+        <div className="absolute right-[10%] top-[20%] h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(143,164,184,0.12),transparent_68%)] blur-3xl" />
+      </div>
+
+      <div className="relative mx-auto max-w-6xl">
+        <div className="mb-8 text-center">
+          <p className="realm-label text-[var(--plate-hi)]">CodeKingdom Initiation</p>
+          <h1 className="realm-page-title mt-3 text-[clamp(2.5rem,5vw,4.7rem)]">Forge your realm</h1>
+          <p className="realm-lore mx-auto mt-3 max-w-3xl text-base">
+            Every repository becomes territory. Every streak hardens the walls. Shape the kingdom that your GitHub history deserves.
+          </p>
+        </div>
+
         <div className="mb-6 flex items-center justify-center gap-3">
           {[1, 2, 3].map((currentStep) => (
             <div
               key={currentStep}
               className={[
                 'h-2 rounded-full transition-all duration-500',
-                step >= currentStep ? 'w-20 bg-[#C9A84C]' : 'w-10 bg-white/10',
+                step >= currentStep ? 'w-24 bg-[var(--ember)]' : 'w-12 bg-[rgba(255,255,255,0.08)]',
               ].join(' ')}
             />
           ))}
         </div>
 
-        <div className="relative min-h-[620px] rounded-[36px] border border-[#C9A84C]/20 bg-[linear-gradient(180deg,rgba(24,17,32,0.96),rgba(10,8,15,0.97))] p-6 shadow-[0_28px_110px_rgba(0,0,0,0.45)] sm:p-10">
+        <div className="realm-panel relative min-h-[680px] rounded-[36px] p-6 sm:p-10">
           <section
             className={[
               'absolute inset-0 p-6 transition duration-500 sm:p-10',
@@ -214,16 +228,16 @@ export function OnboardingClient({
           >
             <div className="grid h-full gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
               <div>
-                <p className="text-xs uppercase tracking-[0.35em] text-[#C9A84C]/75">Step 1</p>
-                <h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">
+                <p className="realm-label text-[var(--plate-hi)]">Step 1</p>
+                <h1 className="realm-page-title mt-3 text-4xl sm:text-5xl">
                   Name your kingdom
                 </h1>
-                <p className="mt-4 max-w-xl text-base leading-7 text-white/70">
+                <p className="realm-lore mt-4 max-w-xl text-base">
                   Choose a title worthy of your code. You can change it now and forge the realm in the next step.
                 </p>
 
                 <div className="mt-8">
-                  <label htmlFor="kingdom-name" className="text-sm font-medium text-white/75">
+                  <label htmlFor="kingdom-name" className="realm-label block text-[var(--silver-2)]">
                     Kingdom name
                   </label>
                   <input
@@ -231,11 +245,11 @@ export function OnboardingClient({
                     value={name}
                     maxLength={30}
                     onChange={(event) => setName(event.target.value)}
-                    className="mt-3 w-full rounded-2xl border border-white/10 bg-[#120f1a] px-4 py-4 text-lg text-white outline-none transition placeholder:text-white/25 focus:border-[#C9A84C]/65"
+                    className="mt-3 w-full rounded-[22px] border border-[var(--b1)] bg-[rgba(12,15,22,0.92)] px-5 py-4 text-lg text-[var(--silver-0)] outline-none transition placeholder:text-[var(--silver-4)] focus:border-[var(--ember)]"
                     placeholder="The Commit Crown"
                   />
-                  <div className="mt-3 flex items-center justify-between text-sm text-white/45">
-                    <span>Live preview updates instantly.</span>
+                  <div className="mt-3 flex items-center justify-between text-sm text-[var(--silver-3)]">
+                    <span>The heraldry updates as you type.</span>
                     <span>{trimmedName.length}/30</span>
                   </div>
                 </div>
@@ -246,25 +260,29 @@ export function OnboardingClient({
                   type="button"
                   onClick={handleNext}
                   disabled={isSubmittingName}
-                  className="mt-8 rounded-2xl bg-[#C9A84C] px-6 py-4 text-sm font-semibold text-[#24180a] transition hover:bg-[#ddb966] disabled:cursor-not-allowed disabled:bg-[#6e5b25] disabled:text-[#d2c7a3]"
+                  className="realm-button realm-button-primary mt-8 rounded-[18px] px-6 py-4 disabled:cursor-not-allowed disabled:opacity-55"
                 >
                   {isSubmittingName ? 'Saving name...' : 'Next'}
                 </button>
               </div>
 
-              <div className="rounded-[32px] border border-white/10 bg-[radial-gradient(circle_at_top,rgba(201,168,76,0.15),transparent_30%),linear-gradient(180deg,#1c1525_0%,#0f0c14_100%)] p-8">
-                <p className="text-center text-xs uppercase tracking-[0.3em] text-[#C9A84C]/75">Live Preview</p>
+              <div className="realm-panel rounded-[32px] p-8">
+                <p className="realm-label text-center text-[var(--plate-hi)]">Live Preview</p>
                 <div className="mt-6 flex flex-col items-center">
-                  <div className="relative h-48 w-48">
-                    <div className="absolute left-7 top-16 h-20 w-28 -skew-x-[28deg] rounded-2xl bg-[#362845]" />
-                    <div className="absolute left-12 top-6 h-24 w-24 rotate-45 rounded-3xl border border-[#f1d07a]/30 bg-[linear-gradient(135deg,#d0a958,#885d21)] shadow-[0_18px_40px_rgba(201,168,76,0.28)]" />
-                    <div className="absolute left-6 top-20 h-16 w-16 rounded-t-[28px] bg-[#7a5632]" />
-                    <div className="absolute right-6 top-20 h-16 w-16 rounded-t-[28px] bg-[#7a5632]" />
-                    <div className="absolute left-[84px] top-12 h-24 w-12 rounded-t-[18px] bg-[#f1d07a]" />
-                    <div className="absolute bottom-8 left-10 right-10 h-12 rounded-[18px] border border-white/10 bg-[#18121f]" />
+                  <div className="relative h-56 w-56">
+                    <div className="absolute inset-[24%] rounded-full bg-[radial-gradient(circle,rgba(200,88,26,0.15),transparent_62%)] blur-xl" />
+                    <div className="absolute left-7 top-20 h-20 w-32 -skew-x-[28deg] rounded-2xl bg-[var(--steel-3)]" />
+                    <div className="absolute left-14 top-8 h-24 w-24 rotate-45 rounded-3xl border border-[var(--b2)] bg-[linear-gradient(135deg,#6f8292,#273040)] shadow-[0_18px_40px_rgba(120,145,170,0.22)]" />
+                    <div className="absolute left-6 top-24 h-16 w-16 rounded-t-[28px] bg-[var(--wood-3)]" />
+                    <div className="absolute right-6 top-24 h-16 w-16 rounded-t-[28px] bg-[var(--wood-3)]" />
+                    <div className="absolute left-[91px] top-14 h-24 w-12 rounded-t-[18px] bg-[linear-gradient(180deg,var(--ember-hi),var(--ember-lo))]" />
+                    <div className="absolute bottom-10 left-10 right-10 h-12 rounded-[18px] border border-[var(--b1)] bg-[var(--steel-1)]" />
                   </div>
-                  <p className="mt-4 text-2xl font-semibold text-[#f7f1e4]">
+                  <p className="realm-page-title mt-4 text-center text-2xl">
                     {trimmedName.length >= 2 ? trimmedName : 'Your Kingdom'}
+                  </p>
+                  <p className="realm-lore mt-3 text-center text-sm">
+                    A steel citadel lit by ember fire, ready to transform your coding history into territory.
                   </p>
                 </div>
               </div>
@@ -278,11 +296,14 @@ export function OnboardingClient({
             ].join(' ')}
           >
             <div className="flex h-full flex-col items-center justify-center text-center">
-              <div className="h-24 w-24 rounded-full border border-[#C9A84C]/35 border-t-[#C9A84C] animate-spin" />
-              <p className="mt-8 text-xs uppercase tracking-[0.35em] text-[#C9A84C]/75">Step 2</p>
-              <h2 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">
+              <div className="h-24 w-24 rounded-full border border-[var(--b2)] border-t-[var(--ember)] animate-spin" />
+              <p className="realm-label mt-8 text-[var(--plate-hi)]">Step 2</p>
+              <h2 className="realm-page-title mt-3 text-4xl sm:text-5xl">
                 Your kingdom is being forged...
               </h2>
+              <p className="realm-lore mt-4 max-w-2xl">
+                Counting every commit, surveying each repository, and hammering your profile into a realm that feels alive.
+              </p>
 
               <div className="mt-10 w-full max-w-xl space-y-4 text-left">
                 {SYNC_STAGES.map((stage, index) => {
@@ -292,10 +313,10 @@ export function OnboardingClient({
                     <div
                       key={stage}
                       className={[
-                        'rounded-2xl border px-5 py-4 transition',
+                        'rounded-[20px] border px-5 py-4 transition',
                         isActive
-                          ? 'border-[#C9A84C]/40 bg-[#21180d] text-[#f3d68c]'
-                          : 'border-white/10 bg-white/[0.03] text-white/45',
+                          ? 'border-[rgba(200,88,26,0.42)] bg-[rgba(44,21,13,0.74)] text-[var(--silver-0)]'
+                          : 'border-[var(--b0)] bg-[rgba(255,255,255,0.03)] text-[var(--silver-3)]',
                       ].join(' ')}
                     >
                       {stage}
@@ -305,18 +326,18 @@ export function OnboardingClient({
               </div>
 
               {syncError ? (
-                <div className="mt-8 max-w-xl rounded-2xl border border-[#a84d4d]/40 bg-[#2a1111]/80 px-5 py-4 text-left text-[#ffc7c7]">
+                <div className="mt-8 max-w-xl rounded-[20px] border border-[#a84d4d]/40 bg-[#2a1111]/80 px-5 py-4 text-left text-[#ffc7c7]">
                   <p className="text-sm">{syncError}</p>
                   <button
                     type="button"
                     onClick={handleRetrySync}
-                    className="mt-4 rounded-xl bg-[#C9A84C] px-4 py-2 text-sm font-semibold text-[#24180a]"
+                    className="realm-button realm-button-primary mt-4 rounded-[14px] px-4 py-2"
                   >
                     Retry forging
                   </button>
                 </div>
               ) : (
-                <p className="mt-8 text-sm text-white/55">This usually finishes in well under two minutes.</p>
+                <p className="mt-8 text-sm text-[var(--silver-3)]">This usually finishes in well under two minutes.</p>
               )}
             </div>
           </section>
@@ -328,38 +349,38 @@ export function OnboardingClient({
             ].join(' ')}
           >
             <div className="flex h-full items-center justify-center">
-              <div className="w-full max-w-2xl rounded-[32px] border border-[#C9A84C]/25 bg-[linear-gradient(180deg,#1d1626_0%,#0f0b14_100%)] p-8 shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
-                <p className="text-xs uppercase tracking-[0.35em] text-[#C9A84C]/75">Step 3</p>
-                <h2 className="mt-3 text-4xl font-semibold tracking-tight">Your kingdom awaits</h2>
-                <p className="mt-4 text-base leading-7 text-white/68">
+              <div className="realm-panel w-full max-w-3xl rounded-[32px] p-8">
+                <p className="realm-label text-[var(--plate-hi)]">Step 3</p>
+                <h2 className="realm-page-title mt-3 text-4xl">Your kingdom awaits</h2>
+                <p className="realm-lore mt-4 text-base">
                   The first structures are in place. Step into the realm and keep shipping code to expand it.
                 </p>
 
                 <div className="mt-8 grid gap-4 sm:grid-cols-2">
-                  <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
-                    <p className="text-xs uppercase tracking-[0.28em] text-white/45">Kingdom Name</p>
-                    <p className="mt-3 text-2xl font-semibold text-[#f7f1e4]">{summary?.name ?? trimmedName}</p>
+                  <div className="rounded-[22px] border border-[var(--b0)] bg-[rgba(255,255,255,0.03)] p-5">
+                    <p className="realm-label">Kingdom Name</p>
+                    <p className="mt-3 text-2xl font-semibold text-[var(--silver-0)]">{summary?.name ?? trimmedName}</p>
                   </div>
-                  <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
-                    <p className="text-xs uppercase tracking-[0.28em] text-white/45">Buildings Generated</p>
-                    <p className="mt-3 text-2xl font-semibold text-[#f7f1e4]">{totalBuildings}</p>
+                  <div className="rounded-[22px] border border-[var(--b0)] bg-[rgba(255,255,255,0.03)] p-5">
+                    <p className="realm-label">Buildings Generated</p>
+                    <p className="mt-3 text-2xl font-semibold text-[var(--silver-0)]">{totalBuildings}</p>
                   </div>
-                  <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
-                    <p className="text-xs uppercase tracking-[0.28em] text-white/45">Top Language Building</p>
-                    <p className="mt-3 text-2xl font-semibold text-[#f7f1e4]">{topLanguageBuilding}</p>
+                  <div className="rounded-[22px] border border-[var(--b0)] bg-[rgba(255,255,255,0.03)] p-5">
+                    <p className="realm-label">Top Language Building</p>
+                    <p className="mt-3 text-2xl font-semibold text-[var(--silver-0)]">{topLanguageBuilding}</p>
                   </div>
-                  <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
-                    <p className="text-xs uppercase tracking-[0.28em] text-white/45">Prestige Score</p>
-                    <p className="mt-3 text-2xl font-semibold text-[#f7f1e4]">{summary?.prestige ?? 0}</p>
+                  <div className="rounded-[22px] border border-[var(--b0)] bg-[rgba(255,255,255,0.03)] p-5">
+                    <p className="realm-label">Prestige Score</p>
+                    <p className="mt-3 text-2xl font-semibold text-[var(--silver-0)]">{summary?.prestige ?? 0}</p>
                   </div>
                 </div>
 
                 <button
                   type="button"
                   onClick={() => router.push('/kingdom')}
-                  className="mt-8 rounded-2xl bg-[#C9A84C] px-6 py-4 text-sm font-semibold text-[#24180a] transition hover:bg-[#ddb966]"
+                  className="realm-button realm-button-primary mt-8 rounded-[18px] px-6 py-4"
                 >
-                  Enter your kingdom {'->'}
+                  Enter your kingdom
                 </button>
               </div>
             </div>

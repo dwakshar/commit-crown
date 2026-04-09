@@ -82,13 +82,13 @@ export function BuildingInfoPanel() {
   }
 
   return (
-    <aside className="pointer-events-auto w-full max-w-sm rounded-3xl border border-[#C9A84C]/30 bg-[#120f1d]/95 p-5 text-[#f5efe2] shadow-[0_20px_80px_rgba(0,0,0,0.45)] backdrop-blur-md">
+    <aside className="pointer-events-auto realm-panel w-full max-w-sm rounded-[28px] p-5 text-[var(--silver-1)]">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.28em] text-[#C9A84C]/80">Selected Building</p>
-          <h2 className="mt-2 text-2xl font-semibold">{getBuildingName(selectedBuilding)}</h2>
-          <div className="mt-2 flex items-center gap-3 text-sm text-white/70">
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
+          <p className="realm-label text-[var(--plate-hi)]">Selected Building</p>
+          <h2 className="mt-2 text-2xl font-semibold text-[var(--silver-0)]">{getBuildingName(selectedBuilding)}</h2>
+          <div className="mt-2 flex items-center gap-3 text-sm text-[var(--silver-2)]">
+            <span className="rounded-full border border-[var(--b0)] bg-[rgba(255,255,255,0.03)] px-3 py-1">
               {metadata.icon}
             </span>
             <span>{selectedBuilding.type.replaceAll('_', ' ')}</span>
@@ -97,30 +97,30 @@ export function BuildingInfoPanel() {
         <button
           type="button"
           onClick={() => selectBuilding(null)}
-          className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-white/80 transition hover:bg-white/10"
+          className="realm-button realm-button-secondary rounded-full px-3 py-1 text-[11px]"
         >
           Close
         </button>
       </div>
 
-      <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4">
+      <div className="mt-5 rounded-[22px] border border-[var(--b0)] bg-[rgba(255,255,255,0.03)] p-4">
         <div className="flex items-center justify-between">
-          <span className="text-sm text-white/60">Current Level</span>
+          <span className="text-sm text-[var(--silver-2)]">Current Level</span>
           <LevelPips level={selectedBuilding.level} />
         </div>
-        <p className="mt-4 text-sm leading-6 text-white/80">{metadata.effect}</p>
+        <p className="realm-lore mt-4 text-sm">{metadata.effect}</p>
       </div>
 
-      <div className="mt-5 flex items-end justify-between gap-4 rounded-2xl border border-[#C9A84C]/20 bg-[#1b1728] p-4">
+      <div className="mt-5 flex items-end justify-between gap-4 rounded-[22px] border border-[rgba(200,88,26,0.22)] bg-[rgba(44,21,13,0.6)] p-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.24em] text-white/50">Upgrade Cost</p>
-          <p className="mt-2 text-2xl font-semibold text-[#C9A84C]">{upgradeCost} Gold</p>
+          <p className="realm-label">Upgrade Cost</p>
+          <p className="mt-2 text-2xl font-semibold text-[var(--silver-0)]">{upgradeCost} Gold</p>
         </div>
         <button
           type="button"
           onClick={handleUpgrade}
           disabled={!canUpgrade}
-          className="rounded-2xl bg-[#C9A84C] px-5 py-3 text-sm font-semibold text-[#22190b] transition hover:bg-[#d7b864] disabled:cursor-not-allowed disabled:bg-[#6e5b25] disabled:text-[#d2c7a3]"
+          className="realm-button realm-button-primary rounded-[18px] px-5 py-3 disabled:cursor-not-allowed disabled:opacity-55"
         >
           {isUpgrading ? 'Upgrading...' : selectedBuilding.level >= 5 ? 'Max Level' : 'Upgrade'}
         </button>

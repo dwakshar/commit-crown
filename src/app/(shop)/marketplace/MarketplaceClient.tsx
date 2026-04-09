@@ -85,24 +85,24 @@ export function MarketplaceClient({
   }, [activeFilter, items]);
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(201,168,76,0.16),transparent_28%),linear-gradient(180deg,#15101c_0%,#09070d_100%)] px-4 py-10 text-[#f5efe1] sm:px-6 lg:px-8">
+    <main className="min-h-screen px-4 py-10 text-[var(--silver-1)] sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <section className="rounded-[32px] border border-[#C9A84C]/20 bg-[linear-gradient(180deg,rgba(24,17,32,0.96),rgba(10,8,15,0.96))] p-5 shadow-[0_24px_100px_rgba(0,0,0,0.45)] sm:p-8">
-          <div className="flex flex-col gap-5 border-b border-white/10 pb-6 lg:flex-row lg:items-end lg:justify-between">
+        <section className="realm-panel rounded-[32px] p-5 sm:p-8">
+          <div className="flex flex-col gap-5 border-b border-[var(--b0)] pb-6 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="text-xs uppercase tracking-[0.35em] text-[#C9A84C]/80">
+              <p className="realm-label text-[var(--plate-hi)]">
                 CodeKingdom Marketplace
               </p>
-              <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+              <h1 className="realm-page-title mt-3 text-3xl sm:text-4xl">
                 Outfit the realm with rare cosmetics
               </h1>
-              <p className="mt-3 max-w-3xl text-sm leading-6 text-white/65 sm:text-base">
+              <p className="realm-lore mt-3 max-w-3xl text-sm sm:text-base">
                 Claim free rewards, purchase premium drops, and equip skins or
                 themes for your kingdom.
               </p>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70">
-              <span className="text-[#C9A84C]">{filteredItems.length}</span>{" "}
+            <div className="rounded-2xl border border-[var(--b1)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-sm text-[var(--silver-2)]">
+              <span className="text-[var(--ember-hi)]">{filteredItems.length}</span>{" "}
               items
               {isRefreshing ? " - refreshing" : ""}
             </div>
@@ -118,10 +118,10 @@ export function MarketplaceClient({
                   type="button"
                   onClick={() => setActiveFilter(filter.value)}
                   className={[
-                    "rounded-full border px-4 py-2 text-sm font-medium transition",
+                    "realm-button rounded-[16px] border px-4 py-3 text-sm font-medium transition",
                     isActive
-                      ? "border-[#C9A84C] bg-[#C9A84C] text-[#24180a] shadow-[0_10px_30px_rgba(201,168,76,0.3)]"
-                      : "border-white/10 bg-white/5 text-white/75 hover:border-[#C9A84C]/45 hover:text-white",
+                      ? "realm-button-primary"
+                      : "realm-button-secondary",
                   ].join(" ")}>
                   {filter.label}
                 </button>
@@ -140,7 +140,7 @@ export function MarketplaceClient({
           </div>
 
           {filteredItems.length === 0 ? (
-            <div className="mt-8 rounded-[28px] border border-dashed border-white/12 bg-white/[0.03] px-6 py-12 text-center text-white/60">
+            <div className="mt-8 rounded-[28px] border border-dashed border-[var(--b1)] bg-[rgba(255,255,255,0.03)] px-6 py-12 text-center text-[var(--silver-2)]">
               No items match this filter yet.
             </div>
           ) : null}

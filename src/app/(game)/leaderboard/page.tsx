@@ -80,42 +80,49 @@ export default async function LeaderboardPage({
   }))
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#120f1d_0%,#09070e_100%)] px-4 py-10 text-[#f7f1e4]">
+    <main className="min-h-screen px-4 py-10 text-[var(--silver-1)]">
       <div className="mx-auto max-w-6xl">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.28em] text-[#C9A84C]/75">Royal Ledger</p>
-            <h1 className="mt-3 text-4xl font-semibold">Kingdom Leaderboard</h1>
-          </div>
-          <Link href="/kingdom" className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm">
-            Return to Kingdom
-          </Link>
-        </div>
-
-        <div className="mt-8 flex flex-wrap gap-3">
-          {tabs.map((tabItem) => (
-            <Link
-              key={tabItem.key}
-              href={`/leaderboard?tab=${tabItem.key}&page=1`}
-              className={`rounded-full border px-4 py-2 text-sm transition ${
-                selectedTab === tabItem.key
-                  ? 'border-[#C9A84C]/40 bg-[#2a2312] text-[#f4d98e]'
-                  : 'border-white/10 bg-white/5 text-white/70 hover:bg-white/10'
-              }`}
-            >
-              {tabItem.label}
+        <div className="realm-panel rounded-[32px] p-6 md:p-8">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="realm-label text-[var(--plate-hi)]">Glory and Conquest</p>
+              <h1 className="realm-page-title mt-3 text-4xl">Hall of Legend</h1>
+              <p className="realm-lore mt-3 max-w-2xl">
+                The mightiest rulers in the realm, ranked by prestige, language mastery, and conquest.
+              </p>
+            </div>
+            <Link href="/kingdom" className="realm-button realm-button-secondary rounded-[18px] px-4 py-3 text-center">
+              Return to Kingdom
             </Link>
-          ))}
-        </div>
+          </div>
 
-        <div className="mt-8">
-          <LeaderboardTable
-            rows={rows}
-            currentUserId={user.id}
-            page={currentPage}
-            totalPages={Math.max(1, Math.ceil((count ?? 0) / 25))}
-            tab={selectedTab}
-          />
+          <div className="realm-divider my-6" />
+
+          <div className="flex flex-wrap gap-3">
+            {tabs.map((tabItem) => (
+              <Link
+                key={tabItem.key}
+                href={`/leaderboard?tab=${tabItem.key}&page=1`}
+                className={`realm-button rounded-[16px] border px-4 py-3 text-sm transition ${
+                  selectedTab === tabItem.key
+                    ? 'realm-button-primary'
+                    : 'realm-button-secondary'
+                }`}
+              >
+                {tabItem.label}
+              </Link>
+            ))}
+          </div>
+
+          <div className="mt-8">
+            <LeaderboardTable
+              rows={rows}
+              currentUserId={user.id}
+              page={currentPage}
+              totalPages={Math.max(1, Math.ceil((count ?? 0) / 25))}
+              tab={selectedTab}
+            />
+          </div>
         </div>
       </div>
     </main>
