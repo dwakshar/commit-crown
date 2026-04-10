@@ -154,7 +154,7 @@ export default async function Home({
             Commit<span className="text-[var(--ember)]">Crown</span>
           </h1>
 
-          <p className="realm-lore mt-6 max-w-2xl text-[clamp(17px,2.2vw,21px)] leading-relaxed text-[var(--silver-2)]">
+          <p className="realm-lore mt-6 max-w-2xl text-[clamp(17px,2.2vw,21px)] leading-5 text-[var(--silver-2)]">
             Every commit lays stone. Every repository raises a tower. Your
             GitHub history builds a realm that breathes, battles, and endures.
           </p>
@@ -227,7 +227,7 @@ export default async function Home({
               How The Kingdom Is Forged
             </h2>
 
-            <p className="realm-lore mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-[var(--silver-2)]">
+            <p className="realm-lore mx-auto mt-6 max-w-2xl text-lg leading-5 text-[var(--silver-2)]">
               From raw commits to castle spires — your craft is the only
               currency that matters in this realm.
             </p>
