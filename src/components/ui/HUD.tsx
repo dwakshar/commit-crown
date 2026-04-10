@@ -7,6 +7,7 @@ import Link from "next/link";
 
 import { AchievementToast } from "@/src/components/ui/AchievementToast";
 import { NotificationBell } from "@/src/components/ui/NotificationBell";
+import { ProfileButton } from "@/src/components/ui/ProfileButton";
 import { RealmTopNav } from "@/src/components/ui/RealmTopNav";
 import { getSyncCooldownRemaining, getUpgradeCost } from "@/src/lib/kingdom";
 import {
@@ -369,22 +370,13 @@ export function HUD() {
           </div>
 
           <div className="flex items-center justify-end gap-2 border-t border-[var(--b0)] px-4 py-3 xl:border-l xl:border-t-0">
-            <Link
-              href="/leaderboard"
-              className="pointer-events-auto flex h-10 items-center justify-center border border-[var(--b1)] px-3.5 text-[11px] uppercase tracking-[0.18em] text-[var(--silver-2)] hover:text-[var(--silver-0)] hover:border-[var(--silver-4)]">
-              ➤
-            </Link>
-            <Link
-              href="/raids/history"
-              className="pointer-events-auto flex h-10 items-center justify-center border border-[var(--b1)] px-3 text-[11px] uppercase tracking-[0.18em] text-[var(--silver-2)] hover:text-[var(--silver-0)] hover:border-[var(--silver-4)]">
-              ⚔️
-            </Link>
             <NotificationBell userId={kingdom.userId} />
-            <Link
-              href="/marketplace"
-              className="pointer-events-auto flex h-10 items-center justify-center border border-[var(--b1)] px-3 text-[11px] uppercase tracking-[0.18em] text-[var(--silver-2)] hover:text-[var(--silver-0)] hover:border-[var(--silver-4)]">
-              🛒
-            </Link>
+            <ProfileButton
+              username={kingdom.ownerName}
+              avatarUrl={kingdom.ownerAvatarUrl}
+              kingdomName={kingdom.name}
+              prestige={kingdom.prestige}
+            />
           </div>
         </div>
       </div>
