@@ -83,6 +83,7 @@ body {
 
 @media (hover: hover) and (pointer: fine) {
   body.has-advanced-cursor,
+  body.has-advanced-cursor canvas,
   body.has-advanced-cursor a,
   body.has-advanced-cursor button,
   body.has-advanced-cursor [role="button"],
