@@ -151,16 +151,12 @@ export default async function Home({
           </div>
 
           <h1 className="realm-display text-[clamp(52px,9vw,96px)] font-bold leading-[0.96] tracking-[-0.02em] text-[var(--silver-0)]">
-            Code<span className="text-[var(--ember)]">Kingdom</span>
+            Commit<span className="text-[var(--ember)]">Crown</span>
           </h1>
 
           <p className="realm-lore mt-6 max-w-2xl text-[clamp(17px,2.2vw,21px)] leading-relaxed text-[var(--silver-2)]">
-            Every commit lays stone.
-            <br />
-            Every repository raises a tower.
-            <br />
-            Your GitHub history builds a realm that breathes, battles, and
-            endures.
+            Every commit lays stone. Every repository raises a tower. Your
+            GitHub history builds a realm that breathes, battles, and endures.
           </p>
 
           <div id="enlist" className="mt-12 flex flex-col sm:flex-row gap-4">
