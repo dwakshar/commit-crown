@@ -19,7 +19,6 @@ export function ProfileButton({
   prestige,
 }: ProfileButtonProps) {
   const [open, setOpen] = useState(false);
-  const [confirmLogout, setConfirmLogout] = useState(false); // ✅ added
   const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const supabase = createClient();
@@ -28,18 +27,12 @@ export function ProfileButton({
     if (!open) return;
 
     const handleClickOutside = (e: MouseEvent) => {
-      if (confirmLogout) return; // ✅ prevent closing during confirm
-
       if (!containerRef.current?.contains(e.target as Node)) {
         setOpen(false);
       }
     };
 
     const handleEscape = (e: KeyboardEvent) => {
-      if (confirmLogout) {
-        setConfirmLogout(false); // ✅ close confirm first
-        return;
-      }
       if (e.key === "Escape") setOpen(false);
     };
 
@@ -50,7 +43,7 @@ export function ProfileButton({
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleEscape);
     };
-  }, [open, confirmLogout]);
+  }, [open]);
 
   const handleLogout = async () => {
     setOpen(false);
@@ -59,6 +52,7 @@ export function ProfileButton({
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
 
+      // Redirect to home after logout
       router.push("/");
       router.refresh();
     } catch (error) {
@@ -143,44 +137,11 @@ export function ProfileButton({
             </button>
 
             <button
-              onClick={() => setConfirmLogout(true)} // ✅ changed
+              onClick={handleLogout}
               className="realm-button w-full border border-red-900/60 bg-[rgba(80,20,20,0.4)] py-3 text-sm text-red-400 hover:border-red-700 hover:text-red-300 transition">
               Logout from Realm
             </button>
           </div>
-
-          {/* ✅ NEW CONFIRM PANEL */}
-          {confirmLogout && (
-            <div className="absolute inset-0 z-[90] flex items-center justify-center bg-[rgba(4,6,10,0.9)] backdrop-blur-[3px]">
-              <div className="w-[92%] max-w-[320px] border border-[rgba(200,88,26,0.6)] bg-[linear-gradient(180deg,rgba(18,8,6,0.98),rgba(8,4,3,0.98))] px-5 py-5 text-center shadow-[0_30px_80px_rgba(0,0,0,0.7)]">
-                <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--silver-3)]">
-                  Realm Alert
-                </div>
-
-                <div className="mt-3 font-[var(--font-head)] text-[1.4rem] text-[var(--ember-hi)]">
-                  Leave the Realm?
-                </div>
-
-                <div className="mt-3 text-sm text-[var(--silver-2)]">
-                  Your session will end. Unsynced progress may be lost.
-                </div>
-
-                <div className="mt-5 flex gap-2">
-                  <button
-                    onClick={() => setConfirmLogout(false)}
-                    className="flex-1 border border-[var(--b1)] py-2 text-xs uppercase tracking-[0.16em] text-[var(--silver-2)] hover:text-[var(--silver-0)]">
-                    Stay
-                  </button>
-
-                  <button
-                    onClick={handleLogout}
-                    className="flex-1 border border-red-800 bg-[rgba(90,20,20,0.55)] py-2 text-xs uppercase tracking-[0.16em] text-red-400 hover:text-red-300">
-                    Logout
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       )}
     </div>
