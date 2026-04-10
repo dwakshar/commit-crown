@@ -1,109 +1,115 @@
-import { NextResponse } from 'next/server'
-import { z } from 'zod'
+import { NextResponse } from "next/server";
+import { z } from "zod";
 
-import { BUILDING_UNLOCK_REQUIREMENTS, type GitHubStats } from '@/src/lib/gameEngine'
-import { ensureKingdomForUser } from '@/src/lib/kingdomPersistence'
-import type { BuildingType } from '@/src/types/game'
-import { createClient } from '@/utils/supabase/server'
+import {
+  BUILDING_UNLOCK_REQUIREMENTS,
+  type GitHubStats,
+} from "@/src/lib/gameEngine";
+import { ensureKingdomForUser } from "@/src/lib/kingdomPersistence";
+import type { BuildingType } from "@/src/types/game";
+import { createClient } from "@/utils/supabase/server";
 
 const placeBuildingSchema = z.object({
   type: z.enum([
-    'town_hall',
-    'arcane_tower',
-    'library',
-    'iron_forge',
-    'barracks',
-    'observatory',
-    'market',
-    'wall',
-    'monument',
+    "town_hall",
+    "arcane_tower",
+    "library",
+    "iron_forge",
+    "barracks",
+    "observatory",
+    "market",
+    "wall",
+    "monument",
   ]),
   position_x: z.number().int().min(0).max(19),
   position_y: z.number().int().min(0).max(19),
-})
+});
 
 type ProfileQueryResult = {
   kingdoms:
     | {
-        id: string
-        building_slots: number
+        id: string;
+        building_slots: number;
         buildings:
           | {
-              id: string
-              type: BuildingType
-              position_x: number
-              position_y: number
+              id: string;
+              type: BuildingType;
+              position_x: number;
+              position_y: number;
             }[]
-          | null
+          | null;
       }[]
-    | null
+    | null;
   github_stats:
     | {
-        total_commits: number
-        total_repos: number
-        total_stars: number
-        total_prs: number
-        followers: number
-        current_streak: number
-        languages: Record<string, number> | null
+        total_commits: number;
+        total_repos: number;
+        total_stars: number;
+        total_prs: number;
+        followers: number;
+        current_streak: number;
+        languages: Record<string, number> | null;
       }[]
-    | null
-}
+    | null;
+};
 
 type EnsuredKingdom = {
-  id: string
-  building_slots: number
+  id: string;
+  building_slots: number;
   buildings:
     | {
-        id: string
-        type: BuildingType
-        position_x: number
-        position_y: number
+        id: string;
+        type: BuildingType;
+        position_x: number;
+        position_y: number;
       }[]
-    | null
-}
+    | null;
+};
 
 export async function POST(request: Request) {
-  const supabase = await createClient()
+  const supabase = await createClient();
   const {
     data: { user },
-  } = await supabase.auth.getUser()
+  } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const rawBody = await request.json().catch(() => null)
-  const parsed = placeBuildingSchema.safeParse(rawBody)
+  const rawBody = await request.json().catch(() => null);
+  const parsed = placeBuildingSchema.safeParse(rawBody);
 
   if (!parsed.success) {
     return NextResponse.json(
-      { error: 'Invalid request body', issues: parsed.error.flatten() },
-      { status: 400 },
-    )
+      { error: "Invalid request body", issues: parsed.error.flatten() },
+      { status: 400 }
+    );
   }
 
   const { data: profile, error } = await supabase
-    .from('profiles')
+    .from("profiles")
     .select(
-      'kingdoms(id, building_slots, buildings(id, type, position_x, position_y)), github_stats(total_commits, total_repos, total_stars, total_prs, followers, current_streak, languages)',
+      "kingdoms(id, building_slots, buildings(id, type, position_x, position_y)), github_stats(total_commits, total_repos, total_stars, total_prs, followers, current_streak, languages)"
     )
-    .eq('id', user.id)
-    .single()
+    .eq("id", user.id)
+    .single();
 
   if (error || !profile) {
-    return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
+    return NextResponse.json({ error: "Profile not found" }, { status: 404 });
   }
 
-  const result = profile as ProfileQueryResult
-  let kingdom = result.kingdoms?.[0] ?? null
+  const result = profile as ProfileQueryResult;
+  let kingdom = result.kingdoms?.[0] ?? null;
 
   if (!kingdom) {
     try {
-      const ensuredKingdom = await ensureKingdomForUser(user.id)
+      const ensuredKingdom = await ensureKingdomForUser(user.id);
 
       if (!ensuredKingdom) {
-        return NextResponse.json({ error: 'Kingdom not found' }, { status: 404 })
+        return NextResponse.json(
+          { error: "Kingdom not found" },
+          { status: 404 }
+        );
       }
 
       kingdom = {
@@ -115,32 +121,53 @@ export async function POST(request: Request) {
           position_x: building.position_x,
           position_y: building.position_y,
         })),
-      } satisfies EnsuredKingdom
+      } satisfies EnsuredKingdom;
     } catch (error) {
       return NextResponse.json(
         {
-          error: error instanceof Error ? error.message : 'Unable to initialize kingdom',
+          error:
+            error instanceof Error
+              ? error.message
+              : "Unable to initialize kingdom",
         },
-        { status: 500 },
-      )
+        { status: 500 }
+      );
     }
   }
 
-  const buildings = kingdom.buildings ?? []
+  const buildings = kingdom.buildings ?? [];
+  if (parsed.data.type === "town_hall") {
+    const hasTownHall = buildings.some((b) => b.type === "town_hall");
+
+    if (hasTownHall) {
+      return NextResponse.json(
+        { error: "Town Hall already exists. You can only have one." },
+        { status: 400 }
+      );
+    }
+  }
+
   const occupied = buildings.some(
     (building) =>
-      building.position_x === parsed.data.position_x && building.position_y === parsed.data.position_y,
-  )
+      building.position_x === parsed.data.position_x &&
+      building.position_y === parsed.data.position_y
+  );
 
   if (occupied) {
-    return NextResponse.json({ error: 'Position is already occupied' }, { status: 400 })
+    return NextResponse.json(
+      { error: "Position is already occupied" },
+      { status: 400 }
+    );
   }
 
   if (buildings.length >= kingdom.building_slots) {
-    return NextResponse.json({ error: 'No building slots available' }, { status: 400 })
+    return NextResponse.json(
+      { error: "No building slots available" },
+      { status: 400 }
+    );
   }
 
-  const statsRow = result.github_stats?.[0]
+  const statsRow = result.github_stats?.[0];
   const githubStats: GitHubStats = {
     total_commits: statsRow?.total_commits ?? 0,
     total_repos: statsRow?.total_repos ?? 0,
@@ -149,14 +176,17 @@ export async function POST(request: Request) {
     followers: statsRow?.followers ?? 0,
     current_streak: statsRow?.current_streak ?? 0,
     languages: statsRow?.languages ?? {},
-  }
+  };
 
   if (!BUILDING_UNLOCK_REQUIREMENTS[parsed.data.type](githubStats)) {
-    return NextResponse.json({ error: 'Building type is locked' }, { status: 400 })
+    return NextResponse.json(
+      { error: "Building type is locked" },
+      { status: 400 }
+    );
   }
 
   const { data: newBuilding, error: insertError } = await supabase
-    .from('buildings')
+    .from("buildings")
     .insert({
       kingdom_id: kingdom.id,
       type: parsed.data.type,
@@ -164,22 +194,25 @@ export async function POST(request: Request) {
       position_y: parsed.data.position_y,
       level: 1,
     })
-    .select('id, kingdom_id, type, level, position_x, position_y, built_at')
-    .single()
+    .select("id, kingdom_id, type, level, position_x, position_y, built_at")
+    .single();
 
   if (insertError || !newBuilding) {
-    if (insertError?.code === '23505') {
-      return NextResponse.json({ error: 'Position is already occupied' }, { status: 400 })
+    if (insertError?.code === "23505") {
+      return NextResponse.json(
+        { error: "Constraint violation (duplicate or occupied position)" },
+        { status: 400 }
+      );
     }
 
     return NextResponse.json(
-      { error: insertError?.message ?? 'Unable to place building' },
-      { status: 500 },
-    )
+      { error: insertError?.message ?? "Unable to place building" },
+      { status: 500 }
+    );
   }
 
   return NextResponse.json({
     success: true,
     building: newBuilding,
-  })
+  });
 }

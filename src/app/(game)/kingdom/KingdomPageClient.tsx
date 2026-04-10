@@ -1,61 +1,73 @@
-'use client'
+"use client";
 
-import { useEffect } from 'react'
+import { useEffect } from "react";
 
-import dynamic from 'next/dynamic'
+import dynamic from "next/dynamic";
 
-import { HUD } from '@/src/components/ui/HUD'
-import { useKingdomStore } from '@/src/store/kingdomStore'
-import type { BuildingData, KingdomData } from '@/src/types/game'
+import { HUD } from "@/src/components/ui/HUD";
+import { useKingdomStore } from "@/src/store/kingdomStore";
+import type { BuildingData, KingdomData } from "@/src/types/game";
 
 const PhaserGame = dynamic(
-  () => import('@/src/components/game/PhaserGame').then((module) => module.PhaserGame),
+  () =>
+    import("@/src/components/game/PhaserGame").then(
+      (module) => module.PhaserGame
+    ),
   {
     ssr: false,
-  },
-)
+  }
+);
 
 export function KingdomPageClient({
   kingdomData,
 }: {
-  kingdomData: KingdomData
+  kingdomData: KingdomData;
 }) {
-  const setKingdom = useKingdomStore((state) => state.setKingdom)
-  const selectBuilding = useKingdomStore((state) => state.selectBuilding)
-  const kingdom = useKingdomStore((state) => state.kingdom)
+  const setKingdom = useKingdomStore((state) => state.setKingdom);
+  const selectBuilding = useKingdomStore((state) => state.selectBuilding);
+  const kingdom = useKingdomStore((state) => state.kingdom);
 
   useEffect(() => {
-    setKingdom(kingdomData)
-  }, [kingdomData, setKingdom])
+    setKingdom(kingdomData);
+  }, [kingdomData, setKingdom]);
 
   useEffect(() => {
     const handleBuildingSelected = (event: Event) => {
-      const customEvent = event as CustomEvent<BuildingData>
-      selectBuilding(customEvent.detail)
-    }
+      const customEvent = event as CustomEvent<BuildingData>;
+      selectBuilding(customEvent.detail);
+    };
 
-    window.addEventListener('codekingdom:building-selected', handleBuildingSelected as EventListener)
+    window.addEventListener(
+      "codekingdom:building-selected",
+      handleBuildingSelected as EventListener
+    );
 
     return () => {
       window.removeEventListener(
-        'codekingdom:building-selected',
-        handleBuildingSelected as EventListener,
-      )
-    }
-  }, [selectBuilding])
+        "codekingdom:building-selected",
+        handleBuildingSelected as EventListener
+      );
+    };
+  }, [selectBuilding]);
 
   useEffect(() => {
     const handleKingdomUpdated = (event: Event) => {
-      const customEvent = event as CustomEvent<KingdomData>
-      setKingdom(customEvent.detail)
-    }
+      const customEvent = event as CustomEvent<KingdomData>;
+      setKingdom(customEvent.detail);
+    };
 
-    window.addEventListener('codekingdom:kingdom-updated', handleKingdomUpdated as EventListener)
+    window.addEventListener(
+      "codekingdom:kingdom-updated",
+      handleKingdomUpdated as EventListener
+    );
 
     return () => {
-      window.removeEventListener('codekingdom:kingdom-updated', handleKingdomUpdated as EventListener)
-    }
-  }, [setKingdom])
+      window.removeEventListener(
+        "codekingdom:kingdom-updated",
+        handleKingdomUpdated as EventListener
+      );
+    };
+  }, [setKingdom]);
 
   return (
     <main className="relative h-screen w-full overflow-hidden bg-[var(--steel-0)]">
@@ -72,5 +84,5 @@ export function KingdomPageClient({
       </div>
       <HUD />
     </main>
-  )
+  );
 }
