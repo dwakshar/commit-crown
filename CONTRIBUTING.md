@@ -42,12 +42,12 @@ For **new features or architectural changes**, always start with an issue.
 
 ### Prerequisites
 
-| Tool | Minimum version | Why |
-|---|---|---|
-| Node.js | 18.17+ | Next.js 14 requirement |
-| npm | 9+ | Lockfile format |
-| Git | 2.30+ | Sparse checkout support |
-| Supabase CLI | latest | Running migrations locally |
+| Tool         | Minimum version | Why                        |
+| ------------ | --------------- | -------------------------- |
+| Node.js      | 18.17+          | Next.js 14 requirement     |
+| npm          | 9+              | Lockfile format            |
+| Git          | 2.30+           | Sparse checkout support    |
+| Supabase CLI | latest          | Running migrations locally |
 
 ### Step 1 — Fork and clone
 
@@ -253,6 +253,7 @@ docs/short-description          # Documentation only
 ```
 
 Examples:
+
 ```
 feat/achievement-night-owl
 fix/raid-cooldown-not-resetting
@@ -274,6 +275,7 @@ refactor: extract toKingdomData helper into kingdomPersistence
 ```
 
 **Format:**
+
 - `feat` — new capability
 - `fix` — corrects a bug
 - `chore` — maintenance, tooling, dependency bumps
@@ -318,6 +320,7 @@ git push origin feat/your-feature
 ### For a bug fix
 
 Same flow as above but use `fix/` prefix. In the PR description, include:
+
 - What the bug was
 - What caused it
 - How your fix addresses the root cause (not just the symptom)
@@ -440,6 +443,7 @@ Zero errors. Zero warnings. If you introduce a `// eslint-disable` comment, expl
 ### PR title
 
 Use the same Conventional Commits format as your commit messages:
+
 ```
 feat: add Night Owl achievement for late-night commits
 fix: raid cooldown not resetting after 24 hours
@@ -449,15 +453,19 @@ fix: raid cooldown not resetting after 24 hours
 
 ```markdown
 ## What this does
+
 One paragraph explaining the change and why it's needed.
 
 ## How to test
+
 Step-by-step instructions for reviewing the PR manually.
 
 ## Screenshots / recordings (if UI change)
+
 Before / after, or a short screen recording.
 
 ## Checklist
+
 - [ ] `npm run lint` passes with zero warnings
 - [ ] `npx tsc --noEmit` passes with zero errors
 - [ ] New tables include RLS policies in the same migration
@@ -482,24 +490,24 @@ All UI must use these tokens from `app/globals.css`. Do not introduce new colour
 
 ### Colours
 
-| Token | Value | Usage |
-|---|---|---|
-| `--abyss` | `#030406` | Deepest backgrounds |
-| `--steel-0` through `--steel-6` | `#0c0f16` → `#445260` | Surface hierarchy |
-| `--silver-0` through `--silver-4` | `#f0f4f8` → `#3a4a58` | Text hierarchy |
-| `--ember` | `#c8581a` | Primary accent — CTAs, highlights |
-| `--ember-hi` | `#e07030` | Hover states on ember elements |
-| `--ember-lo` | `#7a3010` | Pressed states, subdued accents |
-| `--b0` through `--b3` | `rgba(80,105,130,0.12)` → `0.6` | Border hierarchy |
+| Token                             | Value                           | Usage                             |
+| --------------------------------- | ------------------------------- | --------------------------------- |
+| `--abyss`                         | `#030406`                       | Deepest backgrounds               |
+| `--steel-0` through `--steel-6`   | `#0c0f16` → `#445260`           | Surface hierarchy                 |
+| `--silver-0` through `--silver-4` | `#f0f4f8` → `#3a4a58`           | Text hierarchy                    |
+| `--ember`                         | `#c8581a`                       | Primary accent — CTAs, highlights |
+| `--ember-hi`                      | `#e07030`                       | Hover states on ember elements    |
+| `--ember-lo`                      | `#7a3010`                       | Pressed states, subdued accents   |
+| `--b0` through `--b3`             | `rgba(80,105,130,0.12)` → `0.6` | Border hierarchy                  |
 
 ### Typography
 
-| Variable | Font | Used for |
-|---|---|---|
-| `--font-display` | Cinzel Decorative | Kingdom names, hero headings |
-| `--font-head` | Cinzel | Section titles, building names |
-| `--font-body` | EB Garamond | Body text, descriptions |
-| `--font-lore` | Spectral | Italic lore text, flavour copy |
+| Variable         | Font              | Used for                       |
+| ---------------- | ----------------- | ------------------------------ |
+| `--font-display` | Cinzel Decorative | Kingdom names, hero headings   |
+| `--font-head`    | Cinzel            | Section titles, building names |
+| `--font-body`    | EB Garamond       | Body text, descriptions        |
+| `--font-lore`    | Spectral          | Italic lore text, flavour copy |
 
 ### Component classes
 
