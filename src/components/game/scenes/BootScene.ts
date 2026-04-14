@@ -1,4 +1,5 @@
 type PhaserModule = typeof import('phaser')
+type G = import('phaser').GameObjects.Graphics
 
 type PhaserGlobal = typeof globalThis & {
   Phaser?: PhaserModule
@@ -6,245 +7,731 @@ type PhaserGlobal = typeof globalThis & {
 
 function getPhaser(): PhaserModule {
   const phaser = (globalThis as PhaserGlobal).Phaser
-
   if (!phaser) {
     throw new Error('Phaser runtime is unavailable. Load Phaser before importing scenes.')
   }
-
   return phaser
 }
 
 const Phaser = getPhaser()
 
-const BUILDING_COLORS = {
-  town_hall: { top: 0xd8bb72, left: 0xb88840, right: 0x875b27, accent: 0xf7e3aa },
-  arcane_tower: { top: 0xaa98ff, left: 0x745ee2, right: 0x4f38a8, accent: 0xe6d9ff },
-  library: { top: 0xb58c60, left: 0x8f6639, right: 0x6f4b28, accent: 0xe2cda8 },
-  iron_forge: { top: 0xb1b8c4, left: 0x818994, right: 0x5f6670, accent: 0xf08a4b },
-  barracks: { top: 0xd36c6a, left: 0xa84b48, right: 0x7e3230, accent: 0xf1d8cb },
-  observatory: { top: 0x88d2e3, left: 0x579caf, right: 0x386e82, accent: 0xcff2f5 },
-  market: { top: 0xebae5f, left: 0xc98339, right: 0x955923, accent: 0xffe1a2 },
-  wall: { top: 0xd1d8df, left: 0xa1abb6, right: 0x7a8591, accent: 0xf5f7fa },
-  monument: { top: 0xecf0f5, left: 0xc2c8d1, right: 0x949daa, accent: 0xfff3cd },
-} as const
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function tintColor(base: number, amount: number) {
   const color = Phaser.Display.Color.IntegerToColor(base)
   const mix = amount >= 0 ? 255 : 0
   const ratio = Math.abs(amount)
-
   return Phaser.Display.Color.GetColor(
-    Math.round(color.red + (mix - color.red) * ratio),
+    Math.round(color.red   + (mix - color.red)   * ratio),
     Math.round(color.green + (mix - color.green) * ratio),
-    Math.round(color.blue + (mix - color.blue) * ratio),
+    Math.round(color.blue  + (mix - color.blue)  * ratio),
   )
 }
 
-function drawIsoDiamond(
-  graphics: import('phaser').GameObjects.Graphics,
-  centerX: number,
-  centerY: number,
-  width: number,
-  height: number,
-  fill: number,
-  alpha = 1,
+// Draw an isometric diamond fill
+function isoDiamond(g: G, cx: number, cy: number, hw: number, hh: number, fill: number, alpha = 1) {
+  g.fillStyle(fill, alpha)
+  g.fillPoints(
+    [
+      new Phaser.Geom.Point(cx,      cy - hh),
+      new Phaser.Geom.Point(cx + hw, cy),
+      new Phaser.Geom.Point(cx,      cy + hh),
+      new Phaser.Geom.Point(cx - hw, cy),
+    ],
+    true,
+  )
+}
+
+// Draw the three visible faces of an isometric box
+// cx,cy = iso top-face diamond center; hw/hh = half-width/height of top; wallH = side depth
+function isoBox(
+  g: G,
+  cx: number, cy: number,
+  hw: number, hh: number,
+  wallH: number,
+  topColor: number,
+  leftColor: number,
+  rightColor: number,
 ) {
-  graphics.fillStyle(fill, alpha)
-  graphics.fillPoints(
-    [
-      new Phaser.Geom.Point(centerX, centerY - height / 2),
-      new Phaser.Geom.Point(centerX + width / 2, centerY),
-      new Phaser.Geom.Point(centerX, centerY + height / 2),
-      new Phaser.Geom.Point(centerX - width / 2, centerY),
-    ],
-    true,
-  )
+  // Left face: W→S→S+depth→W+depth
+  g.fillStyle(leftColor, 1)
+  g.fillPoints([
+    new Phaser.Geom.Point(cx - hw, cy),
+    new Phaser.Geom.Point(cx,      cy + hh),
+    new Phaser.Geom.Point(cx,      cy + hh + wallH),
+    new Phaser.Geom.Point(cx - hw, cy + wallH),
+  ], true)
+
+  // Right face: S→E→E+depth→S+depth
+  g.fillStyle(rightColor, 1)
+  g.fillPoints([
+    new Phaser.Geom.Point(cx,      cy + hh),
+    new Phaser.Geom.Point(cx + hw, cy),
+    new Phaser.Geom.Point(cx + hw, cy + wallH),
+    new Phaser.Geom.Point(cx,      cy + hh + wallH),
+  ], true)
+
+  // Top face
+  isoDiamond(g, cx, cy, hw, hh, topColor)
 }
 
-function generateBuildingTexture(
-  graphics: import('phaser').GameObjects.Graphics,
-  key: string,
-  palette: { top: number; left: number; right: number; accent: number },
+// Hipped (pyramid) roof: from eave diamond up to a single peak point
+function hippedRoof(
+  g: G,
+  ex: number, ey: number,     // eave iso diamond center
+  ehw: number, ehh: number,   // eave half-dimensions
+  peakX: number, peakY: number,
+  leftFront: number, rightFront: number, rightBack: number,
 ) {
-  graphics.clear()
+  const N = { x: ex,        y: ey - ehh }
+  const E = { x: ex + ehw,  y: ey }
+  const S = { x: ex,        y: ey + ehh }
+  const W = { x: ex - ehw,  y: ey }
+  const P = { x: peakX,     y: peakY }
 
-  drawIsoDiamond(graphics, 64, 104, 98, 34, 0x081019, 0.28)
-  drawIsoDiamond(graphics, 64, 84, 86, 28, 0x0f1c2a, 0.95)
-  drawIsoDiamond(graphics, 64, 78, 76, 30, tintColor(palette.top, -0.16), 1)
-  drawIsoDiamond(graphics, 64, 72, 72, 28, palette.top)
+  // Left-front face (lit side, viewer's left)
+  g.fillStyle(leftFront, 1)
+  g.fillPoints([new Phaser.Geom.Point(W.x, W.y), new Phaser.Geom.Point(S.x, S.y), new Phaser.Geom.Point(P.x, P.y)], true)
 
-  graphics.fillStyle(palette.left, 1)
-  graphics.fillPoints(
-    [
-      new Phaser.Geom.Point(26, 72),
-      new Phaser.Geom.Point(64, 88),
-      new Phaser.Geom.Point(64, 26),
-      new Phaser.Geom.Point(26, 42),
-    ],
-    true,
-  )
+  // Right-front face (shadow side, viewer's right)
+  g.fillStyle(rightFront, 1)
+  g.fillPoints([new Phaser.Geom.Point(S.x, S.y), new Phaser.Geom.Point(E.x, E.y), new Phaser.Geom.Point(P.x, P.y)], true)
 
-  graphics.fillStyle(palette.right, 1)
-  graphics.fillPoints(
-    [
-      new Phaser.Geom.Point(64, 88),
-      new Phaser.Geom.Point(102, 72),
-      new Phaser.Geom.Point(102, 42),
-      new Phaser.Geom.Point(64, 26),
-    ],
-    true,
-  )
+  // Right-back (partially visible)
+  g.fillStyle(rightBack, 1)
+  g.fillPoints([new Phaser.Geom.Point(E.x, E.y), new Phaser.Geom.Point(N.x, N.y), new Phaser.Geom.Point(P.x, P.y)], true)
 
-  graphics.fillStyle(tintColor(palette.top, 0.12), 0.96)
-  graphics.fillRect(48, 38, 32, 28)
-  graphics.fillRect(54, 24, 20, 20)
-  graphics.fillRect(38, 50, 12, 16)
-  graphics.fillRect(78, 50, 12, 16)
-  graphics.fillStyle(palette.accent, 0.96)
-  graphics.fillRect(58, 44, 12, 18)
-  graphics.fillRect(57, 28, 14, 10)
-  graphics.fillStyle(0xf3f8ff, 0.65)
-  graphics.fillRect(53, 46, 4, 8)
-  graphics.fillRect(71, 46, 4, 8)
-  graphics.fillRect(60, 30, 8, 4)
-  graphics.fillStyle(tintColor(palette.accent, -0.2), 0.92)
-  graphics.fillTriangle(64, 8, 42, 34, 86, 34)
-  graphics.fillRect(61, 11, 6, 14)
-  graphics.fillStyle(tintColor(palette.accent, 0.06), 0.36)
-  graphics.fillRect(41, 51, 6, 10)
-  graphics.fillRect(81, 51, 6, 10)
-
-  graphics.lineStyle(2, 0x09111c, 0.5)
-  graphics.strokePoints(
-    [
-      new Phaser.Geom.Point(64, 16),
-      new Phaser.Geom.Point(102, 42),
-      new Phaser.Geom.Point(102, 72),
-      new Phaser.Geom.Point(64, 88),
-      new Phaser.Geom.Point(26, 72),
-      new Phaser.Geom.Point(26, 42),
-    ],
-    true,
-  )
-
-  graphics.lineStyle(1, 0xffffff, 0.08)
-  graphics.strokeLineShape(new Phaser.Geom.Line(44, 36, 82, 36))
-  graphics.strokeLineShape(new Phaser.Geom.Line(64, 16, 64, 88))
-
-  graphics.generateTexture(key, 128, 128)
+  // Left-back (same as right-back, darkest)
+  g.fillStyle(tintColor(rightBack, -0.08), 1)
+  g.fillPoints([new Phaser.Geom.Point(N.x, N.y), new Phaser.Geom.Point(W.x, W.y), new Phaser.Geom.Point(P.x, P.y)], true)
 }
 
-function generatePropTextures(graphics: import('phaser').GameObjects.Graphics) {
-  // ── prop-tree (80×80) — round stylized tree with layered foliage ──
-  graphics.clear()
-  // Drop shadow
-  graphics.fillStyle(0x000000, 0.18)
-  graphics.fillEllipse(40, 72, 46, 14)
-  // Foliage — three overlapping circles build depth
-  graphics.fillStyle(0x274f30, 1)
-  graphics.fillCircle(40, 42, 22)        // dark base layer
-  graphics.fillStyle(0x336040, 1)
-  graphics.fillCircle(30, 35, 16)        // left cluster
-  graphics.fillCircle(50, 35, 16)        // right cluster
-  graphics.fillStyle(0x3d7248, 1)
-  graphics.fillCircle(40, 26, 17)        // top dome
-  // Rim highlight — sells the round silhouette
-  graphics.fillStyle(0x56a060, 0.5)
-  graphics.fillCircle(34, 21, 8)
-  // Trunk
-  graphics.fillStyle(0x5c3d22, 1)
-  graphics.fillRect(36, 56, 8, 18)
-  // Trunk edge highlight
-  graphics.fillStyle(0x8a6040, 0.38)
-  graphics.fillRect(36, 56, 3, 18)
-  graphics.generateTexture('prop-tree', 80, 80)
+// ─── Town Hall ────────────────────────────────────────────────────────────────
+// Canvas: 160×200.  Building base (ground contact) is near canvas y=175.
+// Bottom-center anchor = canvas (80, 200).
 
-  // ── prop-stones (64×64) — polished rock cluster ──
-  graphics.clear()
-  // Drop shadow
-  graphics.fillStyle(0x000000, 0.2)
-  graphics.fillEllipse(32, 54, 44, 13)
-  // Back/center rock (largest)
-  graphics.fillStyle(0x687480, 1)
-  graphics.fillEllipse(34, 36, 28, 19)
-  // Left rock
-  graphics.fillStyle(0x5e6a74, 1)
-  graphics.fillEllipse(19, 41, 20, 14)
-  // Right rock (smallest)
-  graphics.fillStyle(0x70808c, 1)
-  graphics.fillEllipse(47, 43, 15, 11)
-  // Specular highlights
-  graphics.fillStyle(0xb0bec8, 0.38)
-  graphics.fillEllipse(30, 29, 11, 6)
-  graphics.fillStyle(0xb0bec8, 0.22)
-  graphics.fillEllipse(17, 37, 7, 4)
-  graphics.generateTexture('prop-stones', 64, 64)
+function generateTownHall(g: G) {
+  g.clear()
 
-  // ── prop-bush (48×48) — compact leafy bush ──
-  graphics.clear()
-  // Drop shadow
-  graphics.fillStyle(0x000000, 0.15)
-  graphics.fillEllipse(24, 43, 34, 11)
-  // Bush body — two side circles + centre
-  graphics.fillStyle(0x2a5535, 1)
-  graphics.fillCircle(24, 28, 15)
-  graphics.fillStyle(0x366840, 0.92)
-  graphics.fillCircle(16, 25, 11)
-  graphics.fillCircle(32, 25, 11)
-  // Top highlight
-  graphics.fillStyle(0x56a060, 0.48)
-  graphics.fillCircle(20, 20, 6)
-  graphics.generateTexture('prop-bush', 48, 48)
+  const cx = 80  // horizontal center
 
-  // ── prop-grass-tuft (32×32) — small ground clutter ──
-  graphics.clear()
-  // Three triangular blades
-  graphics.fillStyle(0x488040, 1)
-  graphics.fillTriangle(13, 22, 11, 7, 16, 22)
-  graphics.fillStyle(0x5a9a4a, 0.9)
-  graphics.fillTriangle(17, 22, 15, 4, 21, 22)
-  graphics.fillStyle(0x488040, 0.85)
-  graphics.fillTriangle(22, 22, 20, 9, 26, 22)
-  // Blade tips — subtle highlight
-  graphics.fillStyle(0x78c060, 0.45)
-  graphics.fillCircle(16, 7, 2)
-  graphics.fillCircle(18, 4, 2)
-  graphics.generateTexture('prop-grass-tuft', 32, 32)
+  // ── Step 1: Foundation raised platform ───────────────────────────────────
+  // Outer platform — wide stone base step
+  isoBox(g, cx, 148, 56, 20, 13,
+    0xa09078,   // top: warm stone
+    0x7a6c58,   // left: lit side
+    0x5c5040,   // right: shadow side
+  )
 
-  // ── prop-banner (unchanged — used by Building entity) ──
-  graphics.clear()
-  graphics.fillStyle(0x4a3322, 1)
-  graphics.fillRect(28, 18, 5, 32)
-  graphics.fillStyle(0xc9581a, 1)
-  graphics.fillTriangle(33, 18, 52, 28, 33, 36)
-  graphics.fillStyle(0xffdb9b, 0.8)
-  graphics.fillTriangle(33, 22, 46, 28, 33, 32)
-  graphics.generateTexture('prop-banner', 64, 64)
+  // Inner platform — second step (slightly smaller, slightly taller)
+  isoBox(g, cx, 136, 48, 17, 10,
+    0xb0a080,
+    0x887868,
+    0x685848,
+  )
 
-  // ── prop-ruins (unchanged — used by Building entity) ──
-  graphics.clear()
-  graphics.fillStyle(0x081019, 0.25)
-  graphics.fillEllipse(32, 52, 46, 16)
-  graphics.fillStyle(0x5f6974, 0.9)
-  graphics.fillRect(16, 32, 10, 12)
-  graphics.fillRect(28, 26, 10, 18)
-  graphics.fillRect(40, 34, 8, 10)
-  graphics.fillStyle(0x9aa7b4, 0.35)
-  graphics.fillRect(16, 28, 32, 4)
-  graphics.generateTexture('prop-ruins', 64, 64)
+  // Stone detail on outer platform top face
+  g.lineStyle(1, 0x706050, 0.22)
+  g.strokeLineShape(new Phaser.Geom.Line(cx - 28, 148, cx + 28, 143))
+  g.strokeLineShape(new Phaser.Geom.Line(cx - 10, 152, cx + 10, 148))
+  g.lineStyle(1, 0xd0c0a0, 0.18)
+  g.strokeLineShape(new Phaser.Geom.Line(cx - 30, 135, cx, 128))
 
-  // ── prop-beacon (unchanged) ──
-  graphics.clear()
-  graphics.fillStyle(0x081019, 0.22)
-  graphics.fillEllipse(32, 54, 40, 14)
-  graphics.fillStyle(0x102438, 0.92)
-  graphics.fillRect(28, 22, 8, 26)
-  graphics.fillStyle(0xe07030, 0.96)
-  graphics.fillRect(30, 16, 4, 8)
-  graphics.fillStyle(0xf8c08a, 0.26)
-  graphics.fillEllipse(32, 16, 18, 10)
-  graphics.generateTexture('prop-beacon', 64, 64)
+  // ── Step 2: Main building walls ───────────────────────────────────────────
+  // Wall base sits on inner platform top. Wall height = 52px.
+  const wCy = 128   // wall iso-face center y
+  const wHW = 44, wHH = 16, wH = 52
+
+  // Left wall (lit face)
+  g.fillStyle(0xd4bc80, 1)
+  g.fillPoints([
+    new Phaser.Geom.Point(cx - wHW, wCy),
+    new Phaser.Geom.Point(cx,       wCy + wHH),
+    new Phaser.Geom.Point(cx,       wCy + wHH - wH),
+    new Phaser.Geom.Point(cx - wHW, wCy - wH),
+  ], true)
+
+  // Right wall (shadow face)
+  g.fillStyle(0x9c8440, 1)
+  g.fillPoints([
+    new Phaser.Geom.Point(cx,       wCy + wHH),
+    new Phaser.Geom.Point(cx + wHW, wCy),
+    new Phaser.Geom.Point(cx + wHW, wCy - wH),
+    new Phaser.Geom.Point(cx,       wCy + wHH - wH),
+  ], true)
+
+  // Wall top face (roof platform)
+  isoDiamond(g, cx, wCy - wH, wHW, wHH, 0xe0cc88)
+
+  // ── Architectural accent: cornice band at top of walls ───────────────────
+  // Thin bright strip along top edge of left wall
+  g.lineStyle(2, 0xf0d898, 0.55)
+  g.strokeLineShape(
+    new Phaser.Geom.Line(cx - wHW, wCy - wH, cx, wCy + wHH - wH),
+  )
+  g.strokeLineShape(
+    new Phaser.Geom.Line(cx, wCy + wHH - wH, cx + wHW, wCy - wH),
+  )
+
+  // ── Step 3: Windows ───────────────────────────────────────────────────────
+  // Left wall: 2 arched windows
+  const leftWinPositions = [
+    { x: cx - 32, y: wCy - 22 },
+    { x: cx - 16, y: wCy - 10 },
+  ]
+  for (const wp of leftWinPositions) {
+    // Dark frame
+    g.fillStyle(0x2a1e0e, 0.9)
+    g.fillRect(wp.x - 5, wp.y - 12, 10, 16)
+    // Warm glow pane
+    g.fillStyle(0xffda70, 0.85)
+    g.fillRect(wp.x - 3, wp.y - 10, 6, 12)
+    // Arched top (3 dots approximating arch)
+    g.fillStyle(0xffda70, 0.85)
+    g.fillCircle(wp.x, wp.y - 10, 3)
+    // Window cross mullion
+    g.fillStyle(0x2a1e0e, 0.7)
+    g.fillRect(wp.x - 3, wp.y - 5, 6, 1)
+    g.fillRect(wp.x, wp.y - 10, 1, 12)
+  }
+
+  // Right wall: 2 windows (dimmer, shadow side)
+  const rightWinPositions = [
+    { x: cx + 16, y: wCy - 10 },
+    { x: cx + 32, y: wCy - 22 },
+  ]
+  for (const wp of rightWinPositions) {
+    g.fillStyle(0x1e1608, 0.9)
+    g.fillRect(wp.x - 5, wp.y - 12, 10, 16)
+    g.fillStyle(0xd4a030, 0.7)
+    g.fillRect(wp.x - 3, wp.y - 10, 6, 12)
+    g.fillCircle(wp.x, wp.y - 10, 3)
+    g.fillStyle(0x1e1608, 0.6)
+    g.fillRect(wp.x - 3, wp.y - 5, 6, 1)
+    g.fillRect(wp.x, wp.y - 10, 1, 12)
+  }
+
+  // ── Step 4: Main door arch ────────────────────────────────────────────────
+  // Centered at the S point of wall bottom
+  const doorX = cx, doorY = wCy + wHH - 4
+  g.fillStyle(0x2a1808, 0.95)
+  g.fillRect(doorX - 7, doorY - 18, 14, 18)
+  // Door arch top
+  g.fillStyle(0x2a1808, 0.95)
+  g.fillCircle(doorX, doorY - 18, 7)
+  // Door glow (inner light)
+  g.fillStyle(0xff9830, 0.35)
+  g.fillCircle(doorX, doorY - 12, 5)
+  // Door frame decorative border
+  g.lineStyle(1, 0xc89040, 0.5)
+  g.strokeRect(doorX - 8, doorY - 19, 16, 20)
+
+  // ── Step 5: Hipped roof ───────────────────────────────────────────────────
+  // Eave line extends slightly beyond wall top
+  const eCy = wCy - wH      // eave center y = wall top face center
+  const eHW = wHW + 5, eHH = wHH + 4  // eave extends beyond wall
+  const peakX = cx, peakY = eCy - 38  // peak 38px above eave center
+
+  hippedRoof(
+    g,
+    cx, eCy, eHW, eHH,
+    peakX, peakY,
+    0xc84030,   // left-front: warm terracotta (lit)
+    0x8c2418,   // right-front: deep shadow terracotta
+    0xa03020,   // right-back
+  )
+
+  // Roof ridge highlight (bright edge along eave left-front slope)
+  g.lineStyle(2, 0xe05840, 0.5)
+  g.strokeLineShape(
+    new Phaser.Geom.Line(cx - eHW, eCy, peakX, peakY),
+  )
+
+  // Eave overhang edge line — defines crisp roof base
+  g.lineStyle(2, 0x6a1808, 0.55)
+  g.strokePoints(
+    [
+      new Phaser.Geom.Point(cx,        eCy - eHH),
+      new Phaser.Geom.Point(cx + eHW,  eCy),
+      new Phaser.Geom.Point(cx,        eCy + eHH),
+      new Phaser.Geom.Point(cx - eHW,  eCy),
+    ],
+    true,
+  )
+
+  // ── Step 6: Central tower (sits at roof peak) ─────────────────────────────
+  const tCy = peakY + 4       // tower iso-diamond center
+  const tHW = 11, tHH = 5
+  const tWallH = 28           // tower wall height
+
+  // Tower walls
+  g.fillStyle(0xd0b870, 1)    // left face — lit
+  g.fillPoints([
+    new Phaser.Geom.Point(cx - tHW, tCy),
+    new Phaser.Geom.Point(cx,       tCy + tHH),
+    new Phaser.Geom.Point(cx,       tCy + tHH - tWallH),
+    new Phaser.Geom.Point(cx - tHW, tCy - tWallH),
+  ], true)
+
+  g.fillStyle(0x9a8040, 1)    // right face — shadow
+  g.fillPoints([
+    new Phaser.Geom.Point(cx,       tCy + tHH),
+    new Phaser.Geom.Point(cx + tHW, tCy),
+    new Phaser.Geom.Point(cx + tHW, tCy - tWallH),
+    new Phaser.Geom.Point(cx,       tCy + tHH - tWallH),
+  ], true)
+
+  // Tower top face
+  isoDiamond(g, cx, tCy - tWallH, tHW, tHH, 0xe8d080)
+
+  // Tower crenellations (merlons) on top
+  const crenelY = tCy - tWallH - tHH
+  for (let m = -1; m <= 1; m++) {
+    g.fillStyle(0xd8c070, 1)
+    g.fillRect(cx + m * 7 - 3, crenelY - 6, 5, 5)
+  }
+
+  // ── Step 7: Spire ─────────────────────────────────────────────────────────
+  const spireBase = tCy - tWallH - tHH - 2
+  const spireTip  = spireBase - 28
+
+  // Spire left face
+  g.fillStyle(0xc03828, 1)
+  g.fillPoints([
+    new Phaser.Geom.Point(cx - tHW, spireBase),
+    new Phaser.Geom.Point(cx,       spireBase + tHH),
+    new Phaser.Geom.Point(cx,       spireTip),
+  ], true)
+
+  // Spire right face
+  g.fillStyle(0x882018, 1)
+  g.fillPoints([
+    new Phaser.Geom.Point(cx,       spireBase + tHH),
+    new Phaser.Geom.Point(cx + tHW, spireBase),
+    new Phaser.Geom.Point(cx,       spireTip),
+  ], true)
+
+  // Spire highlight edge
+  g.lineStyle(1, 0xe04838, 0.5)
+  g.strokeLineShape(new Phaser.Geom.Line(cx - tHW, spireBase, cx, spireTip))
+
+  // ── Step 8: Flag ──────────────────────────────────────────────────────────
+  // Pole
+  g.lineStyle(2, 0x5c3c18, 1)
+  g.strokeLineShape(new Phaser.Geom.Line(cx, spireTip, cx, spireTip - 18))
+
+  // Flag body
+  g.fillStyle(0xe83018, 0.95)
+  g.fillTriangle(cx, spireTip - 17, cx + 18, spireTip - 11, cx, spireTip - 5)
+  // Flag highlight stripe
+  g.fillStyle(0xff6040, 0.55)
+  g.fillTriangle(cx, spireTip - 16, cx + 15, spireTip - 11, cx, spireTip - 7)
+  // Gold finial at top of pole
+  g.fillStyle(0xffd040, 1)
+  g.fillCircle(cx, spireTip - 18, 2)
+
+  // ── Step 9: Ambient occlusion at building base ────────────────────────────
+  g.fillStyle(0x000000, 0.12)
+  g.fillEllipse(cx, wCy + wHH + 2, 96, 18)
+
+  g.generateTexture('town_hall', 160, 200)
 }
+
+// ─── Generic building generator (all other types) ─────────────────────────────
+// Canvas: 128×128. Each type has its own palette + roof/accent style.
+
+const BUILDING_DEFS = {
+  arcane_tower: {
+    wallTop: 0xb0a0e8, wallLeft: 0x8070d0, wallRight: 0x5848a8,
+    roofLeft: 0x6040c0, roofRight: 0x3828a0, accent: 0xe8d8ff,
+    glow: 0xc8a0ff, style: 'tower',
+  },
+  library: {
+    wallTop: 0xc8a868, wallLeft: 0xa88040, wallRight: 0x785c28,
+    roofLeft: 0x6a5030, roofRight: 0x4e3820, accent: 0xffe0a0,
+    glow: 0xffd070, style: 'dome',
+  },
+  iron_forge: {
+    wallTop: 0xb0b8c4, wallLeft: 0x889098, wallRight: 0x60686e,
+    roofLeft: 0x484e54, roofRight: 0x343840, accent: 0xff8840,
+    glow: 0xff6020, style: 'chimney',
+  },
+  barracks: {
+    wallTop: 0xd87070, wallLeft: 0xa84848, wallRight: 0x7a3030,
+    roofLeft: 0x582020, roofRight: 0x3e1414, accent: 0xf8d0b0,
+    glow: 0xff9060, style: 'battlement',
+  },
+  observatory: {
+    wallTop: 0x90d4e4, wallLeft: 0x60a8ba, wallRight: 0x407a8e,
+    roofLeft: 0x305870, roofRight: 0x203a50, accent: 0xd0f4ff,
+    glow: 0x80e4ff, style: 'dome',
+  },
+  market: {
+    wallTop: 0xf0b860, wallLeft: 0xc88c38, wallRight: 0x986020,
+    roofLeft: 0x784018, roofRight: 0x522808, accent: 0xffe090,
+    glow: 0xffcc40, style: 'awning',
+  },
+  wall: {
+    wallTop: 0xd4dce4, wallLeft: 0xa4acb8, wallRight: 0x78828e,
+    roofLeft: 0x585e66, roofRight: 0x404448, accent: 0xf0f4f8,
+    glow: 0xe8eef4, style: 'battlement',
+  },
+  monument: {
+    wallTop: 0xf0ece4, wallLeft: 0xd0cac0, wallRight: 0xa8a09a,
+    roofLeft: 0x888078, roofRight: 0x605a54, accent: 0xfff8e0,
+    glow: 0xffe860, style: 'spire',
+  },
+} as const
+
+type DefKey = keyof typeof BUILDING_DEFS
+
+function generateBuilding(g: G, key: DefKey) {
+  const d = BUILDING_DEFS[key]
+  g.clear()
+
+  const cx = 64, canvasH = 128
+
+  // ── Shadow ────────────────────────────────────────────────────────────────
+  g.fillStyle(0x000000, 0.14)
+  g.fillEllipse(cx, canvasH - 18, 82, 24)
+  g.fillStyle(0x000000, 0.1)
+  g.fillEllipse(cx, canvasH - 22, 56, 14)
+
+  // ── Foundation platform ───────────────────────────────────────────────────
+  isoBox(g, cx, 94, 42, 15, 9, 0x9a8a78, 0x72665a, 0x564e44)
+
+  // Stone detail
+  g.lineStyle(1, 0x706050, 0.2)
+  g.strokeLineShape(new Phaser.Geom.Line(cx - 22, 91, cx + 22, 86))
+
+  // ── Main building body ────────────────────────────────────────────────────
+  const bCy = 85, bHW = 36, bHH = 14, bWallH = 44
+
+  g.fillStyle(d.wallLeft, 1)
+  g.fillPoints([
+    new Phaser.Geom.Point(cx - bHW, bCy),
+    new Phaser.Geom.Point(cx,       bCy + bHH),
+    new Phaser.Geom.Point(cx,       bCy + bHH - bWallH),
+    new Phaser.Geom.Point(cx - bHW, bCy - bWallH),
+  ], true)
+
+  g.fillStyle(d.wallRight, 1)
+  g.fillPoints([
+    new Phaser.Geom.Point(cx,       bCy + bHH),
+    new Phaser.Geom.Point(cx + bHW, bCy),
+    new Phaser.Geom.Point(cx + bHW, bCy - bWallH),
+    new Phaser.Geom.Point(cx,       bCy + bHH - bWallH),
+  ], true)
+
+  isoDiamond(g, cx, bCy - bWallH, bHW, bHH, d.wallTop)
+
+  // Top edge highlight
+  g.lineStyle(1, tintColor(d.wallTop, 0.25), 0.4)
+  g.strokeLineShape(new Phaser.Geom.Line(cx - bHW, bCy - bWallH, cx, bCy + bHH - bWallH))
+
+  // ── Window on left wall ───────────────────────────────────────────────────
+  const winX = cx - 22, winY = bCy - 20
+  g.fillStyle(0x0a0808, 0.9)
+  g.fillRect(winX - 5, winY - 10, 10, 14)
+  g.fillCircle(winX, winY - 10, 5)
+  g.fillStyle(d.glow, 0.82)
+  g.fillRect(winX - 3, winY - 8, 6, 10)
+  g.fillCircle(winX, winY - 8, 3)
+  // mullion
+  g.fillStyle(0x0a0808, 0.6)
+  g.fillRect(winX - 3, winY - 3, 6, 1)
+
+  // Window on right wall (dimmer)
+  const rWinX = cx + 22, rWinY = bCy - 20
+  g.fillStyle(0x080606, 0.9)
+  g.fillRect(rWinX - 5, rWinY - 10, 10, 14)
+  g.fillCircle(rWinX, rWinY - 10, 5)
+  g.fillStyle(tintColor(d.glow, -0.2), 0.6)
+  g.fillRect(rWinX - 3, rWinY - 8, 6, 10)
+  g.fillCircle(rWinX, rWinY - 8, 3)
+
+  // ── Style-specific roof / top feature ─────────────────────────────────────
+  const eCy = bCy - bWallH
+  const eHW = bHW + 4, eHH = bHH + 3
+
+  if (d.style === 'tower' || d.style === 'spire') {
+    // Tall peaked top
+    const peakY = eCy - 46
+    hippedRoof(g, cx, eCy, eHW, eHH, cx, peakY, d.roofLeft, d.roofRight, tintColor(d.roofRight, 0.05))
+    // Spire finial
+    g.fillStyle(d.accent, 0.9)
+    g.fillTriangle(cx - 4, peakY, cx + 4, peakY, cx, peakY - 14)
+    // Glow at tip
+    g.fillStyle(d.glow, 0.5)
+    g.fillCircle(cx, peakY - 14, 3)
+  } else if (d.style === 'dome') {
+    // Rounded dome approximated with stacked ellipses
+    const domeBaseY = eCy - 4
+    // Dome body (6 ellipses stacked to fake a curve)
+    for (let i = 0; i < 6; i++) {
+      const progress = i / 6
+      const domeW = eHW * 2 * (1 - progress * 0.55)
+      const domeH = eHH * 2 * (1 - progress * 0.6)
+      const domeColor = tintColor(d.roofLeft, progress * 0.3)
+      g.fillStyle(domeColor, 1)
+      g.fillEllipse(cx, domeBaseY - i * 5, domeW, domeH)
+    }
+    // Dome tip knob
+    g.fillStyle(d.accent, 0.9)
+    g.fillCircle(cx, domeBaseY - 30, 4)
+    g.fillStyle(d.glow, 0.5)
+    g.fillCircle(cx, domeBaseY - 34, 2)
+  } else if (d.style === 'battlement') {
+    // Flat roof with crenellations
+    hippedRoof(g, cx, eCy, eHW, eHH, cx, eCy - 18, d.roofLeft, d.roofRight, tintColor(d.roofRight, 0.05))
+    // Merlons along parapet
+    const mY = eCy - 18
+    for (let m = -2; m <= 2; m++) {
+      g.fillStyle(d.wallLeft, 1)
+      g.fillRect(cx + m * 10 - 3, mY - 10, 6, 8)
+    }
+  } else if (d.style === 'chimney') {
+    // Industrial: flat roof + chimney stacks
+    hippedRoof(g, cx, eCy, eHW, eHH, cx, eCy - 20, d.roofLeft, d.roofRight, tintColor(d.roofRight, 0.05))
+    // Two chimneys
+    for (const chx of [cx - 14, cx + 10]) {
+      g.fillStyle(tintColor(d.wallLeft, -0.1), 1)
+      g.fillRect(chx - 4, eCy - 36, 8, 18)
+      g.fillStyle(0x181010, 1)
+      g.fillRect(chx - 5, eCy - 38, 10, 5)
+      // Smoke glow
+      g.fillStyle(d.glow, 0.22)
+      g.fillCircle(chx, eCy - 42, 6)
+      g.fillStyle(d.glow, 0.12)
+      g.fillCircle(chx + 2, eCy - 48, 4)
+    }
+  } else if (d.style === 'awning') {
+    // Market: roof + colorful awning overhang at front
+    hippedRoof(g, cx, eCy, eHW, eHH, cx, eCy - 22, d.roofLeft, d.roofRight, tintColor(d.roofRight, 0.05))
+    // Awning strips on left wall
+    for (let s = 0; s < 3; s++) {
+      const aColor = s % 2 === 0 ? d.accent : tintColor(d.roofLeft, 0.1)
+      const ay = bCy - 12 + s * 8
+      g.fillStyle(aColor, 0.85)
+      g.fillPoints([
+        new Phaser.Geom.Point(cx - bHW,     ay),
+        new Phaser.Geom.Point(cx,           ay + bHH * 0.45),
+        new Phaser.Geom.Point(cx,           ay + bHH * 0.45 + 5),
+        new Phaser.Geom.Point(cx - bHW - 3, ay + 5),
+      ], true)
+    }
+  }
+
+  // ── Type-specific accent detail ───────────────────────────────────────────
+  if (key === 'arcane_tower') {
+    // Glowing rune circle on left wall
+    g.lineStyle(1, d.glow, 0.45)
+    g.strokeCircle(cx - 22, bCy - 26, 8)
+    g.fillStyle(d.glow, 0.15)
+    g.fillCircle(cx - 22, bCy - 26, 8)
+  } else if (key === 'monument') {
+    // Carved inscription lines
+    g.lineStyle(1, 0xfff8d0, 0.3)
+    for (let l = 0; l < 4; l++) {
+      g.strokeLineShape(
+        new Phaser.Geom.Line(cx - 20, bCy - 14 - l * 7, cx - 8, bCy - 14 - l * 7 - 3),
+      )
+    }
+  } else if (key === 'barracks') {
+    // Banner hanging on left wall
+    g.fillStyle(0xb82020, 0.9)
+    g.fillRect(cx - 30, bCy - 34, 8, 14)
+    g.fillStyle(0xff8040, 0.7)
+    g.fillRect(cx - 29, bCy - 33, 6, 6)
+  }
+
+  g.generateTexture(key, 128, 128)
+}
+
+// ─── Prop textures (unchanged core props + improvements) ─────────────────────
+
+function generatePropTextures(g: G) {
+  // ── prop-tree (96×96) ─────────────────────────────────────────────────────
+  g.clear()
+  g.fillStyle(0x000000, 0.22)
+  g.fillEllipse(48, 86, 56, 16)
+  g.fillStyle(0x1a3d22, 1)
+  g.fillCircle(48, 56, 28)
+  g.fillStyle(0x285e30, 1)
+  g.fillCircle(34, 46, 20)
+  g.fillCircle(62, 46, 20)
+  g.fillStyle(0x37723e, 1)
+  g.fillCircle(48, 34, 22)
+  g.fillStyle(0x4a8c52, 1)
+  g.fillCircle(48, 26, 16)
+  g.fillStyle(0x72c07a, 0.55)
+  g.fillCircle(40, 20, 9)
+  g.fillStyle(0x5aa062, 0.3)
+  g.fillCircle(56, 24, 6)
+  g.fillStyle(0x4a3018, 1)
+  g.fillRect(43, 66, 10, 22)
+  g.fillStyle(0x2c1c0a, 0.5)
+  g.fillRect(50, 66, 3, 22)
+  g.fillStyle(0x7a5830, 0.35)
+  g.fillRect(43, 66, 3, 22)
+  g.generateTexture('prop-tree', 96, 96)
+
+  // ── prop-tree-b (96×96) ───────────────────────────────────────────────────
+  g.clear()
+  g.fillStyle(0x000000, 0.25)
+  g.fillEllipse(48, 86, 52, 14)
+  g.fillStyle(0x162e1a, 1)
+  g.fillCircle(48, 56, 26)
+  g.fillStyle(0x1f4826, 1)
+  g.fillCircle(35, 48, 18)
+  g.fillCircle(61, 48, 18)
+  g.fillStyle(0x2a5e30, 1)
+  g.fillCircle(48, 36, 20)
+  g.fillStyle(0x357040, 1)
+  g.fillCircle(48, 28, 14)
+  g.fillStyle(0x5ab878, 0.4)
+  g.fillCircle(41, 22, 7)
+  g.fillStyle(0x3a2410, 1)
+  g.fillRect(44, 68, 9, 20)
+  g.fillStyle(0x221408, 0.5)
+  g.fillRect(50, 68, 3, 20)
+  g.generateTexture('prop-tree-b', 96, 96)
+
+  // ── prop-stones (72×72) ───────────────────────────────────────────────────
+  g.clear()
+  g.fillStyle(0x000000, 0.25)
+  g.fillEllipse(36, 62, 54, 16)
+  g.fillStyle(0x6e7e8c, 1)
+  g.fillEllipse(40, 40, 36, 24)
+  g.fillStyle(0x3a4450, 0.45)
+  g.fillEllipse(46, 46, 20, 12)
+  g.fillStyle(0x62707c, 1)
+  g.fillEllipse(22, 46, 24, 17)
+  g.fillStyle(0x3a444e, 0.4)
+  g.fillEllipse(25, 50, 12, 7)
+  g.fillStyle(0x788898, 1)
+  g.fillEllipse(54, 50, 18, 13)
+  g.fillStyle(0xb8cad6, 0.45)
+  g.fillEllipse(34, 32, 14, 7)
+  g.fillStyle(0xb8cad6, 0.28)
+  g.fillEllipse(19, 40, 9, 5)
+  g.fillStyle(0xd0dce6, 0.2)
+  g.fillEllipse(50, 44, 7, 4)
+  g.generateTexture('prop-stones', 72, 72)
+
+  // ── prop-bush (52×52) ─────────────────────────────────────────────────────
+  g.clear()
+  g.fillStyle(0x000000, 0.18)
+  g.fillEllipse(26, 47, 40, 12)
+  g.fillStyle(0x1e4228, 1)
+  g.fillCircle(26, 30, 18)
+  g.fillStyle(0x2d5e38, 0.95)
+  g.fillCircle(16, 27, 13)
+  g.fillCircle(36, 27, 13)
+  g.fillStyle(0x3d7244, 1)
+  g.fillCircle(26, 20, 12)
+  g.fillStyle(0x62a86a, 0.52)
+  g.fillCircle(21, 16, 7)
+  g.fillStyle(0xc04848, 0.7)
+  g.fillCircle(30, 23, 2)
+  g.fillCircle(22, 26, 2)
+  g.generateTexture('prop-bush', 52, 52)
+
+  // ── prop-flower (28×28) ───────────────────────────────────────────────────
+  g.clear()
+  g.fillStyle(0x3e6e28, 1)
+  g.fillRect(10, 14, 2, 10)
+  g.fillRect(15, 12, 2, 12)
+  g.fillRect(20, 15, 2, 9)
+  g.fillStyle(0xe8c040, 0.9)
+  g.fillCircle(11, 12, 4)
+  g.fillStyle(0xfff080, 0.6)
+  g.fillCircle(11, 12, 2)
+  g.fillStyle(0xd060c0, 0.9)
+  g.fillCircle(16, 10, 4)
+  g.fillStyle(0xf8a8f0, 0.6)
+  g.fillCircle(16, 10, 2)
+  g.fillStyle(0xf8f8f8, 0.88)
+  g.fillCircle(21, 13, 3)
+  g.fillStyle(0xffff80, 0.7)
+  g.fillCircle(21, 13, 1)
+  g.fillStyle(0x4a7830, 0.5)
+  g.fillEllipse(15, 23, 22, 6)
+  g.generateTexture('prop-flower', 28, 28)
+
+  // ── prop-grass-tuft (36×36) ───────────────────────────────────────────────
+  g.clear()
+  g.fillStyle(0x3e6a2e, 0.8)
+  g.fillTriangle(8, 28, 6, 8, 12, 28)
+  g.fillTriangle(26, 28, 24, 10, 30, 28)
+  g.fillStyle(0x52884a, 1)
+  g.fillTriangle(14, 28, 12, 6, 18, 28)
+  g.fillStyle(0x60a058, 0.95)
+  g.fillTriangle(19, 28, 17, 4, 24, 28)
+  g.fillStyle(0x88d070, 0.45)
+  g.fillCircle(15, 7, 2)
+  g.fillCircle(20, 5, 2)
+  g.fillStyle(0x000000, 0.12)
+  g.fillEllipse(18, 29, 26, 6)
+  g.generateTexture('prop-grass-tuft', 36, 36)
+
+  // ── prop-banner ───────────────────────────────────────────────────────────
+  g.clear()
+  g.fillStyle(0x4a3322, 1)
+  g.fillRect(28, 18, 5, 32)
+  g.fillStyle(0xc9581a, 1)
+  g.fillTriangle(33, 18, 52, 28, 33, 36)
+  g.fillStyle(0xffdb9b, 0.8)
+  g.fillTriangle(33, 22, 46, 28, 33, 32)
+  g.generateTexture('prop-banner', 64, 64)
+
+  // ── prop-ruins ────────────────────────────────────────────────────────────
+  g.clear()
+  g.fillStyle(0x081019, 0.25)
+  g.fillEllipse(32, 52, 46, 16)
+  g.fillStyle(0x5f6974, 0.9)
+  g.fillRect(16, 32, 10, 12)
+  g.fillRect(28, 26, 10, 18)
+  g.fillRect(40, 34, 8, 10)
+  g.fillStyle(0x9aa7b4, 0.35)
+  g.fillRect(16, 28, 32, 4)
+  g.generateTexture('prop-ruins', 64, 64)
+
+  // ── prop-beacon ───────────────────────────────────────────────────────────
+  g.clear()
+  g.fillStyle(0x081019, 0.22)
+  g.fillEllipse(32, 54, 40, 14)
+  g.fillStyle(0x102438, 0.92)
+  g.fillRect(28, 22, 8, 26)
+  g.fillStyle(0xe07030, 0.96)
+  g.fillRect(30, 16, 4, 8)
+  g.fillStyle(0xf8c08a, 0.26)
+  g.fillEllipse(32, 16, 18, 10)
+  g.generateTexture('prop-beacon', 64, 64)
+
+  // ── prop-log (56×32) ──────────────────────────────────────────────────────
+  g.clear()
+  g.fillStyle(0x000000, 0.2)
+  g.fillEllipse(28, 28, 52, 10)
+  g.fillStyle(0x5a3c1a, 1)
+  g.fillEllipse(28, 18, 50, 14)
+  g.fillStyle(0x6e4c24, 1)
+  g.fillEllipse(50, 18, 12, 14)
+  g.lineStyle(1, 0x3a2010, 0.5)
+  g.strokeCircle(50, 18, 4)
+  g.strokeCircle(50, 18, 2)
+  g.lineStyle(1, 0x3e2812, 0.4)
+  g.strokeLineShape(new Phaser.Geom.Line(10, 16, 46, 14))
+  g.strokeLineShape(new Phaser.Geom.Line(10, 20, 46, 18))
+  g.fillStyle(0x406030, 0.6)
+  g.fillEllipse(20, 13, 12, 5)
+  g.fillEllipse(35, 15, 9, 4)
+  g.fillStyle(0x8a6030, 0.3)
+  g.fillEllipse(22, 14, 18, 5)
+  g.generateTexture('prop-log', 56, 32)
+}
+
+// ─── Boot scene ───────────────────────────────────────────────────────────────
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -252,14 +739,22 @@ export class BootScene extends Phaser.Scene {
   }
 
   preload(): void {
-    const graphics = this.make.graphics()
+    const g = this.make.graphics()
 
-    Object.entries(BUILDING_COLORS).forEach(([key, palette]) => {
-      generateBuildingTexture(graphics, key, palette)
-    })
+    // Town hall gets its own rich dedicated generator
+    generateTownHall(g)
 
-    generatePropTextures(graphics)
-    graphics.destroy()
+    // All other building types
+    const otherTypes: DefKey[] = [
+      'arcane_tower', 'library', 'iron_forge',
+      'barracks', 'observatory', 'market', 'wall', 'monument',
+    ]
+    for (const key of otherTypes) {
+      generateBuilding(g, key)
+    }
+
+    generatePropTextures(g)
+    g.destroy()
   }
 
   create(): void {
