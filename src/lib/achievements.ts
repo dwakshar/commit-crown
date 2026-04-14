@@ -3,16 +3,27 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 type AchievementCategory = 'coding' | 'social' | 'kingdom' | 'raid' | 'legendary'
 
 export type AchievementKey =
+  // Coding
   | 'night_owl'
   | 'polyglot'
   | 'centurion'
   | 'streak_master'
   | 'open_source_hero'
-  | 'conqueror'
-  | 'architect'
-  | 'diplomat'
   | 'ghost_coder'
+  | 'consistent'
+  | 'contributor'
+  // Kingdom
+  | 'architect'
+  | 'maximalist'
+  | 'treasurer'
+  // Raid
+  | 'conqueror'
+  | 'warlord'
+  // Social
+  | 'diplomat'
+  | 'networked'
   | 'the_silent'
+  // Legendary
   | 'legend'
 
 export interface AchievementDefinition {
@@ -36,6 +47,11 @@ export interface AchievementCheckContext {
   prestigeRank: number
   visitsMade: number
   top10WeeksCount: number
+  // New fields for expanded achievements
+  buildingCount: number
+  currentGold: number
+  followers: number
+  currentStreak: number
 }
 
 export interface UnlockedAchievement {
@@ -48,6 +64,8 @@ export interface UnlockedAchievement {
 type StatsRow = {
   total_commits: number
   longest_streak: number
+  current_streak: number
+  followers: number
   languages: Record<string, number> | null
   monthly_peak: number | null
   night_commits: number | null
@@ -67,17 +85,18 @@ function isSchemaDriftError(error: { message?: string } | null) {
 }
 
 export const ACHIEVEMENTS: AchievementDefinition[] = [
+  // ── Coding ────────────────────────────────────────────────────────────────
   {
     key: 'night_owl',
     name: 'Night Owl',
-    description: 'Make at least 10 night commits.',
+    description: 'Make at least 10 commits after midnight.',
     category: 'coding',
     check: (stats) => stats.nightCommits >= 10,
   },
   {
     key: 'polyglot',
     name: 'Polyglot',
-    description: 'Work across at least five languages.',
+    description: 'Work across at least five programming languages.',
     category: 'coding',
     check: (stats) => Object.keys(stats.languages).length >= 5,
   },
@@ -91,37 +110,16 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
   {
     key: 'streak_master',
     name: 'Streak Master',
-    description: 'Reach a 30 day longest streak.',
+    description: 'Reach a 30-day longest commit streak.',
     category: 'coding',
     check: (stats) => stats.longestStreak >= 30,
   },
   {
     key: 'open_source_hero',
     name: 'Open Source Hero',
-    description: 'Own at least 10 repos with stars.',
+    description: 'Own at least 10 repositories that have received stars.',
     category: 'coding',
     check: (stats) => stats.starredRepoCount >= 10,
-  },
-  {
-    key: 'conqueror',
-    name: 'Conqueror',
-    description: 'Win 10 raids.',
-    category: 'raid',
-    check: (stats) => stats.raidWins >= 10,
-  },
-  {
-    key: 'architect',
-    name: 'Architect',
-    description: 'Upgrade any building to level 5.',
-    category: 'kingdom',
-    check: (stats) => stats.hasLevelFiveBuilding,
-  },
-  {
-    key: 'diplomat',
-    name: 'Diplomat',
-    description: 'Visit 20 distinct kingdoms.',
-    category: 'social',
-    check: (stats) => stats.distinctVisits >= 20,
   },
   {
     key: 'ghost_coder',
@@ -131,12 +129,83 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     check: (stats) => stats.nightCommits >= 5 && stats.totalCommits > 50,
   },
   {
+    key: 'consistent',
+    name: 'Consistent',
+    description: 'Maintain a 14-day active commit streak.',
+    category: 'coding',
+    check: (stats) => stats.currentStreak >= 14,
+  },
+  {
+    key: 'contributor',
+    name: 'Contributor',
+    description: 'Reach 500 total commits.',
+    category: 'coding',
+    check: (stats) => stats.totalCommits >= 500,
+  },
+
+  // ── Kingdom ───────────────────────────────────────────────────────────────
+  {
+    key: 'architect',
+    name: 'Architect',
+    description: 'Upgrade any building to level 5.',
+    category: 'kingdom',
+    check: (stats) => stats.hasLevelFiveBuilding,
+  },
+  {
+    key: 'maximalist',
+    name: 'Maximalist',
+    description: 'Have at least 10 buildings standing in your kingdom.',
+    category: 'kingdom',
+    check: (stats) => stats.buildingCount >= 10,
+  },
+  {
+    key: 'treasurer',
+    name: 'Treasurer',
+    description: 'Accumulate 5 000 gold in your kingdom treasury.',
+    category: 'kingdom',
+    check: (stats) => stats.currentGold >= 5000,
+  },
+
+  // ── Raid ──────────────────────────────────────────────────────────────────
+  {
+    key: 'conqueror',
+    name: 'Conqueror',
+    description: 'Win 10 raids.',
+    category: 'raid',
+    check: (stats) => stats.raidWins >= 10,
+  },
+  {
+    key: 'warlord',
+    name: 'Warlord',
+    description: 'Win 25 raids.',
+    category: 'raid',
+    check: (stats) => stats.raidWins >= 25,
+  },
+
+  // ── Social ────────────────────────────────────────────────────────────────
+  {
+    key: 'diplomat',
+    name: 'Diplomat',
+    description: 'Visit 20 distinct kingdoms.',
+    category: 'social',
+    check: (stats) => stats.distinctVisits >= 20,
+  },
+  {
+    key: 'networked',
+    name: 'Networked',
+    description: 'Reach 50 GitHub followers.',
+    category: 'social',
+    check: (stats) => stats.followers >= 50,
+  },
+  {
     key: 'the_silent',
     name: 'The Silent',
     description: 'Reach the top 50 in prestige while visiting fewer than 5 kingdoms.',
     category: 'social',
     check: (stats) => stats.prestigeRank > 0 && stats.prestigeRank <= 50 && stats.visitsMade < 5,
   },
+
+  // ── Legendary ─────────────────────────────────────────────────────────────
   {
     key: 'legend',
     name: 'Legend',
@@ -154,14 +223,16 @@ export async function checkAndAwardAchievements(
     { data: githubStats, error: githubStatsError },
     raidWinsResponse,
     { data: levelFiveBuildings, error: buildingsError },
+    buildingCountResponse,
     visitResponses,
     { data: prestigeRows, error: prestigeError },
     { data: existingAchievements, error: existingError },
     topWeeksResponse,
+    { data: kingdomRow, error: kingdomError },
   ] = await Promise.all([
     supabase
       .from('github_stats')
-      .select('total_commits, longest_streak, languages, monthly_peak, night_commits, starred_repo_count')
+      .select('total_commits, longest_streak, current_streak, followers, languages, monthly_peak, night_commits, starred_repo_count')
       .eq('user_id', userId)
       .maybeSingle(),
     supabase
@@ -176,6 +247,11 @@ export async function checkAndAwardAchievements(
       .eq('buildings.level', 5)
       .limit(1)
       .maybeSingle(),
+    // Count all non-placeholder buildings
+    supabase
+      .from('buildings')
+      .select('id', { count: 'exact', head: true })
+      .eq('kingdoms.user_id', userId),
     Promise.all([
       supabase
         .from('visits')
@@ -193,6 +269,12 @@ export async function checkAndAwardAchievements(
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
       .lte('prestige_rank', 10),
+    // Fetch current gold for Treasurer achievement
+    supabase
+      .from('kingdoms')
+      .select('gold, buildings(id)')
+      .eq('user_id', userId)
+      .maybeSingle(),
   ])
 
   const shouldIgnoreExistingAchievementsError = isSchemaDriftError(existingError)
@@ -230,14 +312,24 @@ export async function checkAndAwardAchievements(
       ? ((prestigeRows ?? []).findIndex((row) => row.user_id === userId) + 1)
       : 0
 
+  // Building count: use kingdom.buildings array length if available, fall back to 0
+  type KingdomWithBuildings = { gold: number; buildings: { id: string }[] | null }
+  const typedKingdomRow = (kingdomRow as KingdomWithBuildings | null) ?? null
+  const buildingCount = typedKingdomRow?.buildings?.length ?? buildingCountResponse.count ?? 0
+  const currentGold = typedKingdomRow?.gold ?? 0
+
   const context: AchievementCheckContext = {
     nightCommits: typedGithubStats?.night_commits ?? 0,
     languages: typedGithubStats?.languages ?? {},
     monthlyPeak: typedGithubStats?.monthly_peak ?? 0,
     longestStreak: typedGithubStats?.longest_streak ?? 0,
+    currentStreak: typedGithubStats?.current_streak ?? 0,
+    followers: typedGithubStats?.followers ?? 0,
     starredRepoCount: typedGithubStats?.starred_repo_count ?? 0,
     raidWins: raidWinsResponse.count ?? 0,
     hasLevelFiveBuilding: Boolean(levelFiveBuildings),
+    buildingCount,
+    currentGold,
     distinctVisits: visitedHosts.size,
     totalCommits: typedGithubStats?.total_commits ?? 0,
     prestigeRank,

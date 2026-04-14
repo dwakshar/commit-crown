@@ -75,9 +75,22 @@ export function getBuildingName(building: BuildingData): string {
   return building.name ?? getBuildingMetadata(building.type).label
 }
 
+/**
+ * Exponential upgrade cost so early levels are affordable for new developers
+ * but reaching max level (5) is a significant investment.
+ *
+ * Level 1 → 2:  300 gold
+ * Level 2 → 3:  900 gold
+ * Level 3 → 4: 1 800 gold
+ * Level 4 → 5: 3 000 gold
+ * Total to max: 6 000 gold
+ *
+ * Formula: level * (level + 1) * 150
+ * Must stay in sync with upgrade_building_transaction SQL function.
+ */
 export function getUpgradeCost(building: Pick<BuildingData, 'level' | 'type'>): number {
   void building.type
-  return building.level * 500
+  return building.level * (building.level + 1) * 150
 }
 
 export function getSyncCooldownRemaining(lastSyncedAt: string | null): number {

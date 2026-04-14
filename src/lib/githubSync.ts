@@ -217,6 +217,7 @@ export async function syncGitHubKingdomForUser(options: {
       total_prs: ghStats.total_prs,
       followers: ghStats.followers,
       current_streak: ghStats.current_streak,
+      longest_streak: ghStats.longest_streak,
       languages: ghStats.languages,
     })
 

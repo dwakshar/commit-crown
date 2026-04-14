@@ -5,7 +5,9 @@ import {
   BUILDING_UNLOCK_REQUIREMENTS,
   type GitHubStats,
 } from "@/src/lib/gameEngine";
+import { BUILDING_METADATA } from "@/src/lib/kingdom";
 import { ensureKingdomForUser } from "@/src/lib/kingdomPersistence";
+import { supabaseAdmin } from "@/src/lib/supabaseAdmin";
 import type { BuildingType } from "@/src/types/game";
 import { createClient } from "@/utils/supabase/server";
 
@@ -25,11 +27,23 @@ const placeBuildingSchema = z.object({
   position_y: z.number().int().min(0).max(19),
 });
 
+type PlaceBuildingTransactionRow = {
+  building_id: string
+  kingdom_id: string
+  type: BuildingType
+  level: number
+  position_x: number
+  position_y: number
+  built_at: string
+  gold: number
+}
+
 type ProfileQueryResult = {
   kingdoms:
     | {
         id: string;
         building_slots: number;
+        gold: number;
         buildings:
           | {
               id: string;
@@ -48,6 +62,7 @@ type ProfileQueryResult = {
         total_prs: number;
         followers: number;
         current_streak: number;
+        longest_streak: number;
         languages: Record<string, number> | null;
       }[]
     | null;
@@ -56,6 +71,7 @@ type ProfileQueryResult = {
 type EnsuredKingdom = {
   id: string;
   building_slots: number;
+  gold: number;
   buildings:
     | {
         id: string;
@@ -89,7 +105,7 @@ export async function POST(request: Request) {
   const { data: profile, error } = await supabase
     .from("profiles")
     .select(
-      "kingdoms(id, building_slots, buildings(id, type, position_x, position_y)), github_stats(total_commits, total_repos, total_stars, total_prs, followers, current_streak, languages)"
+      "kingdoms(id, building_slots, gold, buildings(id, type, position_x, position_y)), github_stats(total_commits, total_repos, total_stars, total_prs, followers, current_streak, longest_streak, languages)"
     )
     .eq("id", user.id)
     .single();
@@ -115,6 +131,7 @@ export async function POST(request: Request) {
       kingdom = {
         id: ensuredKingdom.id,
         building_slots: ensuredKingdom.building_slots,
+        gold: ensuredKingdom.gold ?? 0,
         buildings: (ensuredKingdom.buildings ?? []).map((building) => ({
           id: building.id,
           type: building.type,
@@ -122,12 +139,12 @@ export async function POST(request: Request) {
           position_y: building.position_y,
         })),
       } satisfies EnsuredKingdom;
-    } catch (error) {
+    } catch (err) {
       return NextResponse.json(
         {
           error:
-            error instanceof Error
-              ? error.message
+            err instanceof Error
+              ? err.message
               : "Unable to initialize kingdom",
         },
         { status: 500 }
@@ -136,6 +153,7 @@ export async function POST(request: Request) {
   }
 
   const buildings = kingdom.buildings ?? [];
+
   if (parsed.data.type === "town_hall") {
     const hasTownHall = buildings.some((b) => b.type === "town_hall");
 
@@ -175,44 +193,95 @@ export async function POST(request: Request) {
     total_prs: statsRow?.total_prs ?? 0,
     followers: statsRow?.followers ?? 0,
     current_streak: statsRow?.current_streak ?? 0,
+    longest_streak: statsRow?.longest_streak ?? 0,
     languages: statsRow?.languages ?? {},
   };
 
-  if (!BUILDING_UNLOCK_REQUIREMENTS[parsed.data.type](githubStats)) {
+  const unlockRequirement = BUILDING_UNLOCK_REQUIREMENTS[parsed.data.type];
+  if (
+    typeof unlockRequirement === "function" &&
+    !unlockRequirement(githubStats)
+  ) {
     return NextResponse.json(
       { error: "Building type is locked" },
       { status: 400 }
     );
   }
 
-  const { data: newBuilding, error: insertError } = await supabase
-    .from("buildings")
-    .insert({
-      kingdom_id: kingdom.id,
-      type: parsed.data.type,
-      position_x: parsed.data.position_x,
-      position_y: parsed.data.position_y,
-      level: 1,
-    })
-    .select("id, kingdom_id, type, level, position_x, position_y, built_at")
-    .single();
+  const placementCost = BUILDING_METADATA[parsed.data.type].baseCost;
 
-  if (insertError || !newBuilding) {
-    if (insertError?.code === "23505") {
+  if (kingdom.gold < placementCost) {
+    return NextResponse.json(
+      {
+        error: `Insufficient gold. Building requires ${placementCost} gold (you have ${kingdom.gold}).`,
+      },
+      { status: 400 }
+    );
+  }
+
+  // Use an atomic transaction to place the building and deduct gold together,
+  // preventing races where two concurrent requests could both pass the gold check.
+  const { data: transactionData, error: transactionError } =
+    await supabaseAdmin.rpc("place_building_transaction", {
+      p_user_id: user.id,
+      p_type: parsed.data.type,
+      p_position_x: parsed.data.position_x,
+      p_position_y: parsed.data.position_y,
+      p_cost: placementCost,
+    });
+
+  if (transactionError) {
+    if (transactionError.message === "Position is already occupied") {
       return NextResponse.json(
-        { error: "Constraint violation (duplicate or occupied position)" },
+        { error: "Position is already occupied" },
+        { status: 400 }
+      );
+    }
+
+    if (transactionError.message === "No building slots available") {
+      return NextResponse.json(
+        { error: "No building slots available" },
+        { status: 400 }
+      );
+    }
+
+    if (transactionError.message.startsWith("Insufficient gold")) {
+      return NextResponse.json(
+        { error: "Insufficient gold" },
+        { status: 400 }
+      );
+    }
+
+    if (transactionError.message === "Town Hall already exists") {
+      return NextResponse.json(
+        { error: "Town Hall already exists. You can only have one." },
         { status: 400 }
       );
     }
 
     return NextResponse.json(
-      { error: insertError?.message ?? "Unable to place building" },
+      { error: transactionError.message ?? "Unable to place building" },
       { status: 500 }
     );
   }
 
+  const placed = (transactionData?.[0] as PlaceBuildingTransactionRow | undefined) ?? null;
+
+  if (!placed) {
+    return NextResponse.json({ error: "Unable to place building" }, { status: 500 });
+  }
+
   return NextResponse.json({
     success: true,
-    building: newBuilding,
+    building: {
+      id: placed.building_id,
+      kingdom_id: placed.kingdom_id,
+      type: placed.type,
+      level: placed.level,
+      position_x: placed.position_x,
+      position_y: placed.position_y,
+      built_at: placed.built_at,
+    },
+    gold: placed.gold,
   });
 }

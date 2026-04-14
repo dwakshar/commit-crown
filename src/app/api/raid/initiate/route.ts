@@ -2,11 +2,13 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
 import { checkAndAwardAchievements } from '@/src/lib/achievements'
+import { calculateKingdomPower } from '@/src/lib/gameEngine'
 import { supabaseAdmin } from '@/src/lib/supabaseAdmin'
 import { createClient } from '@/utils/supabase/server'
+import type { BuildingData, BuildingType } from '@/src/types/game'
 
 const initiateRaidSchema = z.object({
-  defenderId: z.uuid(),
+  defenderId: z.string().uuid(),
 })
 
 type RaidTransactionRow = {
@@ -17,6 +19,12 @@ type RaidTransactionRow = {
   result: 'attacker_win' | 'defender_win'
 }
 
+type BuildingRow = {
+  id: string
+  type: BuildingType
+  level: number
+}
+
 type DefenderProfileRow = {
   id: string
   username: string | null
@@ -25,6 +33,7 @@ type DefenderProfileRow = {
     | {
         gold: number
         defense_rating: number
+        buildings: BuildingRow[] | null
       }[]
     | null
 }
@@ -33,6 +42,17 @@ type AttackerKingdomRow = {
   id: string
   gold: number
   attack_rating: number
+  buildings: BuildingRow[] | null
+}
+
+function toBuildings(rows: BuildingRow[] | null | undefined): BuildingData[] {
+  return (rows ?? []).map((b) => ({
+    id: b.id,
+    type: b.type,
+    level: Math.min(5, Math.max(1, b.level)) as BuildingData['level'],
+    x: 0,
+    y: 0,
+  }))
 }
 
 export async function POST(request: Request) {
@@ -61,15 +81,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Cannot raid yourself' }, { status: 400 })
   }
 
+  // Fetch both kingdoms with buildings so we can compute true combat power.
   const [{ data: attackerKingdom }, { data: defenderProfile }] = await Promise.all([
     supabase
       .from('kingdoms')
-      .select('id, gold, attack_rating')
+      .select('id, gold, attack_rating, buildings(id, type, level)')
       .eq('user_id', user.id)
       .maybeSingle(),
     supabase
       .from('profiles')
-      .select('id, username, raids_enabled, kingdoms(gold, defense_rating)')
+      .select('id, username, raids_enabled, kingdoms(gold, defense_rating, buildings(id, type, level))')
       .eq('id', defenderId)
       .maybeSingle(),
   ])
@@ -90,10 +111,25 @@ export async function POST(request: Request) {
   }
 
   const attackerStats = attackerKingdom as AttackerKingdomRow
-  const attackerVariance = Math.random() * (attackerStats.attack_rating * 0.3)
-  const defenderVariance = Math.random() * (defenderKingdom.defense_rating * 0.3)
-  const attackPower = Math.floor(attackerStats.attack_rating + attackerVariance)
-  const defensePower = Math.floor(defenderKingdom.defense_rating + defenderVariance)
+
+  // Include building bonuses in combat power (previously omitted — buildings had zero effect on raids).
+  const attackerBuildings = toBuildings(attackerStats.buildings)
+  const defenderBuildings = toBuildings(defenderKingdom.buildings)
+
+  const attackerPowerFull = calculateKingdomPower(
+    { attack_rating: attackerStats.attack_rating, defense_rating: 0 },
+    attackerBuildings,
+  ).attack
+
+  const defenderPowerFull = calculateKingdomPower(
+    { attack_rating: 0, defense_rating: defenderKingdom.defense_rating },
+    defenderBuildings,
+  ).defense
+
+  // Apply ±15% variance so investment in buildings matters more than raw luck.
+  // Range: base * 0.85 to base * 1.15
+  const attackPower = Math.floor(attackerPowerFull * (0.85 + Math.random() * 0.3))
+  const defensePower = Math.floor(defenderPowerFull * (0.85 + Math.random() * 0.3))
 
   const { data: transactionData, error: transactionError } = await supabaseAdmin.rpc(
     'execute_raid_transaction',
