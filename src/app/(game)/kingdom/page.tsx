@@ -32,7 +32,7 @@ export default async function KingdomPage({
     await Promise.all([
       supabase
         .from("profiles")
-        .select("username, avatar_url, onboarding_done")
+        .select("username, avatar_url, onboarding_done, raids_enabled")
         .eq("id", user.id)
         .maybeSingle(),
       fetchPersistedKingdomForUser(supabase, user.id)
@@ -103,6 +103,7 @@ export default async function KingdomPage({
     defense_rating: kingdomRow.defense_rating,
     attack_rating: kingdomRow.attack_rating,
     building_slots: kingdomRow.building_slots,
+    raids_enabled: Boolean((profile as { raids_enabled?: boolean } | null)?.raids_enabled ?? true),
     last_synced_at: kingdomRow.last_synced_at,
     themeId: kingdomRow.theme_id,
     ownerName: profile?.username ?? "Code Monarch",

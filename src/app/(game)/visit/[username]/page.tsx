@@ -204,15 +204,14 @@ export default async function VisitPage({
     recentVisitors,
     viewerId,
     viewerName,
-    viewerRaidsEnabled,
     viewerAttackRating,
     viewerGold,
   } = visitData
   const canLeaveFlag = Boolean(viewerId && viewerId !== kingdomData.userId)
+  // Only the defender needs raids_enabled — any authenticated visitor may attack an open kingdom.
   const canRaid = Boolean(
     viewerId &&
       viewerId !== kingdomData.userId &&
-      viewerRaidsEnabled &&
       kingdomData.raids_enabled,
   )
 

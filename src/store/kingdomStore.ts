@@ -35,6 +35,7 @@ interface KingdomStore {
   placementError: string | null
   isSyncing: boolean
   syncError: string | null
+  isTogglingRaids: boolean
   setKingdom: (kingdom: KingdomData) => void
   setBuildings: (buildings: BuildingData[]) => void
   selectBuilding: (building: BuildingData | null) => void
@@ -45,6 +46,7 @@ interface KingdomStore {
   refreshKingdom: () => Promise<KingdomData | null>
   placeBuilding: (buildingType: BuildingType, x: number, y: number) => Promise<KingdomData | null>
   syncKingdom: () => Promise<void>
+  toggleRaids: () => Promise<void>
 }
 
 export const useKingdomStore = create<KingdomStore>((set, get) => ({
@@ -56,6 +58,7 @@ export const useKingdomStore = create<KingdomStore>((set, get) => ({
   placementError: null,
   isSyncing: false,
   syncError: null,
+  isTogglingRaids: false,
   setKingdom: (kingdom) =>
     set({
       kingdom,
@@ -200,6 +203,36 @@ export const useKingdomStore = create<KingdomStore>((set, get) => ({
       throw error
     } finally {
       set({ isSyncing: false })
+    }
+  },
+  toggleRaids: async () => {
+    if (get().isTogglingRaids) {
+      return
+    }
+
+    set({ isTogglingRaids: true })
+
+    try {
+      const response = await fetch('/api/profile/toggle-raids', {
+        method: 'POST',
+      })
+
+      const payload = await parseJsonResponse<{
+        error?: string
+        raids_enabled?: boolean
+      }>(response)
+
+      if (!response.ok) {
+        throw new Error(payload.error ?? 'Unable to toggle raids')
+      }
+
+      set((state) => ({
+        kingdom: state.kingdom
+          ? { ...state.kingdom, raids_enabled: payload.raids_enabled ?? !state.kingdom.raids_enabled }
+          : state.kingdom,
+      }))
+    } finally {
+      set({ isTogglingRaids: false })
     }
   },
 }))

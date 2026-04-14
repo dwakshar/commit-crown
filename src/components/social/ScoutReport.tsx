@@ -173,8 +173,8 @@ export function ScoutReport({
             Operation Window
           </div>
           <div className="mt-2 text-sm text-[var(--silver-2)]">
-            Leave your banner, survey this kingdom, or launch a raid if both
-            realms are open for battle.
+            Leave your banner, survey this kingdom, or launch a raid if the
+            realm is open for battle.
           </div>
           <div className="mt-4 flex flex-col gap-3">
             {canLeaveFlag ? (
@@ -205,7 +205,7 @@ export function ScoutReport({
               </button>
             ) : (
               <div className="rounded-[20px] border border-[rgba(120,140,160,0.12)] bg-[rgba(255,255,255,0.01)] px-4 py-3 text-sm text-[var(--silver-3)]">
-                Raids are unavailable until both commanders enable battle.
+                This kingdom has sealed its borders. Raids are unavailable while the realm is protected.
               </div>
             )}
           </div>

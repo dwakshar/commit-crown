@@ -141,6 +141,8 @@ export function HUD() {
   const clearPlacementError = useKingdomStore(
     (state) => state.clearPlacementError
   );
+  const isTogglingRaids = useKingdomStore((state) => state.isTogglingRaids);
+  const toggleRaids = useKingdomStore((state) => state.toggleRaids);
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [upgradeError, setUpgradeError] = useState<string | null>(null);
   const buildModeTypeRef = useRef(buildModeType);
@@ -636,6 +638,21 @@ export function HUD() {
               className="pointer-events-auto realm-button realm-button-secondary min-w-[120px] px-4 py-2.5">
               Raid Log
             </Link>
+            <button
+              type="button"
+              onClick={() => void toggleRaids()}
+              disabled={isTogglingRaids}
+              className={`pointer-events-auto realm-button min-w-[140px] border px-4 py-2.5 text-sm transition disabled:opacity-55 ${
+                kingdom.raids_enabled
+                  ? "border-[rgba(200,88,26,0.58)] bg-[linear-gradient(180deg,rgba(36,16,10,0.86),rgba(24,10,6,0.92))] text-[var(--ember-hi)] hover:border-[var(--ember)]"
+                  : "border-[var(--b1)] bg-[rgba(255,255,255,0.02)] text-[var(--silver-3)] hover:text-[var(--silver-1)]"
+              }`}>
+              {isTogglingRaids
+                ? "Updating..."
+                : kingdom.raids_enabled
+                ? "War: Open"
+                : "War: Sealed"}
+            </button>
             <Link
               href="/marketplace"
               className="pointer-events-auto realm-button realm-button-secondary min-w-[120px] px-4 py-2.5">
