@@ -208,12 +208,7 @@ export default async function VisitPage({
     viewerGold,
   } = visitData
   const canLeaveFlag = Boolean(viewerId && viewerId !== kingdomData.userId)
-  // Only the defender needs raids_enabled — any authenticated visitor may attack an open kingdom.
-  const canRaid = Boolean(
-    viewerId &&
-      viewerId !== kingdomData.userId &&
-      kingdomData.raids_enabled,
-  )
+  const canRaid = Boolean(viewerId && viewerId !== kingdomData.userId)
 
   return (
     <main className="relative h-screen w-full overflow-hidden bg-[#0b0912]">

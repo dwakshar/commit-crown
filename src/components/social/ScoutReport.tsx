@@ -79,9 +79,7 @@ export function ScoutReport({
 
   const commandHandle =
     kingdomData.ownerGithubUsername ?? kingdomData.ownerName;
-  const kingdomStatus = kingdomData.raids_enabled
-    ? "Raid window open"
-    : "Protected keep";
+  const kingdomStatus = "Open for battle";
   const defenseLabel = kingdomData.defense_rating.toLocaleString();
   const treasuryLabel = kingdomData.gold.toLocaleString();
 
@@ -173,8 +171,7 @@ export function ScoutReport({
             Operation Window
           </div>
           <div className="mt-2 text-sm text-[var(--silver-2)]">
-            Leave your banner, survey this kingdom, or launch a raid if the
-            realm is open for battle.
+            Leave your banner, survey this kingdom, or launch a raid.
           </div>
           <div className="mt-4 flex flex-col gap-3">
             {canLeaveFlag ? (
@@ -205,7 +202,7 @@ export function ScoutReport({
               </button>
             ) : (
               <div className="rounded-[20px] border border-[rgba(120,140,160,0.12)] bg-[rgba(255,255,255,0.01)] px-4 py-3 text-sm text-[var(--silver-3)]">
-                This kingdom has sealed its borders. Raids are unavailable while the realm is protected.
+                Sign in to raid this kingdom.
               </div>
             )}
           </div>

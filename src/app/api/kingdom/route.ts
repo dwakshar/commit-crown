@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { calculateKingdomPower } from '@/src/lib/gameEngine'
+import { supabaseAdmin } from '@/src/lib/supabaseAdmin'
 import {
   createFallbackKingdomData,
   fetchPersistedKingdomForUser,
@@ -16,6 +17,7 @@ import type { BuildingData, GitHubStatsData } from '@/src/types/game'
 type ProfileRow = {
   username: string | null
   avatar_url: string | null
+  raids_enabled: boolean | null
 }
 
 export async function GET() {
@@ -30,7 +32,7 @@ export async function GET() {
 
   const [{ data: profile, error: profileError }, kingdomResult, { data: githubStats }] =
     await Promise.all([
-      supabase.from('profiles').select('username, avatar_url').eq('id', user.id).maybeSingle(),
+      supabase.from('profiles').select('username, avatar_url, raids_enabled').eq('id', user.id).maybeSingle(),
       fetchPersistedKingdomForUser(supabase, user.id)
         .then((data) => ({ data, error: null }))
         .catch((error) => ({
@@ -63,6 +65,7 @@ export async function GET() {
   }
 
   const typedProfile = profile as ProfileRow
+  const raidsEnabled = typedProfile.raids_enabled ?? true
   const kingdomRow = kingdom
 
   if (!kingdomRow) {
@@ -78,7 +81,7 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      kingdom: fallbackKingdomData,
+      kingdom: { ...fallbackKingdomData, raids_enabled: raidsEnabled },
       power: calculateKingdomPower(fallbackKingdomData, fallbackKingdomData.buildings),
     })
   }
@@ -104,6 +107,7 @@ export async function GET() {
     defense_rating: kingdomRow.defense_rating,
     attack_rating: kingdomRow.attack_rating,
     building_slots: kingdomRow.building_slots,
+    raids_enabled: raidsEnabled,
     last_synced_at: kingdomRow.last_synced_at,
     themeId: kingdomRow.theme_id,
     ownerName: typedProfile.username ?? 'Code Monarch',
@@ -120,3 +124,4 @@ export async function GET() {
     power,
   })
 }
+

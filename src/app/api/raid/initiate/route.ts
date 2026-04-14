@@ -28,7 +28,6 @@ type BuildingRow = {
 type DefenderProfileRow = {
   id: string
   username: string | null
-  raids_enabled: boolean | null
   kingdoms:
     | {
         gold: number
@@ -90,7 +89,7 @@ export async function POST(request: Request) {
       .maybeSingle(),
     supabase
       .from('profiles')
-      .select('id, username, raids_enabled, kingdoms(gold, defense_rating, buildings(id, type, level))')
+      .select('id, username, kingdoms(gold, defense_rating, buildings(id, type, level))')
       .eq('id', defenderId)
       .maybeSingle(),
   ])
@@ -104,10 +103,6 @@ export async function POST(request: Request) {
 
   if (!defender || !defenderKingdom) {
     return NextResponse.json({ error: 'Defender kingdom not found' }, { status: 404 })
-  }
-
-  if (!defender.raids_enabled) {
-    return NextResponse.json({ error: 'raids_disabled' }, { status: 403 })
   }
 
   const attackerStats = attackerKingdom as AttackerKingdomRow
