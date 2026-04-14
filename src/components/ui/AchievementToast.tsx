@@ -4,17 +4,37 @@ import { useEffect } from 'react'
 
 import { useNotificationStore } from '@/src/store/notificationStore'
 
-const TOAST_STYLES = {
-  achievement_unlocked:
-    'border-[#C9A84C]/40 bg-[#2a2110] text-[#f7e3a6] shadow-[0_0_30px_rgba(201,168,76,0.35)]',
-  raid_received:
-    'border-[#b54b4b]/40 bg-[#2a1212] text-[#ffb3b3] shadow-[0_0_30px_rgba(181,75,75,0.3)]',
-  kingdom_visited:
-    'border-[#4b79b5]/40 bg-[#121d2a] text-[#b7d5ff] shadow-[0_0_30px_rgba(75,121,181,0.3)]',
-  building_complete:
-    'border-[#4b9b67]/40 bg-[#122318] text-[#b8efc8] shadow-[0_0_30px_rgba(75,155,103,0.3)]',
-  purchase_complete:
-    'border-[#5d8fdb]/40 bg-[#101c2f] text-[#c9ddff] shadow-[0_0_30px_rgba(93,143,219,0.3)]',
+const TOAST_CONFIG = {
+  achievement_unlocked: {
+    label: 'Achievement Unlocked',
+    accent: 'text-[var(--ember-hi)]',
+    border: 'border-[rgba(200,88,26,0.35)]',
+    glow: 'shadow-[0_0_0_1px_rgba(200,88,26,0.08),0_12px_40px_rgba(0,0,0,0.55)]',
+  },
+  raid_received: {
+    label: 'Raid Incoming',
+    accent: 'text-[#ff9696]',
+    border: 'border-[rgba(180,60,60,0.35)]',
+    glow: 'shadow-[0_0_0_1px_rgba(180,60,60,0.08),0_12px_40px_rgba(0,0,0,0.55)]',
+  },
+  kingdom_visited: {
+    label: 'Kingdom Visited',
+    accent: 'text-[#b9d9ff]',
+    border: 'border-[rgba(75,121,181,0.35)]',
+    glow: 'shadow-[0_0_0_1px_rgba(75,121,181,0.08),0_12px_40px_rgba(0,0,0,0.55)]',
+  },
+  building_complete: {
+    label: 'Construction Complete',
+    accent: 'text-[#7fdb91]',
+    border: 'border-[rgba(75,155,103,0.35)]',
+    glow: 'shadow-[0_0_0_1px_rgba(75,155,103,0.08),0_12px_40px_rgba(0,0,0,0.55)]',
+  },
+  purchase_complete: {
+    label: 'Purchase Complete',
+    accent: 'text-[#b9d9ff]',
+    border: 'border-[rgba(93,143,219,0.35)]',
+    glow: 'shadow-[0_0_0_1px_rgba(93,143,219,0.08),0_12px_40px_rgba(0,0,0,0.55)]',
+  },
 } as const
 
 export function AchievementToast() {
@@ -34,13 +54,20 @@ export function AchievementToast() {
     return null
   }
 
+  const config = TOAST_CONFIG[activeToast.type]
+
   return (
     <div className="pointer-events-none fixed bottom-5 right-5 z-[90]">
       <div
-        className={`min-w-[280px] rounded-2xl border px-4 py-3 backdrop-blur-md animate-[toast-in_0.35s_ease-out] ${TOAST_STYLES[activeToast.type]}`}
+        className={`relative min-w-[300px] overflow-hidden border bg-[linear-gradient(180deg,rgba(5,8,13,0.97),rgba(6,10,16,0.92))] px-4 py-4 backdrop-blur-[2px] animate-[toast-in_0.35s_ease-out] ${config.border} ${config.glow}`}
       >
-        <p className="text-xs uppercase tracking-[0.24em] opacity-75">{activeToast.type.replaceAll('_', ' ')}</p>
-        <p className="mt-2 text-sm font-medium">{activeToast.message}</p>
+        {/* Top shimmer line */}
+        <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(176,196,214,0.2),transparent)]" />
+
+        <p className={`text-[10px] uppercase tracking-[0.28em] ${config.accent}`}>
+          {config.label}
+        </p>
+        <p className="mt-2 text-sm text-[var(--silver-1)]">{activeToast.message}</p>
       </div>
     </div>
   )

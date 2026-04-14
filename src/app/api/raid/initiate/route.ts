@@ -25,22 +25,16 @@ type BuildingRow = {
   level: number;
 };
 
-type DefenderProfileRow = {
-  id: string;
-  username: string | null;
-  kingdoms:
-    | {
-        gold: number;
-        defense_rating: number;
-        buildings: BuildingRow[] | null;
-      }[]
-    | null;
-};
-
 type AttackerKingdomRow = {
   id: string;
   gold: number;
   attack_rating: number;
+  buildings: BuildingRow[] | null;
+};
+
+type DefenderKingdomRow = {
+  gold: number;
+  defense_rating: number;
   buildings: BuildingRow[] | null;
 };
 
@@ -83,22 +77,32 @@ export async function POST(request: Request) {
     );
   }
 
-  // Fetch both kingdoms with buildings so we can compute true combat power.
-  const [{ data: attackerKingdom }, { data: defenderProfile }] =
-    await Promise.all([
-      supabase
-        .from("kingdoms")
-        .select("id, gold, attack_rating, buildings(id, type, level)")
-        .eq("user_id", user.id)
-        .maybeSingle(),
-      supabase
-        .from("profiles")
-        .select(
-          "id, username, kingdoms(gold, defense_rating, buildings(id, type, level))"
-        )
-        .eq("id", defenderId)
-        .maybeSingle(),
-    ]);
+  // Three parallel queries:
+  //   1. Attacker's kingdom via user client (RLS passes for own row).
+  //   2. Defender's profile via supabaseAdmin (bypasses RLS for cross-user read).
+  //   3. Defender's kingdom via supabaseAdmin — direct .eq("user_id") to avoid
+  //      PostgREST join issues; same pattern as fetchPersistedKingdomForUser.
+  const [
+    { data: attackerKingdom },
+    { data: defenderProfile },
+    { data: defenderKingdom },
+  ] = await Promise.all([
+    supabase
+      .from("kingdoms")
+      .select("id, gold, attack_rating, buildings(id, type, level)")
+      .eq("user_id", user.id)
+      .maybeSingle(),
+    supabaseAdmin
+      .from("profiles")
+      .select("id, username")
+      .eq("id", defenderId)
+      .maybeSingle(),
+    supabaseAdmin
+      .from("kingdoms")
+      .select("gold, defense_rating, buildings(id, type, level)")
+      .eq("user_id", defenderId)
+      .maybeSingle(),
+  ]);
 
   if (!attackerKingdom) {
     return NextResponse.json(
@@ -107,10 +111,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const defender = defenderProfile as DefenderProfileRow | null;
-  const defenderKingdom = defender?.kingdoms?.[0];
-
-  if (!defender || !defenderKingdom) {
+  if (!defenderProfile || !defenderKingdom) {
     return NextResponse.json(
       { error: "Defender kingdom not found" },
       { status: 404 }
@@ -118,10 +119,10 @@ export async function POST(request: Request) {
   }
 
   const attackerStats = attackerKingdom as AttackerKingdomRow;
+  const defenderStats = defenderKingdom as DefenderKingdomRow;
 
-  // Include building bonuses in combat power (previously omitted — buildings had zero effect on raids).
   const attackerBuildings = toBuildings(attackerStats.buildings);
-  const defenderBuildings = toBuildings(defenderKingdom.buildings);
+  const defenderBuildings = toBuildings(defenderStats.buildings);
 
   const attackerPowerFull = calculateKingdomPower(
     { attack_rating: attackerStats.attack_rating, defense_rating: 0 },
@@ -129,12 +130,11 @@ export async function POST(request: Request) {
   ).attack;
 
   const defenderPowerFull = calculateKingdomPower(
-    { attack_rating: 0, defense_rating: defenderKingdom.defense_rating },
+    { attack_rating: 0, defense_rating: defenderStats.defense_rating },
     defenderBuildings
   ).defense;
 
-  // Apply ±15% variance so investment in buildings matters more than raw luck.
-  // Range: base * 0.85 to base * 1.15
+  // ±15% variance so buildings matter more than raw luck.
   const attackPower = Math.floor(
     attackerPowerFull * (0.85 + Math.random() * 0.3)
   );
@@ -158,10 +158,7 @@ export async function POST(request: Request) {
       );
 
       return NextResponse.json(
-        {
-          error: "cooldown",
-          availableAt,
-        },
+        { error: "cooldown", availableAt },
         { status: 429 }
       );
     }
@@ -195,7 +192,9 @@ export async function POST(request: Request) {
       goldStolen: transactionRow.gold_stolen,
       attackerGold: transactionRow.attacker_gold,
       defenderGold: transactionRow.defender_gold,
-      defenderName: defender.username ?? "Unknown Defender",
+      defenderName:
+        (defenderProfile as { id: string; username: string | null }).username ??
+        "Unknown Defender",
     },
   });
 }

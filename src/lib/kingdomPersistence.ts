@@ -76,7 +76,7 @@ export async function ensureKingdomForUser(userId: string) {
   const { error: insertError } = await supabaseAdmin.from('kingdoms').insert({
     user_id: userId,
     name: 'My Kingdom',
-    gold: 0,
+    gold: 500,
     prestige: 0,
     population: 0,
     defense_rating: 0,
@@ -112,7 +112,7 @@ export function createFallbackKingdomData(options: {
     id: `bootstrap-${userId}`,
     userId,
     name: getOnboardingInitialName(username, kingdomName ?? null),
-    gold: 0,
+    gold: 500,
     prestige: 0,
     population: 0,
     defense_rating: 0,

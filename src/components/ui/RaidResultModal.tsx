@@ -27,76 +27,126 @@ export function RaidResultModal({ open, raid, onClose }: RaidResultModalProps) {
   const didWin = raid.result === "attacker_win";
 
   return (
-    <div className="pointer-events-auto fixed inset-0 z-[70] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-lg border border-[#C9A84C]/30 bg-[linear-gradient(180deg,#171120,#0f0b17)] p-6 text-[#f7f1e4] shadow-[0_24px_90px_rgba(0,0,0,0.55)]">
-        <p className="text-xs uppercase tracking-[0.28em] text-[#C9A84C]/75">
-          Raid Outcome
-        </p>
-        <h3 className="mt-3 text-3xl font-semibold">
-          {didWin ? "Victory in the Shadows" : "Defenses Held"}
-        </h3>
+    <div
+      className="pointer-events-auto fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4 backdrop-blur-[2px]"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}>
+      <div className="relative w-full max-w-[480px] overflow-hidden border border-[var(--b1)] bg-[linear-gradient(180deg,rgba(5,8,13,0.97),rgba(6,10,16,0.9))] text-[var(--silver-1)] shadow-[0_28px_80px_rgba(0,0,0,0.56),0_0_0_1px_rgba(200,88,26,0.08)]">
+        {/* Top shimmer line */}
+        <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(176,196,214,0.28),transparent)]" />
+        {/* Ambient glow — red on loss, ember on win */}
+        <div
+          className={`pointer-events-none absolute inset-0 ${
+            didWin
+              ? "bg-[radial-gradient(circle_at_top_right,rgba(200,88,26,0.1),transparent_40%)]"
+              : "bg-[radial-gradient(circle_at_top_right,rgba(180,40,40,0.08),transparent_40%)]"
+          }`}
+        />
 
-        <div className="mt-5 flex h-24 items-center justify-center rounded-2xl border border-white/10 bg-black/20">
-          {didWin ? (
-            <div className="flex items-center gap-3 text-[#C9A84C]">
-              <span className="animate-bounce text-3xl">◉</span>
-              <span className="animate-bounce [animation-delay:120ms] text-3xl">
-                →
-              </span>
-              <span className="animate-bounce [animation-delay:240ms] text-3xl">
-                ◉
-              </span>
+        {/* Header */}
+        <div className="relative border-b border-[var(--b0)] px-5 py-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.28em] text-[var(--plate-hi)]">
+                Raid Outcome
+              </p>
+              <h3
+                className={`mt-2 font-[var(--font-head)] text-[1.75rem] leading-none ${
+                  didWin ? "text-[var(--silver-0)]" : "text-[#ff9696]"
+                }`}>
+                {didWin ? "Victory in the Shadows" : "Defenses Held"}
+              </h3>
+              <p className="mt-2 text-sm italic text-[var(--silver-2)]">
+                {didWin
+                  ? `${raid.defenderName}'s treasury has been breached.`
+                  : `${raid.defenderName}'s walls turned back the assault.`}
+              </p>
             </div>
-          ) : (
-            <div className="flex items-center gap-3 text-[#C9A84C]">
-              <span className="text-3xl">⚔</span>
-              <span className="text-4xl">⛨</span>
-            </div>
-          )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-9 w-9 shrink-0 items-center justify-center border border-[var(--b0)] bg-[rgba(255,255,255,0.03)] text-lg text-[var(--silver-2)] transition hover:border-[var(--b2)] hover:text-[var(--silver-0)]"
+              aria-label="Close">
+              ×
+            </button>
+          </div>
         </div>
 
-        <div className="mt-5 grid grid-cols-2 gap-3">
-          <div className="border border-white/10 bg-black/20 p-4">
-            <p className="text-xs uppercase tracking-[0.22em] text-white/45">
+        {/* Power readout */}
+        <div className="relative grid grid-cols-2 gap-px border-b border-[var(--b0)] bg-[var(--b0)]">
+          <div className="bg-[rgba(7,10,16,0.96)] px-5 py-5">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--silver-3)]">
               Attack Power
             </p>
-            <p className="mt-2 text-2xl font-semibold text-[#C9A84C]">
+            <p
+              className={`mt-2 font-[var(--font-head)] text-[2rem] leading-none ${
+                didWin ? "text-[var(--ember-hi)]" : "text-[var(--silver-2)]"
+              }`}>
               {raid.attackPower}
             </p>
           </div>
-          <div className="border border-white/10 bg-black/20 p-4">
-            <p className="text-xs uppercase tracking-[0.22em] text-white/45">
+          <div className="bg-[rgba(7,10,16,0.96)] px-5 py-5">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--silver-3)]">
               Defense Power
             </p>
-            <p className="mt-2 text-2xl font-semibold text-[#C9A84C]">
+            <p
+              className={`mt-2 font-[var(--font-head)] text-[2rem] leading-none ${
+                didWin ? "text-[var(--silver-2)]" : "text-[#b9d9ff]"
+              }`}>
               {raid.defensePower}
             </p>
           </div>
         </div>
 
-        <div className="mt-5 border border-white/10 bg-black/20 p-4">
-          <p className="text-sm leading-6 text-white/75">
-            {didWin
-              ? `You broke through ${raid.defenderName}'s defenses and seized ${raid.goldStolen} gold.`
-              : `${raid.defenderName}'s defenses blocked the raid. No gold was stolen.`}
-          </p>
-          <div className="mt-4 flex justify-between text-sm text-white/70">
-            <span>Your treasury: {raid.attackerGold}</span>
-            <span>Defender treasury: {raid.defenderGold}</span>
+        {/* Treasury result */}
+        <div className="relative border-b border-[var(--b0)] px-5 py-5">
+          {didWin ? (
+            <div className="flex items-center gap-3">
+              <span className="font-[var(--font-head)] text-[2.5rem] leading-none text-[#7fdb91]">
+                +{raid.goldStolen.toLocaleString()}
+              </span>
+              <span className="text-sm text-[var(--silver-2)]">
+                gold seized
+              </span>
+            </div>
+          ) : (
+            <p className="text-sm text-[var(--silver-2)]">
+              No gold was taken — the raid was repelled.
+            </p>
+          )}
+          <div className="mt-4 grid grid-cols-2 gap-px bg-[var(--b0)]">
+            <div className="bg-[rgba(7,10,16,0.96)] px-3 py-3">
+              <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--silver-3)]">
+                Your Treasury
+              </p>
+              <p className="mt-1 font-[var(--font-head)] text-lg text-[var(--silver-1)]">
+                {raid.attackerGold.toLocaleString()}
+              </p>
+            </div>
+            <div className="bg-[rgba(7,10,16,0.96)] px-3 py-3">
+              <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--silver-3)]">
+                Defender Treasury
+              </p>
+              <p className="mt-1 font-[var(--font-head)] text-lg text-[var(--silver-1)]">
+                {raid.defenderGold.toLocaleString()}
+              </p>
+            </div>
           </div>
         </div>
 
-        <div className="mt-6 flex items-center justify-between gap-3">
+        {/* Actions */}
+        <div className="relative flex items-center justify-between gap-3 px-5 py-4">
           <Link
             href="/raids/history"
-            className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80 transition hover:bg-white/10">
+            className="realm-button realm-button-secondary px-5 py-2.5 text-sm">
             Raid Log
           </Link>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-2xl bg-[#C9A84C] px-4 py-2 text-sm font-semibold text-[#22190b]">
-            Close
+            className="realm-button border border-[rgba(200,88,26,0.58)] bg-[linear-gradient(180deg,rgba(36,16,10,0.86),rgba(24,10,6,0.92))] px-6 py-2.5 text-sm text-[var(--ember-hi)] transition hover:border-[var(--ember)] hover:text-[#ffd2ad]">
+            Dismiss
           </button>
         </div>
       </div>

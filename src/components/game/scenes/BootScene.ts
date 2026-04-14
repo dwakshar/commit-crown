@@ -135,29 +135,83 @@ function generateBuildingTexture(
 }
 
 function generatePropTextures(graphics: import('phaser').GameObjects.Graphics) {
+  // ── prop-tree (80×80) — round stylized tree with layered foliage ──
   graphics.clear()
-  graphics.fillStyle(0x081019, 0.24)
-  graphics.fillEllipse(32, 56, 40, 16)
-  graphics.fillStyle(0x23332a, 1)
-  graphics.fillTriangle(20, 44, 32, 12, 44, 44)
-  graphics.fillTriangle(16, 52, 32, 20, 48, 52)
-  graphics.fillStyle(0x395b45, 0.9)
-  graphics.fillTriangle(22, 46, 32, 18, 42, 46)
-  graphics.fillStyle(0x4a3322, 1)
-  graphics.fillRect(29, 44, 6, 12)
-  graphics.generateTexture('prop-tree', 64, 64)
+  // Drop shadow
+  graphics.fillStyle(0x000000, 0.18)
+  graphics.fillEllipse(40, 72, 46, 14)
+  // Foliage — three overlapping circles build depth
+  graphics.fillStyle(0x274f30, 1)
+  graphics.fillCircle(40, 42, 22)        // dark base layer
+  graphics.fillStyle(0x336040, 1)
+  graphics.fillCircle(30, 35, 16)        // left cluster
+  graphics.fillCircle(50, 35, 16)        // right cluster
+  graphics.fillStyle(0x3d7248, 1)
+  graphics.fillCircle(40, 26, 17)        // top dome
+  // Rim highlight — sells the round silhouette
+  graphics.fillStyle(0x56a060, 0.5)
+  graphics.fillCircle(34, 21, 8)
+  // Trunk
+  graphics.fillStyle(0x5c3d22, 1)
+  graphics.fillRect(36, 56, 8, 18)
+  // Trunk edge highlight
+  graphics.fillStyle(0x8a6040, 0.38)
+  graphics.fillRect(36, 56, 3, 18)
+  graphics.generateTexture('prop-tree', 80, 80)
 
+  // ── prop-stones (64×64) — polished rock cluster ──
   graphics.clear()
-  graphics.fillStyle(0x081019, 0.2)
-  graphics.fillEllipse(32, 52, 40, 14)
-  graphics.fillStyle(0x53606d, 1)
-  graphics.fillEllipse(24, 38, 18, 12)
-  graphics.fillEllipse(36, 34, 20, 14)
-  graphics.fillEllipse(44, 40, 16, 10)
-  graphics.fillStyle(0xaeb9c2, 0.2)
-  graphics.fillEllipse(39, 31, 10, 4)
+  // Drop shadow
+  graphics.fillStyle(0x000000, 0.2)
+  graphics.fillEllipse(32, 54, 44, 13)
+  // Back/center rock (largest)
+  graphics.fillStyle(0x687480, 1)
+  graphics.fillEllipse(34, 36, 28, 19)
+  // Left rock
+  graphics.fillStyle(0x5e6a74, 1)
+  graphics.fillEllipse(19, 41, 20, 14)
+  // Right rock (smallest)
+  graphics.fillStyle(0x70808c, 1)
+  graphics.fillEllipse(47, 43, 15, 11)
+  // Specular highlights
+  graphics.fillStyle(0xb0bec8, 0.38)
+  graphics.fillEllipse(30, 29, 11, 6)
+  graphics.fillStyle(0xb0bec8, 0.22)
+  graphics.fillEllipse(17, 37, 7, 4)
   graphics.generateTexture('prop-stones', 64, 64)
 
+  // ── prop-bush (48×48) — compact leafy bush ──
+  graphics.clear()
+  // Drop shadow
+  graphics.fillStyle(0x000000, 0.15)
+  graphics.fillEllipse(24, 43, 34, 11)
+  // Bush body — two side circles + centre
+  graphics.fillStyle(0x2a5535, 1)
+  graphics.fillCircle(24, 28, 15)
+  graphics.fillStyle(0x366840, 0.92)
+  graphics.fillCircle(16, 25, 11)
+  graphics.fillCircle(32, 25, 11)
+  // Top highlight
+  graphics.fillStyle(0x56a060, 0.48)
+  graphics.fillCircle(20, 20, 6)
+  graphics.generateTexture('prop-bush', 48, 48)
+
+  // ── prop-grass-tuft (32×32) — small ground clutter ──
+  graphics.clear()
+  // Three triangular blades
+  graphics.fillStyle(0x488040, 1)
+  graphics.fillTriangle(13, 22, 11, 7, 16, 22)
+  graphics.fillStyle(0x5a9a4a, 0.9)
+  graphics.fillTriangle(17, 22, 15, 4, 21, 22)
+  graphics.fillStyle(0x488040, 0.85)
+  graphics.fillTriangle(22, 22, 20, 9, 26, 22)
+  // Blade tips — subtle highlight
+  graphics.fillStyle(0x78c060, 0.45)
+  graphics.fillCircle(16, 7, 2)
+  graphics.fillCircle(18, 4, 2)
+  graphics.generateTexture('prop-grass-tuft', 32, 32)
+
+  // ── prop-banner (unchanged — used by Building entity) ──
   graphics.clear()
   graphics.fillStyle(0x4a3322, 1)
   graphics.fillRect(28, 18, 5, 32)
@@ -167,6 +221,7 @@ function generatePropTextures(graphics: import('phaser').GameObjects.Graphics) {
   graphics.fillTriangle(33, 22, 46, 28, 33, 32)
   graphics.generateTexture('prop-banner', 64, 64)
 
+  // ── prop-ruins (unchanged — used by Building entity) ──
   graphics.clear()
   graphics.fillStyle(0x081019, 0.25)
   graphics.fillEllipse(32, 52, 46, 16)
@@ -178,6 +233,7 @@ function generatePropTextures(graphics: import('phaser').GameObjects.Graphics) {
   graphics.fillRect(16, 28, 32, 4)
   graphics.generateTexture('prop-ruins', 64, 64)
 
+  // ── prop-beacon (unchanged) ──
   graphics.clear()
   graphics.fillStyle(0x081019, 0.22)
   graphics.fillEllipse(32, 54, 40, 14)

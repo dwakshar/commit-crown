@@ -45,16 +45,18 @@ export function RaidConfirmModal({
 
   const estimatedWinProbability = useMemo(() => {
     const total = attackerAttackRating + defenderDefenseRating;
-    if (total <= 0) {
-      return 50;
-    }
-
+    if (total <= 0) return 50;
     return Math.round((attackerAttackRating / total) * 100);
   }, [attackerAttackRating, defenderDefenseRating]);
 
-  if (!open) {
-    return null;
-  }
+  const winColor =
+    estimatedWinProbability >= 70
+      ? "text-[#7fdb91]"
+      : estimatedWinProbability >= 40
+      ? "text-[var(--ember-hi)]"
+      : "text-[#ff9696]";
+
+  if (!open) return null;
 
   const handleLaunchRaid = async () => {
     setIsLaunching(true);
@@ -63,9 +65,7 @@ export function RaidConfirmModal({
     try {
       const response = await fetch("/api/raid/initiate", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ defenderId }),
       });
 
@@ -83,11 +83,6 @@ export function RaidConfirmModal({
             ).toLocaleString()}`
           );
         }
-
-        if (response.status === 403 && payload.error === "raids_disabled") {
-          throw new Error("This kingdom is not accepting raids.");
-        }
-
         throw new Error(payload.error ?? "Raid failed");
       }
 
@@ -100,102 +95,148 @@ export function RaidConfirmModal({
     }
   };
 
-  const didWin = raidResult?.result === "attacker_win";
-
   return (
     <>
-      <div className="pointer-events-auto fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-        <div className="w-full max-w-3xl rounded-[30px] border border-[#C9A84C]/30 bg-[linear-gradient(180deg,#171120,#0f0b17)] p-6 text-[#f7f1e4] shadow-[0_24px_90px_rgba(0,0,0,0.55)]">
-          <p className="text-xs uppercase tracking-[0.28em] text-[#C9A84C]/75">
-            Raid Council
-          </p>
-          <h3 className="mt-3 text-3xl font-semibold">Prepare the Raid</h3>
+      {/* Backdrop */}
+      <div
+        className="pointer-events-auto fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-[2px]"
+        onMouseDown={(e) => {
+          if (e.target === e.currentTarget) onClose();
+        }}>
+        {/* Panel */}
+        <div className="relative w-full max-w-[560px] overflow-hidden border border-[var(--b1)] bg-[linear-gradient(180deg,rgba(5,8,13,0.97),rgba(6,10,16,0.9))] text-[var(--silver-1)] shadow-[0_28px_80px_rgba(0,0,0,0.56),0_0_0_1px_rgba(200,88,26,0.08)]">
+          {/* Top shimmer line */}
+          <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(176,196,214,0.28),transparent)]" />
+          {/* Ambient glow */}
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(200,88,26,0.1),transparent_40%)]" />
 
-          <div className="mt-6 grid gap-4 md:grid-cols-[1fr_auto_1fr] md:items-center">
-            <div className="rounded-3xl border border-white/10 bg-black/20 p-5">
-              <p className="text-xs uppercase tracking-[0.22em] text-white/45">
+          {/* Header */}
+          <div className="relative border-b border-[var(--b0)] px-5 py-5">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.28em] text-[var(--plate-hi)]">
+                  Raid Orders
+                </p>
+                <h3 className="mt-2 font-[var(--font-head)] text-[1.75rem] leading-none text-[var(--silver-0)]">
+                  War Tribunal
+                </h3>
+                <p className="mt-2 text-sm italic text-[var(--silver-2)]">
+                  Commit troops and resolve the engagement.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex h-9 w-9 shrink-0 items-center justify-center border border-[var(--b0)] bg-[rgba(255,255,255,0.03)] text-lg text-[var(--silver-2)] transition hover:border-[var(--b2)] hover:text-[var(--silver-0)]"
+                aria-label="Close">
+                ×
+              </button>
+            </div>
+          </div>
+
+          {/* Commander cards */}
+          <div className="relative grid grid-cols-[1fr_auto_1fr] items-stretch border-b border-[var(--b0)]">
+            {/* Attacker */}
+            <div className="px-5 py-5">
+              <p className="text-[10px] uppercase tracking-[0.24em] text-[var(--silver-3)]">
                 Attacker
               </p>
-              <h4 className="mt-2 text-2xl font-semibold">{attackerName}</h4>
-              <p className="mt-4 text-sm text-white/70">Attack Rating</p>
-              <p className="mt-1 text-3xl font-semibold text-[#C9A84C]">
-                {attackerAttackRating}
+              <p className="mt-2 font-[var(--font-head)] text-[1.25rem] leading-none text-[var(--silver-0)]">
+                {attackerName}
               </p>
-              <p className="mt-4 text-sm text-white/70">Gold</p>
-              <p className="mt-1 text-xl font-semibold text-[#C9A84C]">
-                {attackerGold}
-              </p>
+              <div className="mt-4 grid grid-cols-2 gap-px bg-[var(--b0)]">
+                <div className="bg-[rgba(7,10,16,0.96)] px-3 py-3">
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--silver-3)]">
+                    Attack
+                  </p>
+                  <p className="mt-1 font-[var(--font-head)] text-xl text-[var(--ember-hi)]">
+                    {attackerAttackRating}
+                  </p>
+                </div>
+                <div className="bg-[rgba(7,10,16,0.96)] px-3 py-3">
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--silver-3)]">
+                    Treasury
+                  </p>
+                  <p className="mt-1 font-[var(--font-head)] text-xl text-[var(--silver-1)]">
+                    {attackerGold.toLocaleString()}
+                  </p>
+                </div>
+              </div>
             </div>
 
-            <div className="flex flex-col items-center justify-center">
-              <span className="text-xs uppercase tracking-[0.24em] text-white/45">
-                Estimated Win Rate
-              </span>
-              <span className="mt-3 text-4xl font-semibold text-[#C9A84C]">
+            {/* VS divider */}
+            <div className="flex flex-col items-center justify-center gap-2 border-x border-[var(--b0)] px-4">
+              <p className="text-[10px] uppercase tracking-[0.24em] text-[var(--silver-3)]">
+                Win Odds
+              </p>
+              <p
+                className={`font-[var(--font-head)] text-[2rem] leading-none ${winColor}`}>
                 {estimatedWinProbability}%
-              </span>
+              </p>
             </div>
 
-            <div className="rounded-3xl border border-white/10 bg-black/20 p-5">
-              <p className="text-xs uppercase tracking-[0.22em] text-white/45">
+            {/* Defender */}
+            <div className="px-5 py-5">
+              <p className="text-[10px] uppercase tracking-[0.24em] text-[var(--silver-3)]">
                 Defender
               </p>
-              <h4 className="mt-2 text-2xl font-semibold">{defenderName}</h4>
-              <p className="mt-4 text-sm text-white/70">Defense Rating</p>
-              <p className="mt-1 text-3xl font-semibold text-[#C9A84C]">
-                {defenderDefenseRating}
+              <p className="mt-2 font-[var(--font-head)] text-[1.25rem] leading-none text-[var(--silver-0)]">
+                {defenderName}
               </p>
-              <p className="mt-4 text-sm text-white/70">Gold</p>
-              <p className="mt-1 text-xl font-semibold text-[#C9A84C]">
-                {defenderGold}
-              </p>
+              <div className="mt-4 grid grid-cols-2 gap-px bg-[var(--b0)]">
+                <div className="bg-[rgba(7,10,16,0.96)] px-3 py-3">
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--silver-3)]">
+                    Defense
+                  </p>
+                  <p className="mt-1 font-[var(--font-head)] text-xl text-[#b9d9ff]">
+                    {defenderDefenseRating}
+                  </p>
+                </div>
+                <div className="bg-[rgba(7,10,16,0.96)] px-3 py-3">
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--silver-3)]">
+                    Treasury
+                  </p>
+                  <p className="mt-1 font-[var(--font-head)] text-xl text-[var(--silver-1)]">
+                    {defenderGold.toLocaleString()}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="mt-6 rounded-3xl border border-white/10 bg-black/20 p-5">
+          {/* Advisory */}
+          <div className="relative border-b border-[var(--b0)] px-5 py-4">
             {isLaunching ? (
-              <div className="flex h-20 items-center justify-center">
-                {didWin ? (
-                  <div className="flex items-center gap-3 text-[#C9A84C]">
-                    <span className="animate-bounce text-2xl">◉</span>
-                    <span className="animate-bounce [animation-delay:120ms] text-2xl">
-                      ◉
-                    </span>
-                    <span className="animate-bounce [animation-delay:240ms] text-2xl">
-                      ◉
-                    </span>
-                  </div>
-                ) : (
-                  <div className="text-3xl text-[#C9A84C]">⛨</div>
-                )}
+              <div className="flex items-center gap-3 text-sm text-[var(--silver-2)]">
+                <span className="animate-pulse text-[var(--ember-hi)]">⚔</span>
+                Troops are marching — awaiting the server&apos;s verdict...
               </div>
             ) : (
-              <p className="text-sm leading-6 text-white/72">
-                The final outcome is resolved entirely on the server. A
-                successful raid can steal up to 10% of the defender&apos;s
-                current gold, and the same attacker cannot target the same
-                defender again for 24 hours.
+              <p className="text-sm leading-6 text-[var(--silver-2)]">
+                Outcome is resolved server-side. A victory steals up to 12% of
+                the defender&apos;s treasury (50 gold minimum). The same target
+                cannot be raided again for 24 hours.
               </p>
             )}
+            {errorMessage ? (
+              <p className="mt-3 text-sm text-[#ff9696]">{errorMessage}</p>
+            ) : null}
           </div>
 
-          {errorMessage ? (
-            <p className="mt-4 text-sm text-[#ff9696]">{errorMessage}</p>
-          ) : null}
-
-          <div className="mt-6 flex justify-end gap-3">
+          {/* Actions */}
+          <div className="relative flex items-center justify-end gap-2 px-5 py-4">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80 transition hover:bg-white/10">
+              className="realm-button realm-button-secondary px-5 py-2.5 text-sm">
               Cancel
             </button>
             <button
               type="button"
               onClick={handleLaunchRaid}
               disabled={isLaunching}
-              className="rounded-2xl bg-[#C9A84C] px-5 py-3 text-sm font-semibold text-[#22190b] transition hover:bg-[#d7b864] disabled:cursor-not-allowed disabled:bg-[#6e5b25] disabled:text-[#d2c7a3]">
-              {isLaunching ? "Launching Raid..." : "Launch Raid"}
+              className="realm-button border border-[rgba(200,88,26,0.58)] bg-[linear-gradient(180deg,rgba(36,16,10,0.86),rgba(24,10,6,0.92))] px-6 py-2.5 text-sm text-[var(--ember-hi)] transition hover:border-[var(--ember)] hover:text-[#ffd2ad] disabled:cursor-not-allowed disabled:opacity-55">
+              {isLaunching ? "Launching..." : "Launch Raid"}
             </button>
           </div>
         </div>
