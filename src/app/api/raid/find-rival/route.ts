@@ -1,7 +1,9 @@
-import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
 import { supabaseAdmin } from "@/src/lib/supabaseAdmin";
 import { createClient } from "@/utils/supabase/server";
+
+export const dynamic = "force-dynamic";
 
 type KingdomRow = {
   user_id: string;
@@ -16,7 +18,7 @@ type ProfileRow = {
   avatar_url: string | null;
 };
 
-export async function GET() {
+export async function GET(_request: NextRequest) {
   try {
     const supabase = await createClient();
     const {
@@ -24,7 +26,7 @@ export async function GET() {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { data: kingdoms, error } = await supabaseAdmin
@@ -35,10 +37,7 @@ export async function GET() {
       .limit(60);
 
     if (error || !kingdoms || kingdoms.length === 0) {
-      return NextResponse.json(
-        { error: "No rival kingdoms found" },
-        { status: 404 }
-      );
+      return Response.json({ error: "No rival kingdoms found" }, { status: 404 });
     }
 
     const rival = (kingdoms as KingdomRow[])[
@@ -56,7 +55,7 @@ export async function GET() {
       avatar_url: null,
     };
 
-    return NextResponse.json({
+    return Response.json({
       rival: {
         userId: rival.user_id,
         username: username ?? "Unknown",
@@ -68,7 +67,7 @@ export async function GET() {
       },
     });
   } catch (err) {
-    console.error("[find-rival] unhandled error:", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    console.error("[find-rival] error:", err);
+    return Response.json({ error: "Internal server error" }, { status: 500 });
   }
 }
