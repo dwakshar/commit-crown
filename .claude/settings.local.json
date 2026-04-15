@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(xargs grep:*)"
+      "Bash(xargs grep:*)",
+      "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); [print\\(r['page']\\) for r in d.get\\('dynamicRoutes',[]\\)+[{'page':r} for r in d.get\\('staticRoutes',[]\\)]]\")",
+      "Bash(node -e ':*)"
     ]
   }
 }

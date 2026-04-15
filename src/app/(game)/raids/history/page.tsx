@@ -1,9 +1,16 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { FindRivalPanel } from "@/src/components/ui/FindRivalPanel";
 import { createClient } from "@/utils/supabase/server";
 
 type SearchParams = Promise<{ page?: string }>;
+
+type AttackerKingdom = {
+  name: string | null;
+  gold: number;
+  attack_rating: number;
+};
 
 type RaidRow = {
   id: string;
@@ -113,6 +120,13 @@ export default async function RaidHistoryPage({
   if (!user) {
     redirect("/");
   }
+
+  const { data: attackerKingdomRaw } = await supabase
+    .from("kingdoms")
+    .select("name, gold, attack_rating")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  const attackerKingdom = attackerKingdomRaw as AttackerKingdom | null;
 
   const { data: raidsData, count } = await supabase
     .from("raids")
@@ -250,7 +264,9 @@ export default async function RaidHistoryPage({
 
       <div className="mx-auto max-w-[1840px] px-6 py-12 md:px-9">
         {raids.length > 0 ? (
-          <div className="space-y-4">
+          <div className="grid gap-10 xl:grid-cols-[minmax(0,1fr)_400px]">
+            {/* Raid history column */}
+            <div className="space-y-4">
             {raids.map((raid) => {
               const attackerProfile = profiles.get(raid.attacker_id);
               const defenderProfile = profiles.get(raid.defender_id);
@@ -404,24 +420,35 @@ export default async function RaidHistoryPage({
                 </article>
               );
             })}
+            </div>
+
+            {/* Find Rival sidebar — always visible alongside history */}
+            <div className="xl:sticky xl:top-6 xl:self-start">
+              <FindRivalPanel
+                attackerName={attackerKingdom?.name ?? "Your Kingdom"}
+                attackerAttackRating={attackerKingdom?.attack_rating ?? 0}
+                attackerGold={attackerKingdom?.gold ?? 0}
+              />
+            </div>
           </div>
         ) : (
-          <div className="realm-panel px-6 py-16 text-center">
-            <p className="realm-label text-[var(--plate-hi)]">War Archive</p>
-            <h2 className="mt-4 font-[var(--font-head)] text-3xl text-[var(--silver-0)]">
-              No raids recorded yet
-            </h2>
-            <p className="realm-lore mx-auto mt-4 max-w-2xl text-base">
-              Your war ledger is still empty. Visit rival kingdoms and launch
-              your first raid to begin the chronicle.
-            </p>
-            <div className="mt-8 flex justify-center">
-              <Link
-                href="/leaderboard"
-                className="realm-button realm-button-secondary rounded-[18px] px-5 py-3">
-                Find Rival Kingdoms
-              </Link>
+          /* ── Empty state — panel contains the Find Rival flow ─────────── */
+          <div className="grid gap-10 xl:grid-cols-[minmax(0,1fr)_400px]">
+            <div className="realm-panel px-6 py-14 text-center">
+              <p className="realm-label text-[var(--plate-hi)]">War Archive</p>
+              <h2 className="mt-4 font-[var(--font-head)] text-3xl text-[var(--silver-0)]">
+                No raids recorded yet
+              </h2>
+              <p className="realm-lore mx-auto mt-4 max-w-2xl text-base">
+                Your war ledger is still empty. Scout a rival below and launch
+                your first raid to begin the chronicle.
+              </p>
             </div>
+            <FindRivalPanel
+              attackerName={attackerKingdom?.name ?? "Your Kingdom"}
+              attackerAttackRating={attackerKingdom?.attack_rating ?? 0}
+              attackerGold={attackerKingdom?.gold ?? 0}
+            />
           </div>
         )}
 

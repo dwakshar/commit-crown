@@ -772,52 +772,55 @@ export class KingdomScene extends Phaser.Scene {
           continue;
         }
 
-        // Skip non-green border tiles — nothing grows on sand/shore
+        // Skip shore/sand border — nothing placed there
         if (
           cls === "shore" ||
           cls === "wet_sand" ||
-          cls === "transition" ||
-          cls === "stone_patch" ||
-          cls === "dirt_path"
+          cls === "transition"
         )
           continue;
 
-        // All remaining tiles are green grass — shorthand check
+        // ── Pebble carpet on grey tiles ───────────────────────────────────────
+        if (cls === "stone_patch") {
+          const tileCX = point.x;
+          const tileNY = point.y + yOffset;
+          const tileHW = this.tileWidth / 2; // 32
+
+          const tints = [0xe2ddd4, 0xd4d0c8, 0xc8c4bc];
+
+          for (let i = 0; i < 60; i++) {
+            const s2 = this.hashXY(x * 67 + i, y * 79 + i * 11);
+            const s3 = this.hashXY(s2 + x * 5, s2 + y * 9 + i);
+
+            const dx = (s2 % 65) - 32;
+            const dy = s3 % 33;
+
+            if (Math.abs(dx) / tileHW + Math.abs(dy / 16 - 1) > 0.92) continue;
+
+            const gx = tileCX + dx;
+            const gy = tileNY + dy;
+            const key = s2 % 3 === 0 ? "prop-stone-b" : "prop-stones";
+            const scale = 0.18 + (s2 % 8) * 0.04; // 0.18–0.46
+
+            this.decorLayer.add(
+              this.add
+                .image(gx, gy, key)
+                .setOrigin(0.5, 0.9)
+                .setScale(scale)
+                .setTint(tints[s2 % 3])
+                .setDepth(gy)
+            );
+          }
+          continue;
+        }
+
+        // All remaining tiles are green grass
         const isGreen =
           cls === "grass_dry" ||
           cls === "grass_mid" ||
           cls === "grass_lush" ||
           cls === "grass_deep";
         if (!isGreen) continue;
-
-        // ── Big trees (2-3 total across all green tiles) ─────────────────────
-        if (seed % 88 === 1) {
-          const key = seed % 3 === 0 ? "prop-tree-b" : "prop-tree";
-          const scale = 0.72 + (seed % 5) * 0.04;
-          const tint = key === "prop-tree" ? 0xffffff : 0xeeeeff;
-          const sprite = this.add
-            .image(point.x + (seed % 9) - 4, point.y + yOffset, key)
-            .setOrigin(0.5, 0.92)
-            .setScale(scale)
-            .setTint(tint)
-            .setDepth(depth + 4);
-          this.decorLayer.add(sprite);
-          continue;
-        }
-
-        // ── Rocks (sparse, ~10 total) ─────────────────────────────────────────
-        if (seed % 22 === 3) {
-          const rx = point.x + (this.hashXY(x + 1, y) % 16) - 8;
-          const ry = point.y + yOffset + 10 + (this.hashXY(x, y + 1) % 8) - 4;
-          this.decorLayer.add(
-            this.add
-              .image(rx, ry, "prop-stones")
-              .setOrigin(0.5, 0.9)
-              .setScale(0.42 + (seed % 4) * 0.06)
-              .setDepth(ry)
-          );
-          continue;
-        }
 
         // ── Dense grass carpet: 100 random sub-tile attempts → ~45 sprites ────
         // Each attempt is a random point in the tile bounding box;
