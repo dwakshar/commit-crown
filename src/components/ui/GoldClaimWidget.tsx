@@ -56,6 +56,27 @@ export function GoldClaimWidget() {
 
   const isReady = msLeft === 0;
 
+  // Auto-open the popup when ready — either on page load (return after 2h) or
+  // when the live countdown hits zero.
+  const prevIsReadyRef = useRef(isReady);
+  useEffect(() => {
+    const wasReady = prevIsReadyRef.current;
+    prevIsReadyRef.current = isReady;
+    if (isReady && !wasReady) {
+      // Countdown just hit zero while the page was open
+      setOpen(true);
+    }
+  }, [isReady]);
+
+  // On mount: if a previous claim exists AND 2h have passed, pop open automatically.
+  useEffect(() => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) return; // first-ever load — don't auto-open
+    const elapsed = Date.now() - new Date(stored).getTime();
+    if (elapsed >= COOLDOWN_MS) setOpen(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function handleClaim() {
     if (!isReady || claiming) return;
     setClaiming(true);
