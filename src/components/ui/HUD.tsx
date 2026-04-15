@@ -1,6 +1,14 @@
 "use client";
 
-import { startTransition, useEffect, useMemo, useRef, useState } from "react";
+import {
+  memo,
+  startTransition,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { formatDistanceToNowStrict } from "date-fns";
 import Link from "next/link";
@@ -10,7 +18,11 @@ import { GoldClaimWidget } from "@/src/components/ui/GoldClaimWidget";
 import { NotificationBell } from "@/src/components/ui/NotificationBell";
 import { ProfileButton } from "@/src/components/ui/ProfileButton";
 import { RealmTopNav } from "@/src/components/ui/RealmTopNav";
-import { BUILD_TIMES, getSyncCooldownRemaining, getUpgradeCost } from "@/src/lib/kingdom";
+import {
+  BUILD_TIMES,
+  getSyncCooldownRemaining,
+  getUpgradeCost,
+} from "@/src/lib/kingdom";
 import {
   getBoardSummary,
   getBuildingCatalog,
@@ -21,24 +33,27 @@ import { useKingdomStore } from "@/src/store/kingdomStore";
 import type { BuildingData } from "@/src/types/game";
 
 function formatBuildTime(seconds: number): string {
-  if (seconds < 60) return `${seconds}s`
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m`
-  return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`
+  if (seconds < 60) return `${seconds}s`;
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
+  return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
 }
 
-function getConstructionSecondsLeft(builtAt: string | null | undefined, buildSeconds: number): number {
-  if (!builtAt) return 0
-  const elapsed = (Date.now() - new Date(builtAt).getTime()) / 1000
-  return Math.max(0, Math.ceil(buildSeconds - elapsed))
+function getConstructionSecondsLeft(
+  builtAt: string | null | undefined,
+  buildSeconds: number
+): number {
+  if (!builtAt) return 0;
+  const elapsed = (Date.now() - new Date(builtAt).getTime()) / 1000;
+  return Math.max(0, Math.ceil(buildSeconds - elapsed));
 }
 
 function useTick(intervalMs = 1000) {
-  const [tick, setTick] = useState(0)
+  const [tick, setTick] = useState(0);
   useEffect(() => {
-    const id = setInterval(() => setTick((t) => t + 1), intervalMs)
-    return () => clearInterval(id)
-  }, [intervalMs])
-  return tick
+    const id = setInterval(() => setTick((t) => t + 1), intervalMs);
+    return () => clearInterval(id);
+  }, [intervalMs]);
+  return tick;
 }
 
 function StatCell({
@@ -78,7 +93,7 @@ function BuildingDots({ level }: { level: number }) {
   );
 }
 
-function MinimapPanel({
+const MinimapPanel = memo(function MinimapPanel({
   buildings,
   activeBuildingId,
   onSelectBuilding,
@@ -88,11 +103,11 @@ function MinimapPanel({
   onSelectBuilding: (building: BuildingData) => void;
 }) {
   const gridSize = 20;
-  const occupancy = new Map<string, BuildingData>();
-
-  buildings.forEach((building) => {
-    occupancy.set(`${building.x}:${building.y}`, building);
-  });
+  const occupancy = useMemo(() => {
+    const map = new Map<string, BuildingData>();
+    buildings.forEach((b) => map.set(`${b.x}:${b.y}`, b));
+    return map;
+  }, [buildings]);
 
   return (
     <div>
@@ -143,7 +158,56 @@ function MinimapPanel({
       </div>
     </div>
   );
-}
+});
+
+// Renders and ticks independently — keeps countdown fresh without re-rendering HUD.
+const ConstructionBadge = memo(function ConstructionBadge({
+  builtAt,
+  buildTime,
+}: {
+  builtAt: string | null | undefined;
+  buildTime: number;
+}) {
+  const tick = useTick(1000);
+  const secondsLeft = useMemo(
+    () => getConstructionSecondsLeft(builtAt, buildTime),
+    // tick is intentionally included so the value updates every second
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [builtAt, buildTime, tick]
+  );
+  if (secondsLeft <= 0) return null;
+  return (
+    <span className="rounded bg-[rgba(200,140,40,0.18)] px-2 py-0.5 text-[10px] uppercase tracking-[0.16em] text-[#f0c060]">
+      ⚒ {formatBuildTime(secondsLeft)}
+    </span>
+  );
+});
+
+// Sync button with its own clock so only it re-renders for label/cooldown changes.
+const SyncButton = memo(function SyncButton({
+  onClick,
+  isSyncing,
+  lastSyncedAt,
+}: {
+  onClick: () => void;
+  isSyncing: boolean;
+  lastSyncedAt: string | null;
+}) {
+  useTick(10_000);
+  const cooldownRemaining = getSyncCooldownRemaining(lastSyncedAt);
+  const label = lastSyncedAt
+    ? formatDistanceToNowStrict(new Date(lastSyncedAt), { addSuffix: true })
+    : "Never synced";
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={isSyncing || cooldownRemaining > 0}
+      className="pointer-events-auto realm-button min-w-[260px] border border-[rgba(79,162,103,0.35)] bg-[rgba(16,50,22,0.78)] px-5 py-3 text-[#7fdb91] disabled:opacity-55">
+      {isSyncing ? "Syncing GitHub..." : `Sync GitHub / ${label}`}
+    </button>
+  );
+});
 
 export function HUD() {
   const kingdom = useKingdomStore((state) => state.kingdom);
@@ -165,7 +229,6 @@ export function HUD() {
   );
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [upgradeError, setUpgradeError] = useState<string | null>(null);
-  useTick(1000);
   const buildModeTypeRef = useRef(buildModeType);
   const placeBuildingRef = useRef(placeBuilding);
   const clearPlacementErrorRef = useRef(clearPlacementError);
@@ -218,9 +281,20 @@ export function HUD() {
     () => (kingdom ? getBuildingCatalog(kingdom) : []),
     [kingdom]
   );
-  const cooldownRemaining = useMemo(
-    () => getSyncCooldownRemaining(kingdom?.last_synced_at ?? null),
-    [kingdom?.last_synced_at]
+  const handleSelectBuilding = useCallback(
+    (building: BuildingData) => {
+      setUpgradeError(null);
+      clearPlacementError();
+      startTransition(() => {
+        selectBuilding(building);
+      });
+      window.dispatchEvent(
+        new CustomEvent<BuildingData>("codekingdom:focus-building", {
+          detail: building,
+        })
+      );
+    },
+    [clearPlacementError, selectBuilding]
   );
 
   if (!kingdom || !economy || !boardSummary) {
@@ -243,24 +317,6 @@ export function HUD() {
     activeBuilding.level < 5 &&
     kingdom.gold >= (upgradeCost ?? 0) &&
     !isUpgrading;
-  const lastSyncedLabel = kingdom.last_synced_at
-    ? formatDistanceToNowStrict(new Date(kingdom.last_synced_at), {
-        addSuffix: true,
-      })
-    : "Never synced";
-
-  const handleSelectBuilding = (building: BuildingData) => {
-    setUpgradeError(null);
-    clearPlacementError();
-    startTransition(() => {
-      selectBuilding(building);
-    });
-    window.dispatchEvent(
-      new CustomEvent<BuildingData>("codekingdom:focus-building", {
-        detail: building,
-      })
-    );
-  };
 
   const handleBuildMode = (type: BuildingData["type"] | null) => {
     const nextType = buildModeType === type ? null : type;
@@ -588,12 +644,18 @@ export function HUD() {
                 const buildTime = BUILD_TIMES[entry.type];
                 const isActive = buildModeType === entry.type;
 
-                // Find the most recently placed building of this type that's still under construction
-                const underConstruction = kingdom.buildings
-                  .filter((b) => !b.isPlaceholder && b.type === entry.type && b.builtAt)
-                  .map((b) => getConstructionSecondsLeft(b.builtAt, buildTime))
-                  .filter((s) => s > 0)
-                  .sort((a, b) => b - a)[0] ?? 0;
+                // Find the builtAt of the most recently placed building of this
+                // type still under construction — passed to ConstructionBadge
+                // which manages its own per-second tick in isolation.
+                const constructingBuiltAt = kingdom.buildings
+                  .filter(
+                    (b) =>
+                      !b.isPlaceholder && b.type === entry.type && b.builtAt
+                  )
+                  .reduce<string | null>((latest, b) => {
+                    if (!b.builtAt) return latest;
+                    return !latest || b.builtAt > latest ? b.builtAt : latest;
+                  }, null);
 
                 return (
                   <div
@@ -605,17 +667,21 @@ export function HUD() {
                           <div className="font-[var(--font-head)] text-[1.2rem] leading-none text-[var(--silver-0)]">
                             {entry.metadata.label}
                           </div>
-                          {underConstruction > 0 && (
-                            <span className="rounded bg-[rgba(200,140,40,0.18)] px-2 py-0.5 text-[10px] uppercase tracking-[0.16em] text-[#f0c060]">
-                              ⚒ {formatBuildTime(underConstruction)}
-                            </span>
-                          )}
+                          <ConstructionBadge
+                            builtAt={constructingBuiltAt}
+                            buildTime={buildTime}
+                          />
                         </div>
                         <div className="mt-1.5 text-[12px] leading-5 text-[var(--silver-3)]">
                           {entry.metadata.effect}
                         </div>
                         <div className="mt-2.5 flex items-center gap-3 text-[11px] uppercase tracking-[0.16em]">
-                          <span className={canAfford ? "text-[#f0c060]" : "text-[rgba(240,100,80,0.9)]"}>
+                          <span
+                            className={
+                              canAfford
+                                ? "text-[#f0c060]"
+                                : "text-[rgba(240,100,80,0.9)]"
+                            }>
                             ◆ {cost.toLocaleString()} gold
                           </span>
                           <span className="text-[var(--silver-3)]">
@@ -632,7 +698,8 @@ export function HUD() {
                         type="button"
                         onClick={() => handleBuildMode(entry.type)}
                         disabled={
-                          (!isActive && (!canAfford || boardSummary.openSlots <= 0)) ||
+                          (!isActive &&
+                            (!canAfford || boardSummary.openSlots <= 0)) ||
                           isPlacingBuilding
                         }
                         className={`min-w-[88px] border px-3 py-2 text-[11px] uppercase tracking-[0.18em] transition ${
@@ -693,15 +760,11 @@ export function HUD() {
               Cosmetics
             </Link>
             <div className="min-w-2 grow" />
-            <button
-              type="button"
+            <SyncButton
               onClick={handleSync}
-              disabled={isSyncing || cooldownRemaining > 0}
-              className="pointer-events-auto realm-button min-w-[260px] border border-[rgba(79,162,103,0.35)] bg-[rgba(16,50,22,0.78)] px-5 py-3 text-[#7fdb91] disabled:opacity-55">
-              {isSyncing
-                ? "Syncing GitHub..."
-                : `Sync GitHub / ${lastSyncedLabel}`}
-            </button>
+              isSyncing={isSyncing}
+              lastSyncedAt={kingdom.last_synced_at}
+            />
           </div>
         </div>
       </div>

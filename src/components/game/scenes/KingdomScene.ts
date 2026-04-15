@@ -74,6 +74,10 @@ export class KingdomScene extends Phaser.Scene {
   private lightingOverlay?: PhaserGraphics;
   private waterShimmerTweens: PhaserTween[] = [];
   private waterShimmerGraphics: PhaserGraphics[] = [];
+  // Decoration cache — rebuilt only when occupied/placeholder tile set changes
+  private occupiedKey = "";
+  // Building reconciliation — track previous data to skip unchanged sprites
+  private buildingDataCache = new Map<string, BuildingData>();
 
   constructor() {
     super("KingdomScene");
@@ -90,6 +94,7 @@ export class KingdomScene extends Phaser.Scene {
     this.drawWaterLayer();
     this.drawTerrain();
     this.renderWorld(kingdomData);
+    this.renderLighting();
     this.registerCameraDrag();
     this.registerBuildMode();
     this.input.on(
@@ -144,6 +149,15 @@ export class KingdomScene extends Phaser.Scene {
         };
       }
     }
+  }
+
+  // Stable key representing which tiles are occupied/placeholder — used to
+  // skip expensive decoration re-renders when only gold/level changed.
+  private computeOccupiedKey(buildings: BuildingData[]): string {
+    return buildings
+      .map((b) => `${b.isPlaceholder ? "p" : "b"}:${b.x}:${b.y}`)
+      .sort()
+      .join("|");
   }
 
   // Deterministic hash for a tile position (used for decoration seeding)
@@ -657,13 +671,25 @@ export class KingdomScene extends Phaser.Scene {
   private renderWorld(kingdomData: KingdomData): void {
     this.renderDecor(kingdomData);
     this.renderBuildings(kingdomData);
-    this.renderLighting();
+    // renderLighting is static — called separately in create() and handleResize()
   }
 
   private renderBuildings(kingdomData: KingdomData): void {
-    this.buildingLayer?.destroy(true);
-    this.buildingLayer = this.add.container();
-    this.buildingMap.clear();
+    // Reconcile: remove buildings that no longer exist
+    const newIds = new Set(kingdomData.buildings.map((b) => b.id));
+    for (const [id, building] of this.buildingMap) {
+      if (!newIds.has(id)) {
+        building.destroy();
+        this.buildingMap.delete(id);
+        this.buildingDataCache.delete(id);
+      }
+    }
+
+    if (!this.buildingLayer) {
+      this.buildingLayer = this.add.container();
+    }
+    const layer = this.buildingLayer;
+
     this.selectionMarker?.setVisible(false);
 
     const sortedBuildings = [...kingdomData.buildings].sort(
@@ -671,24 +697,40 @@ export class KingdomScene extends Phaser.Scene {
     );
 
     sortedBuildings.forEach((buildingData) => {
-      const elevation =
-        this.terrainData[buildingData.y]?.[buildingData.x]?.elevation || 0;
-      const point = this.isoToScreen(buildingData.x, buildingData.y);
-      const yOffset = this.tileHeight / 2 - elevation * 20;
-      const building = new Building(
-        this,
-        point.x,
-        point.y + yOffset,
-        buildingData
-      );
+      const cached = this.buildingDataCache.get(buildingData.id);
+      const needsRecreate =
+        !cached ||
+        cached.level !== buildingData.level ||
+        cached.isPlaceholder !== buildingData.isPlaceholder;
 
-      building.setDepth(point.y + yOffset);
-      this.buildingLayer?.add(building);
-      this.buildingMap.set(buildingData.id, building);
+      if (needsRecreate) {
+        // Destroy the stale sprite if it exists, then create a fresh one
+        const existing = this.buildingMap.get(buildingData.id);
+        if (existing) {
+          existing.destroy();
+          this.buildingMap.delete(buildingData.id);
+        }
+
+        const elevation =
+          this.terrainData[buildingData.y]?.[buildingData.x]?.elevation || 0;
+        const point = this.isoToScreen(buildingData.x, buildingData.y);
+        const yOffset = this.tileHeight / 2 - elevation * 20;
+        const building = new Building(this, point.x, point.y + yOffset, buildingData);
+        building.setDepth(point.y + yOffset);
+        layer.add(building);
+        this.buildingMap.set(buildingData.id, building);
+      }
+
+      this.buildingDataCache.set(buildingData.id, buildingData);
     });
+
+    // Re-sort container children so painter's-algorithm depth stays correct
+    // after any additions. n is small (≤ building_slots) so this is cheap.
+    layer.sort("depth");
   }
 
   private renderDecor(kingdomData: KingdomData): void {
+    this.occupiedKey = this.computeOccupiedKey(kingdomData.buildings);
     this.decorLayer?.destroy(true);
     this.decorLayer = this.add.container();
 
@@ -885,7 +927,13 @@ export class KingdomScene extends Phaser.Scene {
 
   private handleKingdomUpdated(updatedKingdom?: KingdomData): void {
     const kingdomData = updatedKingdom ?? this.getKingdomData();
-    this.renderWorld(kingdomData);
+    const newKey = this.computeOccupiedKey(kingdomData.buildings);
+    // Decoration depends only on which tiles are occupied/placeholder, not on
+    // gold, prestige, or other fields — skip the expensive rebuild when unchanged.
+    if (newKey !== this.occupiedKey) {
+      this.renderDecor(kingdomData);
+    }
+    this.renderBuildings(kingdomData);
   }
 
   private handleResize(gameSize: { width: number }): void {
@@ -898,6 +946,10 @@ export class KingdomScene extends Phaser.Scene {
     this.selectionMarker = undefined;
     this.placementMarker = undefined;
     this.lightingOverlay = undefined;
+    // Clear reconciliation caches — all objects were destroyed by removeAll
+    this.buildingMap.clear();
+    this.buildingDataCache.clear();
+    this.occupiedKey = "";
     // Water graphics are destroyed as part of removeAll(true) above,
     // but we still need to clear our references and tweens
     this.waterShimmerTweens.forEach((t) => t.destroy());
@@ -907,6 +959,7 @@ export class KingdomScene extends Phaser.Scene {
     this.drawWaterLayer();
     this.drawTerrain();
     this.renderWorld(this.getKingdomData());
+    this.renderLighting();
   }
 
   private handleShutdown(): void {

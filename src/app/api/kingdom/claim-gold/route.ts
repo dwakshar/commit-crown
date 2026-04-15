@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { tryEnsureKingdomForUser } from "@/src/lib/kingdomPersistence";
 import { supabaseAdmin } from "@/src/lib/supabaseAdmin";
 import { createClient } from "@/utils/supabase/server";
 
@@ -31,14 +32,20 @@ export async function POST(request: Request) {
     }
   }
 
-  const { data: kingdom, error: fetchError } = await supabaseAdmin
+  const { data: fetched, error: fetchError } = await supabaseAdmin
     .from("kingdoms")
     .select("id, gold")
     .eq("user_id", user.id)
     .maybeSingle();
 
+  let kingdom = fetched;
+
   if (fetchError || !kingdom) {
-    return NextResponse.json({ error: "Kingdom not found" }, { status: 404 });
+    const ensured = await tryEnsureKingdomForUser(user.id);
+    if (!ensured) {
+      return NextResponse.json({ error: "Kingdom not found" }, { status: 404 });
+    }
+    kingdom = { id: ensured.id, gold: ensured.gold };
   }
 
   const newGold = kingdom.gold + CLAIM_AMOUNT;

@@ -68,13 +68,16 @@ export function GoldClaimWidget() {
     }
   }, [isReady]);
 
-  // On mount: if a previous claim exists AND 2h have passed, pop open automatically.
+  // On mount: pop open if gold is ready (first-ever visit or 2h have passed).
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) return; // first-ever load — don't auto-open
+    if (!stored) {
+      // First-ever visit — gold is immediately claimable, show the popup.
+      setOpen(true);
+      return;
+    }
     const elapsed = Date.now() - new Date(stored).getTime();
     if (elapsed >= COOLDOWN_MS) setOpen(true);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function handleClaim() {
@@ -115,10 +118,10 @@ export function GoldClaimWidget() {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
+    <div className="pointer-events-auto fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
       {/* Popup panel */}
       {open && (
-        <div className="mb-1 w-56 rounded-xl border border-[var(--b0)] bg-[#0d1520]/95 shadow-2xl backdrop-blur-sm">
+        <div className="mb-1 w-56 border border-[var(--b0)] bg-[#0d1520]/95 shadow-2xl backdrop-blur-sm">
           <div className="border-b border-[var(--b0)] px-4 py-3">
             <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--silver-3)]">
               Treasury
@@ -134,25 +137,25 @@ export function GoldClaimWidget() {
               <div className="mt-1 font-[var(--font-head)] text-2xl text-[#f4c94e]">
                 +{CLAIM_AMOUNT}
               </div>
-              <div className="text-[11px] text-[var(--silver-3)]">gold per claim</div>
+              <div className="text-[11px] text-[var(--silver-3)]">
+                gold per claim
+              </div>
             </div>
 
             {claimMsg ? (
               <div
-                className={`rounded-lg px-3 py-2 text-center text-sm font-semibold ${
+                className={`px-3 py-2 text-center text-sm font-semibold ${
                   claimMsg.startsWith("+")
                     ? "bg-[rgba(244,201,78,0.15)] text-[#f4c94e]"
                     : "bg-[rgba(255,80,80,0.12)] text-red-400"
-                }`}
-              >
+                }`}>
                 {claimMsg}
               </div>
             ) : isReady ? (
               <button
                 onClick={handleClaim}
                 disabled={claiming}
-                className="w-full rounded-lg bg-[#f4c94e] px-3 py-2 text-sm font-bold text-[#0d0e14] transition-opacity hover:opacity-90 disabled:opacity-50"
-              >
+                className="w-full bg-[#f4c94e] px-3 py-2 text-sm font-bold text-[#0d0e14] transition-opacity hover:opacity-90 disabled:opacity-50">
                 {claiming ? "Claiming…" : "Claim Gold"}
               </button>
             ) : (
@@ -172,13 +175,16 @@ export function GoldClaimWidget() {
       {/* Floating chest button */}
       <button
         onClick={() => setOpen((v) => !v)}
-        title={isReady ? "Claim free gold!" : `Gold ready in ${formatCountdown(msLeft)}`}
+        title={
+          isReady
+            ? "Claim free gold!"
+            : `Gold ready in ${formatCountdown(msLeft)}`
+        }
         className={`relative flex h-12 w-12 items-center justify-center rounded-full border shadow-lg transition-all ${
           isReady
             ? "animate-pulse border-[#f4c94e]/60 bg-[#1a1408] text-2xl shadow-[0_0_16px_rgba(244,201,78,0.4)] hover:scale-110"
             : "border-[var(--b0)] bg-[#0d1520]/90 text-xl hover:scale-105"
-        }`}
-      >
+        }`}>
         🏺
         {isReady && (
           <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#f4c94e] text-[9px] font-bold text-[#0d0e14]">
