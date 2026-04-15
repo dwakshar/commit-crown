@@ -7,30 +7,10 @@ const STARTER_BUILDINGS: BuildingData[] = [
   {
     id: 'starter-town-hall',
     type: 'town_hall',
-    x: 10,
-    y: 6,
+    x: 12,
+    y: 12,
     level: 1,
     name: 'Town Hall',
-  },
-  {
-    id: 'starter-ruins-west',
-    type: 'wall',
-    x: 8,
-    y: 7,
-    level: 1,
-    name: 'Ruins',
-    isPlaceholder: true,
-    placeholderLabel: 'Code more to unlock',
-  },
-  {
-    id: 'starter-ruins-east',
-    type: 'wall',
-    x: 12,
-    y: 7,
-    level: 1,
-    name: 'Ruins',
-    isPlaceholder: true,
-    placeholderLabel: 'Code more to unlock',
   },
 ]
 

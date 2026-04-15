@@ -2,6 +2,19 @@ import type { BuildingData, BuildingType } from '@/src/types/game'
 
 export const SYNC_COOLDOWN_MINUTES = 30
 
+// Build duration in seconds per building type (CoC-style construction time).
+export const BUILD_TIMES: Record<BuildingType, number> = {
+  town_hall:    300,  // 5 min
+  wall:         120,  // 2 min
+  market:       180,  // 3 min
+  library:      240,  // 4 min
+  barracks:     300,  // 5 min
+  iron_forge:   360,  // 6 min
+  observatory:  420,  // 7 min
+  arcane_tower: 480,  // 8 min
+  monument:     600,  // 10 min
+}
+
 export const BUILDING_METADATA: Record<
   BuildingType,
   {

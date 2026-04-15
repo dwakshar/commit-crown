@@ -22,19 +22,17 @@ export type KingdomStats = {
 
 export type BuildingUnlockCheck = (stats: GitHubStats) => boolean
 
+// All buildings are available to place — gated by gold cost only, not GitHub stats.
 export const BUILDING_UNLOCK_REQUIREMENTS: Record<BuildingType, BuildingUnlockCheck> = {
-  town_hall: () => true,
-  market: (stats) => stats.total_repos >= 1,
-  library: (stats) => stats.total_commits >= 25,
-  iron_forge: (stats) => stats.total_stars >= 10 || (stats.languages.Rust ?? 0) >= 1,
-  barracks: (stats) => stats.total_prs >= 5,
-  observatory: (stats) => stats.followers >= 5,
-  arcane_tower: (stats) =>
-    stats.total_repos >= 3 ||
-    (stats.languages.TypeScript ?? 0) >= 2 ||
-    (stats.languages.JavaScript ?? 0) >= 2,
-  wall: (stats) => stats.current_streak >= 7,
-  monument: (stats) => stats.total_stars >= 50 || stats.followers >= 20,
+  town_hall:    () => true,
+  market:       () => true,
+  library:      () => true,
+  iron_forge:   () => true,
+  barracks:     () => true,
+  observatory:  () => true,
+  arcane_tower: () => true,
+  wall:         () => true,
+  monument:     () => true,
 }
 
 export const BUILDING_EFFECTS: Record<BuildingType, Record<1 | 2 | 3 | 4 | 5, string>> = {

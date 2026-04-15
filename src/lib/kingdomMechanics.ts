@@ -1,5 +1,4 @@
 import {
-  BUILDING_UNLOCK_REQUIREMENTS,
   calculateKingdomPower,
   type GitHubStats,
 } from "@/src/lib/gameEngine";
@@ -114,21 +113,9 @@ function sumWeightedValue(
   }, 0);
 }
 
-export function getUnlockedBuildingTypes(
-  stats: GitHubStatsData | null | undefined
-): BuildingType[] {
-  const githubStats = toGitHubStats(stats);
-
-  return (Object.keys(BUILDING_METADATA) as BuildingType[]).filter((type) =>
-    BUILDING_UNLOCK_REQUIREMENTS[type](githubStats)
-  );
-}
-
 export function getBuildingCatalog(
   kingdom: KingdomData
 ): BuildingCatalogEntry[] {
-  const unlockedTypes = new Set(getUnlockedBuildingTypes(kingdom.githubStats));
-
   return (Object.keys(BUILDING_METADATA) as BuildingType[]).map((type) => {
     const placedCount = kingdom.buildings.filter(
       (building) => !building.isPlaceholder && building.type === type
@@ -137,13 +124,9 @@ export function getBuildingCatalog(
     return {
       type,
       metadata: BUILDING_METADATA[type],
-      unlocked: unlockedTypes.has(type),
+      unlocked: true,
       placedCount,
-      nextTierLabel: unlockedTypes.has(type)
-        ? placedCount > 0
-          ? "Ready to expand"
-          : "Ready to found"
-        : "Locked by GitHub progress",
+      nextTierLabel: placedCount > 0 ? "Expand district" : "Ready to found",
     };
   });
 }

@@ -675,6 +675,22 @@ function generatePropTextures(g: G) {
   g.fillEllipse(18, 29, 26, 6)
   g.generateTexture('prop-grass-tuft', 36, 36)
 
+  // ── prop-grass-b (36×36) — mirrored/rotated variant for variety ──────────
+  g.clear()
+  g.fillStyle(0x3a6628, 0.8)
+  g.fillTriangle(28, 28, 30, 8, 24, 28)
+  g.fillTriangle(10, 28, 12, 10, 6, 28)
+  g.fillStyle(0x4e8244, 1)
+  g.fillTriangle(22, 28, 24, 6, 18, 28)
+  g.fillStyle(0x5a9850, 0.95)
+  g.fillTriangle(17, 28, 19, 4, 12, 28)
+  g.fillStyle(0x80c865, 0.45)
+  g.fillCircle(21, 7, 2)
+  g.fillCircle(16, 5, 2)
+  g.fillStyle(0x000000, 0.12)
+  g.fillEllipse(18, 29, 26, 6)
+  g.generateTexture('prop-grass-b', 36, 36)
+
   // ── prop-banner ───────────────────────────────────────────────────────────
   g.clear()
   g.fillStyle(0x4a3322, 1)

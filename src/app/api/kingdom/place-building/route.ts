@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import {
-  BUILDING_UNLOCK_REQUIREMENTS,
-  type GitHubStats,
-} from "@/src/lib/gameEngine";
 import { BUILDING_METADATA } from "@/src/lib/kingdom";
 import { ensureKingdomForUser } from "@/src/lib/kingdomPersistence";
 import { supabaseAdmin } from "@/src/lib/supabaseAdmin";
@@ -54,18 +50,6 @@ type ProfileQueryResult = {
           | null;
       }[]
     | null;
-  github_stats:
-    | {
-        total_commits: number;
-        total_repos: number;
-        total_stars: number;
-        total_prs: number;
-        followers: number;
-        current_streak: number;
-        longest_streak: number;
-        languages: Record<string, number> | null;
-      }[]
-    | null;
 };
 
 type EnsuredKingdom = {
@@ -105,7 +89,7 @@ export async function POST(request: Request) {
   const { data: profile, error } = await supabase
     .from("profiles")
     .select(
-      "kingdoms(id, building_slots, gold, buildings(id, type, position_x, position_y)), github_stats(total_commits, total_repos, total_stars, total_prs, followers, current_streak, longest_streak, languages)"
+      "kingdoms(id, building_slots, gold, buildings(id, type, position_x, position_y))"
     )
     .eq("id", user.id)
     .single();
@@ -181,29 +165,6 @@ export async function POST(request: Request) {
   if (buildings.length >= kingdom.building_slots) {
     return NextResponse.json(
       { error: "No building slots available" },
-      { status: 400 }
-    );
-  }
-
-  const statsRow = result.github_stats?.[0];
-  const githubStats: GitHubStats = {
-    total_commits: statsRow?.total_commits ?? 0,
-    total_repos: statsRow?.total_repos ?? 0,
-    total_stars: statsRow?.total_stars ?? 0,
-    total_prs: statsRow?.total_prs ?? 0,
-    followers: statsRow?.followers ?? 0,
-    current_streak: statsRow?.current_streak ?? 0,
-    longest_streak: statsRow?.longest_streak ?? 0,
-    languages: statsRow?.languages ?? {},
-  };
-
-  const unlockRequirement = BUILDING_UNLOCK_REQUIREMENTS[parsed.data.type];
-  if (
-    typeof unlockRequirement === "function" &&
-    !unlockRequirement(githubStats)
-  ) {
-    return NextResponse.json(
-      { error: "Building type is locked" },
       { status: 400 }
     );
   }

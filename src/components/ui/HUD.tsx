@@ -6,10 +6,11 @@ import { formatDistanceToNowStrict } from "date-fns";
 import Link from "next/link";
 
 import { AchievementToast } from "@/src/components/ui/AchievementToast";
+import { GoldClaimWidget } from "@/src/components/ui/GoldClaimWidget";
 import { NotificationBell } from "@/src/components/ui/NotificationBell";
 import { ProfileButton } from "@/src/components/ui/ProfileButton";
 import { RealmTopNav } from "@/src/components/ui/RealmTopNav";
-import { getSyncCooldownRemaining, getUpgradeCost } from "@/src/lib/kingdom";
+import { BUILD_TIMES, getSyncCooldownRemaining, getUpgradeCost } from "@/src/lib/kingdom";
 import {
   getBoardSummary,
   getBuildingCatalog,
@@ -18,6 +19,27 @@ import {
 } from "@/src/lib/kingdomMechanics";
 import { useKingdomStore } from "@/src/store/kingdomStore";
 import type { BuildingData } from "@/src/types/game";
+
+function formatBuildTime(seconds: number): string {
+  if (seconds < 60) return `${seconds}s`
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m`
+  return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`
+}
+
+function getConstructionSecondsLeft(builtAt: string | null | undefined, buildSeconds: number): number {
+  if (!builtAt) return 0
+  const elapsed = (Date.now() - new Date(builtAt).getTime()) / 1000
+  return Math.max(0, Math.ceil(buildSeconds - elapsed))
+}
+
+function useTick(intervalMs = 1000) {
+  const [tick, setTick] = useState(0)
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), intervalMs)
+    return () => clearInterval(id)
+  }, [intervalMs])
+  return tick
+}
 
 function StatCell({
   label,
@@ -143,6 +165,7 @@ export function HUD() {
   );
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [upgradeError, setUpgradeError] = useState<string | null>(null);
+  useTick(1000);
   const buildModeTypeRef = useRef(buildModeType);
   const placeBuildingRef = useRef(placeBuilding);
   const clearPlacementErrorRef = useRef(clearPlacementError);
@@ -403,10 +426,10 @@ export function HUD() {
               </div>
               <div className="bg-[rgba(7,10,16,0.96)] px-5 py-4">
                 <div className="text-[10px] uppercase tracking-[0.2em] text-[var(--silver-3)]">
-                  Ruin Sites
+                  Districts Built
                 </div>
                 <div className="mt-2 font-[var(--font-head)] text-2xl text-[var(--silver-0)]">
-                  {boardSummary.ruins}
+                  {boardSummary.usedSlots}
                 </div>
               </div>
               <div className="bg-[rgba(7,10,16,0.96)] px-5 py-4">
@@ -477,7 +500,7 @@ export function HUD() {
             </div>
             <div className="mt-2 text-sm italic text-[var(--silver-2)]">
               {activeBuilding?.isPlaceholder
-                ? "This ruined district can be reclaimed with any unlocked structure."
+                ? "This ruined district can be reclaimed — select any structure from the foundry."
                 : "Review the district, commit an upgrade, or expand the kingdom from the build list below."}
             </div>
           </div>
@@ -554,55 +577,83 @@ export function HUD() {
               District Foundry
             </div>
             <div className="mt-2 text-sm text-[var(--silver-2)]">
-              Unlocked structures can be placed on any open tile. Locked ones
-              awaken from GitHub progress.
+              Place any structure using gold. Each building takes time to
+              construct — plan your kingdom like a commander.
             </div>
 
             <div className="mt-4 space-y-3">
-              {catalog.map((entry) => (
-                <div
-                  key={entry.type}
-                  className={`border px-4 py-4 ${
-                    entry.unlocked
-                      ? "border-[var(--b0)] bg-[rgba(255,186,186,0.02)]"
-                      : "border-[rgba(120,140,160,0.12)] bg-[rgba(255,255,255,0.01)] opacity-60"
-                  }`}>
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <div className="font-[var(--font-head)] text-[1.25rem] leading-none text-[var(--silver-0)]">
-                        {entry.metadata.label}
+              {catalog.map((entry) => {
+                const cost = entry.metadata.baseCost;
+                const canAfford = kingdom.gold >= cost;
+                const buildTime = BUILD_TIMES[entry.type];
+                const isActive = buildModeType === entry.type;
+
+                // Find the most recently placed building of this type that's still under construction
+                const underConstruction = kingdom.buildings
+                  .filter((b) => !b.isPlaceholder && b.type === entry.type && b.builtAt)
+                  .map((b) => getConstructionSecondsLeft(b.builtAt, buildTime))
+                  .filter((s) => s > 0)
+                  .sort((a, b) => b - a)[0] ?? 0;
+
+                return (
+                  <div
+                    key={entry.type}
+                    className="border border-[var(--b0)] bg-[rgba(255,255,255,0.015)] px-4 py-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <div className="font-[var(--font-head)] text-[1.2rem] leading-none text-[var(--silver-0)]">
+                            {entry.metadata.label}
+                          </div>
+                          {underConstruction > 0 && (
+                            <span className="rounded bg-[rgba(200,140,40,0.18)] px-2 py-0.5 text-[10px] uppercase tracking-[0.16em] text-[#f0c060]">
+                              ⚒ {formatBuildTime(underConstruction)}
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-1.5 text-[12px] leading-5 text-[var(--silver-3)]">
+                          {entry.metadata.effect}
+                        </div>
+                        <div className="mt-2.5 flex items-center gap-3 text-[11px] uppercase tracking-[0.16em]">
+                          <span className={canAfford ? "text-[#f0c060]" : "text-[rgba(240,100,80,0.9)]"}>
+                            ◆ {cost.toLocaleString()} gold
+                          </span>
+                          <span className="text-[var(--silver-3)]">
+                            ⏱ {formatBuildTime(buildTime)}
+                          </span>
+                          {entry.placedCount > 0 && (
+                            <span className="text-[var(--silver-3)]">
+                              {entry.placedCount} built
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <div className="mt-2 text-sm text-[var(--silver-2)]">
-                        {entry.metadata.effect}
-                      </div>
-                      <div className="mt-3 text-[11px] uppercase tracking-[0.18em] text-[var(--silver-3)]">
-                        {entry.placedCount} built / {entry.nextTierLabel}
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleBuildMode(entry.type)}
+                        disabled={
+                          (!isActive && (!canAfford || boardSummary.openSlots <= 0)) ||
+                          isPlacingBuilding
+                        }
+                        className={`min-w-[88px] border px-3 py-2 text-[11px] uppercase tracking-[0.18em] transition ${
+                          isActive
+                            ? "border-[var(--ember)] bg-[rgba(44,21,13,0.72)] text-[var(--ember-hi)]"
+                            : canAfford && boardSummary.openSlots > 0
+                            ? "border-[rgba(79,162,103,0.5)] text-[#7fdb91] hover:border-[rgba(79,162,103,0.9)]"
+                            : "border-[var(--b1)] text-[var(--silver-3)]"
+                        } disabled:cursor-not-allowed`}>
+                        {isActive
+                          ? "Cancel"
+                          : !canAfford
+                          ? "Need Gold"
+                          : boardSummary.openSlots <= 0
+                          ? "No Slots"
+                          : "Place"}
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleBuildMode(entry.unlocked ? entry.type : null)
-                      }
-                      disabled={
-                        !entry.unlocked ||
-                        boardSummary.openSlots <= 0 ||
-                        isPlacingBuilding
-                      }
-                      className={`min-w-[120px] border px-4 py-2 text-[11px] uppercase tracking-[0.18em] transition ${
-                        buildModeType === entry.type
-                          ? "border-[var(--ember)] bg-[rgba(44,21,13,0.72)] text-[var(--ember-hi)]"
-                          : "border-[var(--b1)] text-[var(--silver-2)] hover:text-[var(--silver-0)]"
-                      } disabled:cursor-not-allowed disabled:opacity-100`}>
-                      {buildModeType === entry.type
-                        ? "Cancel"
-                        : entry.unlocked
-                        ? "Place"
-                        : "Locked"}
-                    </button>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -676,6 +727,8 @@ export function HUD() {
       <div className="pointer-events-none absolute inset-0 z-40">
         <AchievementToast />
       </div>
+
+      <GoldClaimWidget />
     </div>
   );
 }

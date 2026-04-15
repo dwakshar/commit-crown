@@ -34,20 +34,20 @@ function deriveSkinTint(skinId: string | null | undefined) {
   return Phaser.Display.Color.HSLToColor(hue / 360, 0.55, 0.58).color
 }
 
-// Per-type config: display size and foundation dimensions
+// Per-type config: display size and sprite anchor offset (spriteY > 0 = anchor below tile center)
 const ASSET_CONFIG: Record<
   BuildingData['type'],
-  { dispW: number; dispH: number; fW: number; fH: number; fDepth: number }
+  { dispW: number; dispH: number; spriteY: number }
 > = {
-  town_hall:     { dispW: 116, dispH: 145, fW: 86, fH: 30, fDepth: 11 },
-  arcane_tower:  { dispW:  88, dispH: 110, fW: 62, fH: 22, fDepth:  7 },
-  library:       { dispW:  92, dispH:  96, fW: 66, fH: 24, fDepth:  8 },
-  iron_forge:    { dispW:  88, dispH:  96, fW: 64, fH: 22, fDepth:  7 },
-  barracks:      { dispW:  92, dispH:  96, fW: 66, fH: 22, fDepth:  7 },
-  observatory:   { dispW:  88, dispH: 100, fW: 62, fH: 22, fDepth:  7 },
-  market:        { dispW:  92, dispH:  96, fW: 66, fH: 22, fDepth:  7 },
-  wall:          { dispW:  88, dispH:  80, fW: 64, fH: 20, fDepth:  6 },
-  monument:      { dispW:  88, dispH: 108, fW: 62, fH: 22, fDepth:  7 },
+  town_hall:     { dispW: 116, dispH: 145, spriteY: 36 },
+  arcane_tower:  { dispW:  88, dispH: 110, spriteY: 26 },
+  library:       { dispW:  92, dispH:  96, spriteY: 21 },
+  iron_forge:    { dispW:  88, dispH:  96, spriteY: 21 },
+  barracks:      { dispW:  92, dispH:  96, spriteY: 21 },
+  observatory:   { dispW:  88, dispH: 100, spriteY: 22 },
+  market:        { dispW:  92, dispH:  96, spriteY: 21 },
+  wall:          { dispW:  88, dispH:  80, spriteY: 15 },
+  monument:      { dispW:  88, dispH: 108, spriteY: 25 },
 }
 
 export class Building extends Phaser.GameObjects.Container {
@@ -82,86 +82,23 @@ export class Building extends Phaser.GameObjects.Container {
     const tint = deriveSkinTint(this.buildingData.skinId)
     const g = this.scene.add.graphics()
 
-    // ── Soft drop shadow (NO blend mode — avoids dark blob artefacts) ──────
-    const sw = cfg.fW * 1.55
-    const sh = cfg.fH * 1.55
+    // ── Soft drop shadow centered at tile face (no fW/fH needed) ────────────
     g.fillStyle(0x000000, 0.08)
-    g.fillEllipse(2, cfg.fH * 0.9, sw, sh)
+    g.fillEllipse(2, 14, 92, 28)
     g.fillStyle(0x000000, 0.10)
-    g.fillEllipse(1, cfg.fH * 0.7, sw * 0.68, sh * 0.72)
+    g.fillEllipse(1, 10, 62, 20)
     g.fillStyle(0x000000, 0.12)
-    g.fillEllipse(0, cfg.fH * 0.5, sw * 0.42, sh * 0.50)
+    g.fillEllipse(0, 6, 38, 13)
 
-    // ── Isometric stone foundation slab ────────────────────────────────────
-    this.drawFoundation(g, cfg.fW, cfg.fH, cfg.fDepth)
-
-    // ── Building sprite (sits ON the foundation) ───────────────────────────
-    // Sprite anchor (origin 0.5, 1) = bottom-center of displayed image.
-    // We raise it so the texture base aligns with the foundation front edge.
-    const spriteY = -(cfg.fH * 0.28)
+    // ── Building sprite — texture already includes stone foundation ──────────
+    // spriteY > 0 shifts anchor below tile center so foundation base sits on tile
     const sprite = this.scene.add
-      .image(0, spriteY, this.buildingData.type)
+      .image(0, cfg.spriteY, this.buildingData.type)
       .setDisplaySize(cfg.dispW, cfg.dispH)
       .setOrigin(0.5, 1)
       .setTint(tint ?? 0xffffff)
 
-    // Ambient occlusion ring at sprite base — very subtle darkening where
-    // structure meets foundation, no blend mode needed
-    g.fillStyle(0x000000, 0.09)
-    g.fillEllipse(0, spriteY + 2, cfg.fW * 0.72, cfg.fH * 0.55)
-
     return this.scene.add.container(0, 0, [g, sprite])
-  }
-
-  // Isometric stone slab drawn in local container space.
-  // Foundation top-face center is at container (0, 0).
-  private drawFoundation(g: PhaserGraphics, fW: number, fH: number, fd: number): void {
-    const hW = fW / 2
-    const hH = fH / 2
-
-    // Left side face — lit from above-left
-    g.fillStyle(0x6e6454, 1)
-    g.fillPoints(
-      [
-        new Phaser.Geom.Point(-hW, 0),
-        new Phaser.Geom.Point(0, hH),
-        new Phaser.Geom.Point(0, hH + fd),
-        new Phaser.Geom.Point(-hW, fd),
-      ],
-      true,
-    )
-
-    // Right side face — in shadow
-    g.fillStyle(0x524840, 1)
-    g.fillPoints(
-      [
-        new Phaser.Geom.Point(0, hH),
-        new Phaser.Geom.Point(hW, 0),
-        new Phaser.Geom.Point(hW, fd),
-        new Phaser.Geom.Point(0, hH + fd),
-      ],
-      true,
-    )
-
-    // Top face — warm stone colour
-    g.fillStyle(0x988670, 1)
-    g.fillPoints(
-      [
-        new Phaser.Geom.Point(0, -hH),
-        new Phaser.Geom.Point(hW, 0),
-        new Phaser.Geom.Point(0, hH),
-        new Phaser.Geom.Point(-hW, 0),
-      ],
-      true,
-    )
-
-    // Subtle stone highlight on top-left edge
-    g.lineStyle(1, 0xc8b898, 0.35)
-    g.strokeLineShape(new Phaser.Geom.Line(-hW + 3, -2, hW - 3, -hH + 3))
-
-    // Faint mortar line across center
-    g.lineStyle(1, 0x706050, 0.2)
-    g.strokeLineShape(new Phaser.Geom.Line(-hW * 0.6, hH * 0.2, hW * 0.6, -hH * 0.2))
   }
 
   private createRuinsVisual(): PhaserContainer {
@@ -221,7 +158,7 @@ export class Building extends Phaser.GameObjects.Container {
     if (this.buildingData.isPlaceholder) return container
 
     const cfg = ASSET_CONFIG[this.buildingData.type]
-    const dotY = -(cfg.dispH * 0.82)
+    const dotY = cfg.spriteY - cfg.dispH - 8
     const spacing = 8
     const startX = -((this.buildingData.level - 1) * spacing) / 2
 

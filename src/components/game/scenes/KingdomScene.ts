@@ -471,7 +471,9 @@ export class KingdomScene extends Phaser.Scene {
 
     const screenPosition = this.isoToScreen(building.x, building.y);
     const yOffset =
-      -8 - (this.terrainData[building.y]?.[building.x]?.elevation || 0) * 20;
+      this.tileHeight / 2 +
+      8 -
+      (this.terrainData[building.y]?.[building.x]?.elevation || 0) * 20;
 
     this.selectionMarker
       .clear()
@@ -672,7 +674,7 @@ export class KingdomScene extends Phaser.Scene {
       const elevation =
         this.terrainData[buildingData.y]?.[buildingData.x]?.elevation || 0;
       const point = this.isoToScreen(buildingData.x, buildingData.y);
-      const yOffset = -elevation * 20;
+      const yOffset = this.tileHeight / 2 - elevation * 20;
       const building = new Building(
         this,
         point.x,
@@ -746,8 +748,8 @@ export class KingdomScene extends Phaser.Scene {
           cls === "grass_deep";
         if (!isGreen) continue;
 
-        // ── 2 big trees only, on lush/deep tiles ─────────────────────────────
-        if (seed % 4 === 2 && (cls === "grass_lush" || cls === "grass_deep")) {
+        // ── Big trees (2-3 total across all green tiles) ─────────────────────
+        if (seed % 88 === 1) {
           const key = seed % 3 === 0 ? "prop-tree-b" : "prop-tree";
           const scale = 0.72 + (seed % 5) * 0.04;
           const tint = key === "prop-tree" ? 0xffffff : 0xeeeeff;
@@ -761,47 +763,72 @@ export class KingdomScene extends Phaser.Scene {
           continue;
         }
 
-        // ── Rocks — scattered on green tiles ─────────────────────────────────
-        if (seed % 18 === 2) {
+        // ── Rocks (sparse, ~10 total) ─────────────────────────────────────────
+        if (seed % 22 === 3) {
           const rx = point.x + (this.hashXY(x + 1, y) % 16) - 8;
-          const ry = point.y + yOffset + (this.hashXY(x, y + 1) % 8) - 4;
-          const rock = this.add
-            .image(rx, ry, "prop-stones")
-            .setOrigin(0.5, 0.9)
-            .setScale(0.42 + (seed % 4) * 0.06)
-            .setDepth(ry);
-          this.decorLayer.add(rock);
+          const ry = point.y + yOffset + 10 + (this.hashXY(x, y + 1) % 8) - 4;
+          this.decorLayer.add(
+            this.add
+              .image(rx, ry, "prop-stones")
+              .setOrigin(0.5, 0.9)
+              .setScale(0.42 + (seed % 4) * 0.06)
+              .setDepth(ry)
+          );
           continue;
         }
 
-        // ── Dense flowers — every 3rd green tile, 2-3 per spot → ~200+ ───────
-        if (seed % 2 === 1) {
-          const numFlowers = 2 + (seed % 2);
-          for (let f = 0; f < numFlowers; f++) {
-            const fx = point.x + (this.hashXY(x + f * 3, y + f) % 26) - 13;
-            const fy =
-              point.y + yOffset + (this.hashXY(x + f, y + f * 2) % 10) - 5;
-            const flower = this.add
-              .image(fx, fy, "prop-flower")
-              .setOrigin(0.5, 0.85)
-              .setScale(0.48 + (seed % 3) * 0.06)
-              .setDepth(fy);
-            this.decorLayer.add(flower);
-          }
-          continue;
-        }
-
-        // ── Grass tufts — all remaining green tiles → ~200+ ──────────────────
+        // ── Dense grass carpet: 100 random sub-tile attempts → ~45 sprites ────
+        // Each attempt is a random point in the tile bounding box;
+        // the diamond constraint |dx/32| + |dy/16 − 1| < 0.92 rejects
+        // corners outside the iso diamond, leaving ~47% = ~47 placements.
         {
-          const gx = point.x + (seed % 13) - 6;
-          const gy = point.y + yOffset + (seed % 7) - 3;
-          const gScale = 0.4 + (seed % 4) * 0.06;
-          const tuft = this.add
-            .image(gx, gy, "prop-grass-tuft")
-            .setOrigin(0.5, 0.9)
-            .setScale(gScale)
-            .setDepth(gy);
-          this.decorLayer.add(tuft);
+          const tileCX = point.x;
+          const tileNY = point.y + yOffset;
+          const tileHW = this.tileWidth / 2; // 32
+
+          // Per-class tint palette for colour variation
+          const tints =
+            cls === "grass_dry"
+              ? [0xddf0aa, 0xe8f0b4, 0xd8e89a]
+              : cls === "grass_mid"
+              ? [0xeefccc, 0xffffff, 0xe8f8c0]
+              : cls === "grass_deep"
+              ? [0xccffcc, 0xd8ffd8, 0xc4f8c4]
+              : /* grass_lush */ [0xffffff, 0xeeffcc, 0xf4ffdc];
+
+          for (let i = 0; i < 100; i++) {
+            const s2 = this.hashXY(x * 71 + i, y * 83 + i * 13);
+            const s3 = this.hashXY(s2 + x * 7, s2 + y * 11 + i);
+
+            // Random position in tile bounding box: dx ∈ [-32,32], dy ∈ [0,32]
+            const dx = (s2 % 65) - 32;
+            const dy = s3 % 33;
+
+            // Reject outside iso diamond
+            if (Math.abs(dx) / tileHW + Math.abs(dy / 16 - 1) > 0.92) continue;
+
+            const gx = tileCX + dx;
+            const gy = tileNY + dy;
+
+            const isFlower = s2 % 10 === 0;
+            const key = isFlower
+              ? "prop-flower"
+              : s2 % 4 === 0
+              ? "prop-grass-b"
+              : "prop-grass-tuft";
+            const scale = isFlower
+              ? 0.38 + (s2 % 4) * 0.06
+              : 0.22 + (s2 % 8) * 0.04; // 0.22–0.50
+
+            this.decorLayer.add(
+              this.add
+                .image(gx, gy, key)
+                .setOrigin(0.5, 0.9)
+                .setScale(scale)
+                .setTint(tints[s2 % 3])
+                .setDepth(gy)
+            );
+          }
         }
       }
     }
@@ -965,38 +992,35 @@ export class KingdomScene extends Phaser.Scene {
       .lineStyle(2, color, 0.85)
       .strokePoints(
         [
-          new Phaser.Geom.Point(
-            point.x,
-            point.y + yOffset - this.tileHeight / 2
-          ),
+          new Phaser.Geom.Point(point.x, point.y + yOffset),
           new Phaser.Geom.Point(
             point.x + this.tileWidth / 2,
-            point.y + yOffset
-          ),
-          new Phaser.Geom.Point(
-            point.x,
             point.y + yOffset + this.tileHeight / 2
           ),
+          new Phaser.Geom.Point(point.x, point.y + yOffset + this.tileHeight),
           new Phaser.Geom.Point(
             point.x - this.tileWidth / 2,
-            point.y + yOffset
+            point.y + yOffset + this.tileHeight / 2
           ),
         ],
         true
       )
-      .setDepth(point.y + yOffset + 10)
+      .setDepth(point.y + yOffset + this.tileHeight / 2 + 10)
       .setVisible(true);
   }
 
   // ─── Tile picking ──────────────────────────────────────────────────────────
 
   private screenToTile(worldX: number, worldY: number) {
+    // Shift worldY up by half a tile so detection is centered on the
+    // tile face (N-vertex to S-vertex) rather than anchored at N vertex.
+    const adjY = worldY - this.tileHeight / 2;
     const rawX =
       ((worldX - this.originX) / (this.tileWidth / 2) +
-        (worldY - this.originY) / (this.tileHeight / 2)) /
+        (adjY - this.originY) / (this.tileHeight / 2)) /
       2;
     const rawY =
-      ((worldY - this.originY) / (this.tileHeight / 2) -
+      ((adjY - this.originY) / (this.tileHeight / 2) -
         (worldX - this.originX) / (this.tileWidth / 2)) /
       2;
     const x = Math.round(rawX);
