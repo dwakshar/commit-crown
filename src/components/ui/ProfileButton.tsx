@@ -81,10 +81,10 @@ export function ProfileButton({
             alt={username}
             width={28}
             height={28}
-            className="h-7 w-7 rounded-full border border-[var(--b1)] object-cover"
+            className="h-7 w-7 border border-[var(--b1)] object-cover"
           />
         ) : (
-          <div className="flex h-7 w-7 items-center justify-center rounded-full border border-[var(--b1)] bg-[var(--steel-3)] font-[var(--font-head)] text-sm text-[var(--silver-0)]">
+          <div className="flex h-7 w-7 items-center justify-center border border-[var(--b1)] bg-[var(--steel-3)] font-[var(--font-head)] text-sm text-[var(--silver-0)]">
             {username[0]?.toUpperCase() || "?"}
           </div>
         )}
@@ -109,10 +109,10 @@ export function ProfileButton({
                   alt={username}
                   width={64}
                   height={64}
-                  className="h-16 w-16 rounded-2xl border border-[var(--b1)] object-cover"
+                  className="h-16 w-16 border border-[var(--b1)] object-cover"
                 />
               ) : (
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-[var(--b1)] bg-[var(--steel-3)] text-4xl text-[var(--silver-0)]">
+                <div className="flex h-16 w-16 items-center justify-center border border-[var(--b1)] bg-[var(--steel-3)] text-4xl text-[var(--silver-0)]">
                   {username[0]?.toUpperCase() || "?"}
                 </div>
               )}

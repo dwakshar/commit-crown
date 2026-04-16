@@ -186,9 +186,9 @@ export default async function RaidHistoryPage({
       <div className="border-b border-[var(--b1)] bg-[linear-gradient(180deg,rgba(3,4,6,0.98),rgba(8,11,16,0.94))]">
         <div className="flex h-[42px] items-center justify-between px-4 text-[11px] uppercase tracking-[0.28em] text-[var(--silver-3)]">
           <div className="flex items-center gap-2">
-            <span className="realm-orb h-2 w-2 rounded-full" />
-            <span className="realm-orb h-2 w-2 rounded-full opacity-70" />
-            <span className="realm-orb h-2 w-2 rounded-full opacity-45" />
+            <span className="realm-orb h-2 w-2" />
+            <span className="realm-orb h-2 w-2 opacity-70" />
+            <span className="realm-orb h-2 w-2 opacity-45" />
           </div>
           <div className="hidden items-center gap-12 md:flex">
             <Link
@@ -206,12 +206,11 @@ export default async function RaidHistoryPage({
               className="transition hover:text-[var(--silver-0)]">
               Leaderboard
             </Link>
-            <span className="text-[var(--silver-0)]">Raid History</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="realm-orb h-2 w-2 rounded-full opacity-45" />
-            <span className="realm-orb h-2 w-2 rounded-full opacity-70" />
-            <span className="realm-orb h-2 w-2 rounded-full" />
+            <span className="realm-orb h-2 w-2 opacity-45" />
+            <span className="realm-orb h-2 w-2 opacity-70" />
+            <span className="realm-orb h-2 w-2" />
           </div>
         </div>
       </div>
@@ -267,159 +266,159 @@ export default async function RaidHistoryPage({
           <div className="grid gap-10 xl:grid-cols-[minmax(0,1fr)_400px]">
             {/* Raid history column */}
             <div className="space-y-4">
-            {raids.map((raid) => {
-              const attackerProfile = profiles.get(raid.attacker_id);
-              const defenderProfile = profiles.get(raid.defender_id);
-              const result = getResultCopy(raid, user.id);
-              const gold = getRelativeGold(raid, user.id);
+              {raids.map((raid) => {
+                const attackerProfile = profiles.get(raid.attacker_id);
+                const defenderProfile = profiles.get(raid.defender_id);
+                const result = getResultCopy(raid, user.id);
+                const gold = getRelativeGold(raid, user.id);
 
-              return (
-                <article
-                  key={raid.id}
-                  className="realm-panel rounded-[30px] p-5 md:p-6">
-                  <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-3">
-                        <span
-                          className={`rounded-full border px-3 py-1 text-[11px] uppercase tracking-[0.2em] ${result.accent}`}>
-                          {result.label}
-                        </span>
-                        <span className="text-[12px] uppercase tracking-[0.18em] text-[var(--silver-3)]">
-                          {new Date(raid.created_at).toLocaleString()}
-                        </span>
-                      </div>
-
-                      <h2 className="mt-4 font-[var(--font-head)] text-[1.8rem] leading-none text-[var(--silver-0)]">
-                        {result.title}
-                      </h2>
-                      <p className="mt-3 text-base leading-7 text-[var(--silver-2)]">
-                        {raid.attacker_id === user.id
-                          ? "You launched a raid on "
-                          : "Your realm was raided by "}
-                        <span className="text-[var(--silver-0)]">
-                          @
-                          {raid.attacker_id === user.id
-                            ? getDisplayName(
-                                defenderProfile,
-                                "Unknown defender"
-                              )
-                            : getDisplayName(
-                                attackerProfile,
-                                "Unknown attacker"
-                              )}
-                        </span>{" "}
-                        of{" "}
-                        <span className="italic text-[var(--silver-1)]">
-                          {raid.attacker_id === user.id
-                            ? getKingdomName(defenderProfile)
-                            : getKingdomName(attackerProfile)}
-                        </span>
-                        .
-                      </p>
-                    </div>
-
-                    <div className="grid shrink-0 gap-3 sm:grid-cols-2 lg:min-w-[380px]">
-                      <div className="border border-[var(--b0)] bg-[rgba(255,255,255,0.03)] p-4">
-                        <p className="realm-label">You</p>
-                        <div className="mt-3 flex items-center gap-3">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[var(--b1)] bg-[var(--steel-3)] font-[var(--font-head)] text-sm text-[var(--silver-0)]">
-                            {getInitials(
-                              profiles.get(user.id)?.username ?? "You"
-                            )}
-                          </div>
-                          <div>
-                            <p className="font-[var(--font-head)] text-lg text-[var(--silver-0)]">
-                              @{getDisplayName(profiles.get(user.id), "you")}
-                            </p>
-                            <p className="text-sm italic text-[var(--silver-3)]">
-                              {raid.attacker_id === user.id
-                                ? getKingdomName(attackerProfile)
-                                : getKingdomName(defenderProfile)}
-                            </p>
-                          </div>
+                return (
+                  <article key={raid.id} className="realm-panel p-5 md:p-6">
+                    <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-3">
+                          <span
+                            className={`border px-3 py-1 text-[11px] uppercase tracking-[0.2em] ${result.accent}`}>
+                            {result.label}
+                          </span>
+                          <span className="text-[12px] uppercase tracking-[0.18em] text-[var(--silver-3)]">
+                            {new Date(raid.created_at).toLocaleString()}
+                          </span>
                         </div>
-                        <p className="mt-4 font-[var(--font-display)] text-3xl text-[var(--silver-0)]">
-                          {(raid.attacker_id === user.id
-                            ? raid.attacker_power
-                            : raid.defender_power
-                          ).toLocaleString()}
-                        </p>
-                        <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--silver-3)]">
-                          Battle power
-                        </p>
-                      </div>
 
-                      <div className="border border-[var(--b0)] bg-[rgba(255,255,255,0.03)] p-4">
-                        <p className="realm-label">Opponent</p>
-                        <div className="mt-3 flex items-center gap-3">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[var(--b1)] bg-[var(--steel-3)] font-[var(--font-head)] text-sm text-[var(--silver-0)]">
+                        <h2 className="mt-4 font-[var(--font-head)] text-[1.8rem] leading-none text-[var(--silver-0)]">
+                          {result.title}
+                        </h2>
+                        <p className="mt-3 text-base leading-7 text-[var(--silver-2)]">
+                          {raid.attacker_id === user.id
+                            ? "You launched a raid on "
+                            : "Your realm was raided by "}
+                          <span className="text-[var(--silver-0)]">
+                            @
                             {raid.attacker_id === user.id
-                              ? getInitials(defenderProfile?.username ?? "EN")
-                              : getInitials(attackerProfile?.username ?? "EN")}
-                          </div>
-                          <div>
-                            <p className="font-[var(--font-head)] text-lg text-[var(--silver-0)]">
-                              @
-                              {raid.attacker_id === user.id
-                                ? getDisplayName(defenderProfile, "enemy")
-                                : getDisplayName(attackerProfile, "enemy")}
-                            </p>
-                            <p className="text-sm italic text-[var(--silver-3)]">
-                              {raid.attacker_id === user.id
-                                ? getKingdomName(defenderProfile)
-                                : getKingdomName(attackerProfile)}
-                            </p>
-                          </div>
-                        </div>
-                        <p className="mt-4 font-[var(--font-display)] text-3xl text-[var(--silver-0)]">
-                          {(raid.attacker_id === user.id
-                            ? raid.defender_power
-                            : raid.attacker_power
-                          ).toLocaleString()}
+                              ? getDisplayName(
+                                  defenderProfile,
+                                  "Unknown defender"
+                                )
+                              : getDisplayName(
+                                  attackerProfile,
+                                  "Unknown attacker"
+                                )}
+                          </span>{" "}
+                          of{" "}
+                          <span className="italic text-[var(--silver-1)]">
+                            {raid.attacker_id === user.id
+                              ? getKingdomName(defenderProfile)
+                              : getKingdomName(attackerProfile)}
+                          </span>
+                          .
                         </p>
-                        <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--silver-3)]">
-                          Battle power
+                      </div>
+
+                      <div className="grid shrink-0 gap-3 sm:grid-cols-2 lg:min-w-[380px]">
+                        <div className="border border-[var(--b0)] bg-[rgba(255,255,255,0.03)] p-4">
+                          <p className="realm-label">You</p>
+                          <div className="mt-3 flex items-center gap-3">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[var(--b1)] bg-[var(--steel-3)] font-[var(--font-head)] text-sm text-[var(--silver-0)]">
+                              {getInitials(
+                                profiles.get(user.id)?.username ?? "You"
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-[var(--font-head)] text-lg text-[var(--silver-0)]">
+                                @{getDisplayName(profiles.get(user.id), "you")}
+                              </p>
+                              <p className="text-sm italic text-[var(--silver-3)]">
+                                {raid.attacker_id === user.id
+                                  ? getKingdomName(attackerProfile)
+                                  : getKingdomName(defenderProfile)}
+                              </p>
+                            </div>
+                          </div>
+                          <p className="mt-4 font-[var(--font-display)] text-3xl text-[var(--silver-0)]">
+                            {(raid.attacker_id === user.id
+                              ? raid.attacker_power
+                              : raid.defender_power
+                            ).toLocaleString()}
+                          </p>
+                          <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--silver-3)]">
+                            Battle power
+                          </p>
+                        </div>
+
+                        <div className="border border-[var(--b0)] bg-[rgba(255,255,255,0.03)] p-4">
+                          <p className="realm-label">Opponent</p>
+                          <div className="mt-3 flex items-center gap-3">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[var(--b1)] bg-[var(--steel-3)] font-[var(--font-head)] text-sm text-[var(--silver-0)]">
+                              {raid.attacker_id === user.id
+                                ? getInitials(defenderProfile?.username ?? "EN")
+                                : getInitials(
+                                    attackerProfile?.username ?? "EN"
+                                  )}
+                            </div>
+                            <div>
+                              <p className="font-[var(--font-head)] text-lg text-[var(--silver-0)]">
+                                @
+                                {raid.attacker_id === user.id
+                                  ? getDisplayName(defenderProfile, "enemy")
+                                  : getDisplayName(attackerProfile, "enemy")}
+                              </p>
+                              <p className="text-sm italic text-[var(--silver-3)]">
+                                {raid.attacker_id === user.id
+                                  ? getKingdomName(defenderProfile)
+                                  : getKingdomName(attackerProfile)}
+                              </p>
+                            </div>
+                          </div>
+                          <p className="mt-4 font-[var(--font-display)] text-3xl text-[var(--silver-0)]">
+                            {(raid.attacker_id === user.id
+                              ? raid.defender_power
+                              : raid.attacker_power
+                            ).toLocaleString()}
+                          </p>
+                          <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--silver-3)]">
+                            Battle power
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 grid gap-3 border-t border-[var(--b0)] pt-5 sm:grid-cols-3">
+                      <div className="border border-[var(--b0)] bg-[rgba(255,255,255,0.02)] px-4 py-3">
+                        <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--silver-3)]">
+                          Spoils
+                        </p>
+                        <p
+                          className={`mt-2 font-[var(--font-head)] text-lg ${gold.tone}`}>
+                          {gold.label}
+                        </p>
+                      </div>
+                      <div className="border border-[var(--b0)] bg-[rgba(255,255,255,0.02)] px-4 py-3">
+                        <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--silver-3)]">
+                          Power Delta
+                        </p>
+                        <p className="mt-2 font-[var(--font-head)] text-lg text-[var(--silver-0)]">
+                          {getPowerDelta(raid, user.id)}
+                        </p>
+                      </div>
+                      <div className="border border-[var(--b0)] bg-[rgba(255,255,255,0.02)] px-4 py-3">
+                        <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--silver-3)]">
+                          Treasury Aftermath
+                        </p>
+                        <p className="mt-2 text-sm text-[var(--silver-2)]">
+                          Your vault:{" "}
+                          <span className="font-[var(--font-head)] text-[var(--silver-0)]">
+                            {(raid.attacker_id === user.id
+                              ? raid.attacker_gold_after
+                              : raid.defender_gold_after
+                            )?.toLocaleString() ?? "Unknown"}
+                          </span>
                         </p>
                       </div>
                     </div>
-                  </div>
-
-                  <div className="mt-6 grid gap-3 border-t border-[var(--b0)] pt-5 sm:grid-cols-3">
-                    <div className="border border-[var(--b0)] bg-[rgba(255,255,255,0.02)] px-4 py-3">
-                      <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--silver-3)]">
-                        Spoils
-                      </p>
-                      <p
-                        className={`mt-2 font-[var(--font-head)] text-lg ${gold.tone}`}>
-                        {gold.label}
-                      </p>
-                    </div>
-                    <div className="border border-[var(--b0)] bg-[rgba(255,255,255,0.02)] px-4 py-3">
-                      <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--silver-3)]">
-                        Power Delta
-                      </p>
-                      <p className="mt-2 font-[var(--font-head)] text-lg text-[var(--silver-0)]">
-                        {getPowerDelta(raid, user.id)}
-                      </p>
-                    </div>
-                    <div className="border border-[var(--b0)] bg-[rgba(255,255,255,0.02)] px-4 py-3">
-                      <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--silver-3)]">
-                        Treasury Aftermath
-                      </p>
-                      <p className="mt-2 text-sm text-[var(--silver-2)]">
-                        Your vault:{" "}
-                        <span className="font-[var(--font-head)] text-[var(--silver-0)]">
-                          {(raid.attacker_id === user.id
-                            ? raid.attacker_gold_after
-                            : raid.defender_gold_after
-                          )?.toLocaleString() ?? "Unknown"}
-                        </span>
-                      </p>
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
+                  </article>
+                );
+              })}
             </div>
 
             {/* Find Rival sidebar — always visible alongside history */}

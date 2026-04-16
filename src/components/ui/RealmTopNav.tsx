@@ -11,9 +11,9 @@ export function RealmTopNav({
     <div className="border-b border-[var(--b1)] bg-[linear-gradient(180deg,rgba(3,4,6,0.98),rgba(8,11,16,0.94))]">
       <div className="flex h-[42px] items-center justify-between px-4 text-[11px] uppercase tracking-[0.28em] text-[var(--silver-3)]">
         <div className="flex items-center gap-2">
-          <span className="realm-orb h-2 w-2 rounded-full" />
-          <span className="realm-orb h-2 w-2 rounded-full opacity-70" />
-          <span className="realm-orb h-2 w-2 rounded-full opacity-45" />
+          <span className="realm-orb h-2 w-2" />
+          <span className="realm-orb h-2 w-2 opacity-70" />
+          <span className="realm-orb h-2 w-2 opacity-45" />
         </div>
 
         <div className="hidden items-center gap-12 md:flex">
@@ -47,9 +47,9 @@ export function RealmTopNav({
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="realm-orb h-2 w-2 rounded-full opacity-45" />
-          <span className="realm-orb h-2 w-2 rounded-full opacity-70" />
-          <span className="realm-orb h-2 w-2 rounded-full" />
+          <span className="realm-orb h-2 w-2 opacity-45" />
+          <span className="realm-orb h-2 w-2 opacity-70" />
+          <span className="realm-orb h-2 w-2" />
         </div>
       </div>
     </div>

@@ -4,6 +4,8 @@ import { tryEnsureKingdomForUser } from "@/src/lib/kingdomPersistence";
 import { supabaseAdmin } from "@/src/lib/supabaseAdmin";
 import { createClient } from "@/utils/supabase/server";
 
+export const dynamic = "force-dynamic";
+
 const CLAIM_AMOUNT = 50;
 const COOLDOWN_MS = 2 * 60 * 60 * 1000; // 2 hours
 

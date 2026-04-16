@@ -56,23 +56,18 @@ export function GoldClaimWidget() {
 
   const isReady = msLeft === 0;
 
-  // Auto-open the popup when ready — either on page load (return after 2h) or
-  // when the live countdown hits zero.
   const prevIsReadyRef = useRef(isReady);
   useEffect(() => {
     const wasReady = prevIsReadyRef.current;
     prevIsReadyRef.current = isReady;
     if (isReady && !wasReady) {
-      // Countdown just hit zero while the page was open
       setOpen(true);
     }
   }, [isReady]);
 
-  // On mount: pop open if gold is ready (first-ever visit or 2h have passed).
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (!stored) {
-      // First-ever visit — gold is immediately claimable, show the popup.
       setOpen(true);
       return;
     }
@@ -92,17 +87,23 @@ export function GoldClaimWidget() {
         body: JSON.stringify({ lastClaimAt }),
       });
 
-      const data = await res.json();
+      let data: Record<string, unknown> = {};
+      try {
+        data = await res.json();
+      } catch {
+        setClaimMsg(`Server error (${res.status})`);
+        return;
+      }
 
       if (!res.ok) {
-        setClaimMsg(data.error ?? "Failed to claim");
+        setClaimMsg((data.error as string) ?? "Failed to claim");
         return;
       }
 
       const now = new Date().toISOString();
       localStorage.setItem(STORAGE_KEY, now);
       setLastClaimAt(now);
-      updateGold(data.gold);
+      updateGold(data.gold as number);
       setClaimMsg(`+${CLAIM_AMOUNT} gold claimed!`);
 
       // Auto-close after 2s
@@ -159,7 +160,7 @@ export function GoldClaimWidget() {
                 {claiming ? "Claiming…" : "Claim Gold"}
               </button>
             ) : (
-              <div className="rounded-lg bg-[rgba(255,255,255,0.04)] px-3 py-2 text-center">
+              <div className="bg-[rgba(255,255,255,0.04)] px-3 py-2 text-center">
                 <div className="text-[10px] uppercase tracking-widest text-[var(--silver-3)]">
                   Next claim in
                 </div>

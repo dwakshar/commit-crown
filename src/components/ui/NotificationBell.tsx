@@ -122,7 +122,7 @@ export function NotificationBell({ userId }: { userId: string }) {
           />
         </svg>
         {unreadLabel ? (
-          <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full border border-[rgba(255,212,173,0.28)] bg-[linear-gradient(180deg,var(--ember-hi),var(--ember))] px-1 text-[10px] font-bold text-[var(--silver-0)] shadow-[0_0_18px_rgba(200,88,26,0.35)]">
+          <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center border border-[rgba(255,212,173,0.28)] bg-[linear-gradient(180deg,var(--ember-hi),var(--ember))] px-1 text-[10px] font-bold text-[var(--silver-0)] shadow-[0_0_18px_rgba(200,88,26,0.35)]">
             {unreadLabel}
           </span>
         ) : null}

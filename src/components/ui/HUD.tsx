@@ -17,6 +17,7 @@ import { AchievementToast } from "@/src/components/ui/AchievementToast";
 import { GoldClaimWidget } from "@/src/components/ui/GoldClaimWidget";
 import { NotificationBell } from "@/src/components/ui/NotificationBell";
 import { ProfileButton } from "@/src/components/ui/ProfileButton";
+import { RaidAlertModal } from "@/src/components/ui/RaidAlertModal";
 import { RealmTopNav } from "@/src/components/ui/RealmTopNav";
 import {
   BUILD_TIMES,
@@ -84,7 +85,7 @@ function BuildingDots({ level }: { level: number }) {
       {Array.from({ length: 5 }, (_, index) => (
         <span
           key={index}
-          className={`h-[4px] w-7 rounded-full ${
+          className={`h-[4px] w-7 ${
             index < level ? "bg-[var(--ember)]" : "bg-[rgba(120,140,160,0.2)]"
           }`}
         />
@@ -131,7 +132,7 @@ const MinimapPanel = memo(function MinimapPanel({
               return (
                 <span
                   key={`${x}-${y}`}
-                  className="h-[7px] w-[7px] rounded-[2px] bg-[rgba(122,150,94,0.14)]"
+                  className="h-[7px] w-[7px] bg-[rgba(122,150,94,0.14)]"
                 />
               );
             }
@@ -177,7 +178,7 @@ const ConstructionBadge = memo(function ConstructionBadge({
   );
   if (secondsLeft <= 0) return null;
   return (
-    <span className="rounded bg-[rgba(200,140,40,0.18)] px-2 py-0.5 text-[10px] uppercase tracking-[0.16em] text-[#f0c060]">
+    <span className="bg-[rgba(200,140,40,0.18)] px-2 py-0.5 text-[10px] uppercase tracking-[0.16em] text-[#f0c060]">
       ⚒ {formatBuildTime(secondsLeft)}
     </span>
   );
@@ -531,7 +532,7 @@ export function HUD() {
                 </>
               )}
               {highlightedTileLabel ? (
-                <div className="mt-3 rounded-[16px] border border-[var(--b0)] bg-[rgba(255,255,255,0.02)] px-3 py-2 text-xs uppercase tracking-[0.16em] text-[var(--silver-3)]">
+                <div className="mt-3 border border-[var(--b0)] bg-[rgba(255,255,255,0.02)] px-3 py-2 text-xs uppercase tracking-[0.16em] text-[var(--silver-3)]">
                   Focus Tile: {highlightedTileLabel}
                 </div>
               ) : null}
@@ -738,12 +739,6 @@ export function HUD() {
 
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 border-t border-[var(--b1)] bg-[rgba(4,6,10,0.92)] px-3 py-3">
           <div className="flex items-center text-center gap-2 overflow-x-auto">
-            <button
-              type="button"
-              onClick={() => handleBuildMode(buildModeType)}
-              className="pointer-events-auto realm-button realm-button-secondary min-w-[120px] px-4 py-2.5">
-              {buildModeType ? "Cancel Build" : "Build Mode"}
-            </button>
             <Link
               href="/leaderboard"
               className="pointer-events-auto realm-button realm-button-secondary min-w-[120px] px-4 py-2.5">
@@ -758,6 +753,11 @@ export function HUD() {
               href="/marketplace"
               className="pointer-events-auto realm-button realm-button-secondary min-w-[120px] px-4 py-2.5">
               Cosmetics
+            </Link>
+            <Link
+              href="/inventory"
+              className="pointer-events-auto realm-button realm-button-secondary min-w-[120px] px-4 py-2.5">
+              Inventory
             </Link>
             <div className="min-w-2 grow" />
             <SyncButton
@@ -790,6 +790,8 @@ export function HUD() {
       <div className="pointer-events-none absolute inset-0 z-40">
         <AchievementToast />
       </div>
+
+      <RaidAlertModal />
 
       <GoldClaimWidget />
     </div>
