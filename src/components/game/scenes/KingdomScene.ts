@@ -197,7 +197,12 @@ export class KingdomScene extends Phaser.Scene {
           const tx = building.x + dx;
           const ty = building.y + dy;
 
-          if (tx < 1 || ty < 1 || tx >= this.gridSize - 1 || ty >= this.gridSize - 1) {
+          if (
+            tx < 1 ||
+            ty < 1 ||
+            tx >= this.gridSize - 1 ||
+            ty >= this.gridSize - 1
+          ) {
             continue;
           }
 
@@ -603,7 +608,8 @@ export class KingdomScene extends Phaser.Scene {
       };
     }
 
-    const elevation = this.terrainData[building.y]?.[building.x]?.elevation || 0;
+    const elevation =
+      this.terrainData[building.y]?.[building.x]?.elevation || 0;
     const point = this.isoToScreen(building.x, building.y);
     const yOffset = this.tileHeight / 2 - elevation * 20;
     return {
@@ -777,12 +783,20 @@ export class KingdomScene extends Phaser.Scene {
     return this.getWaterSlots()[slotIndex] ?? null;
   }
 
-  private getNearestWaterSlot(worldX: number, worldY: number): WaterSlot | null {
+  private getNearestWaterSlot(
+    worldX: number,
+    worldY: number
+  ): WaterSlot | null {
     let nearest: WaterSlot | null = null;
     let nearestDistance = Infinity;
 
     for (const slot of this.getWaterSlots()) {
-      const distance = Phaser.Math.Distance.Between(worldX, worldY, slot.x, slot.y);
+      const distance = Phaser.Math.Distance.Between(
+        worldX,
+        worldY,
+        slot.x,
+        slot.y
+      );
       if (distance < nearestDistance) {
         nearest = slot;
         nearestDistance = distance;
@@ -877,7 +891,10 @@ export class KingdomScene extends Phaser.Scene {
       if (isWaterBuildingType(this.buildModeType)) {
         const slot = this.getNearestWaterSlot(pointer.worldX, pointer.worldY);
         if (slot && this.isWaterSlotAvailable(slot.index)) {
-          this.game.events.emit("tile-selected", encodeWaterSlotPosition(slot.index));
+          this.game.events.emit(
+            "tile-selected",
+            encodeWaterSlotPosition(slot.index)
+          );
         }
       } else {
         const tile = this.screenToTile(pointer.worldX, pointer.worldY);
@@ -921,7 +938,9 @@ export class KingdomScene extends Phaser.Scene {
     this.selectionMarker?.setVisible(false);
 
     const sortedBuildings = [...kingdomData.buildings].sort(
-      (a, b) => this.getBuildingRenderPoint(a).depth - this.getBuildingRenderPoint(b).depth
+      (a, b) =>
+        this.getBuildingRenderPoint(a).depth -
+        this.getBuildingRenderPoint(b).depth
     );
 
     sortedBuildings.forEach((buildingData) => {
@@ -940,7 +959,12 @@ export class KingdomScene extends Phaser.Scene {
         }
 
         const renderPoint = this.getBuildingRenderPoint(buildingData);
-        const building = new Building(this, renderPoint.x, renderPoint.y, buildingData);
+        const building = new Building(
+          this,
+          renderPoint.x,
+          renderPoint.y,
+          buildingData
+        );
         building.setDepth(renderPoint.depth);
         layer.add(building);
         this.buildingMap.set(buildingData.id, building);
@@ -969,7 +993,9 @@ export class KingdomScene extends Phaser.Scene {
         .filter((b) => b.isPlaceholder)
         .map((b) => this.toTileKey(b.x, b.y))
     );
-    const decorBufferTiles = this.computeDecorBufferTiles(kingdomData.buildings);
+    const decorBufferTiles = this.computeDecorBufferTiles(
+      kingdomData.buildings
+    );
 
     const themeKey = kingdomData.themeId ?? "realm";
 
@@ -1003,48 +1029,10 @@ export class KingdomScene extends Phaser.Scene {
         }
 
         // Skip shore/sand border — nothing placed there
-        if (
-          cls === "shore" ||
-          cls === "wet_sand" ||
-          cls === "transition"
-        )
+        if (cls === "shore" || cls === "wet_sand" || cls === "transition")
           continue;
 
         if (decorBufferTiles.has(tileKey)) continue;
-
-        // ── Pebble carpet on grey tiles ───────────────────────────────────────
-        if (cls === "stone_patch") {
-          const tileCX = point.x;
-          const tileNY = point.y + yOffset;
-          const tileHW = this.tileWidth / 2; // 32
-
-          const tints = [0xe2ddd4, 0xd4d0c8, 0xc8c4bc];
-
-          for (let i = 0; i < 60; i++) {
-            const s2 = this.hashXY(x * 67 + i, y * 79 + i * 11);
-            const s3 = this.hashXY(s2 + x * 5, s2 + y * 9 + i);
-
-            const dx = (s2 % 65) - 32;
-            const dy = s3 % 33;
-
-            if (Math.abs(dx) / tileHW + Math.abs(dy / 16 - 1) > 0.92) continue;
-
-            const gx = tileCX + dx;
-            const gy = tileNY + dy;
-            const key = s2 % 3 === 0 ? "prop-stone-b" : "prop-stones";
-            const scale = 0.18 + (s2 % 8) * 0.04; // 0.18–0.46
-
-            this.decorLayer.add(
-              this.add
-                .image(gx, gy, key)
-                .setOrigin(0.5, 0.9)
-                .setScale(scale)
-                .setTint(tints[s2 % 3])
-                .setDepth(gy)
-            );
-          }
-          continue;
-        }
 
         // All remaining tiles are green grass
         const isGreen =
@@ -1248,7 +1236,10 @@ export class KingdomScene extends Phaser.Scene {
         return;
       }
 
-      this.drawWaterPlacementMarker(slot, this.isWaterSlotAvailable(slot.index));
+      this.drawWaterPlacementMarker(
+        slot,
+        this.isWaterSlotAvailable(slot.index)
+      );
       return;
     }
 
