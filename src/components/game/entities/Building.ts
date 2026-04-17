@@ -39,7 +39,7 @@ const ASSET_CONFIG: Record<
   BuildingData['type'],
   { dispW: number; dispH: number; spriteY: number }
 > = {
-  town_hall:     { dispW: 116, dispH: 145, spriteY: 36 },
+  town_hall:     { dispW: 184, dispH: 200, spriteY: 22 },
   arcane_tower:  { dispW:  88, dispH: 110, spriteY: 26 },
   library:       { dispW:  92, dispH:  96, spriteY: 21 },
   iron_forge:    { dispW:  88, dispH:  96, spriteY: 21 },

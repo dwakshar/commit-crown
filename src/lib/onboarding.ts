@@ -15,13 +15,14 @@ const STARTER_BUILDINGS: BuildingData[] = [
 ]
 
 export function withStarterKingdomState(kingdom: KingdomData): KingdomData {
-  if (kingdom.buildings.length > 0) {
+  const hasTownHall = kingdom.buildings.some((b) => b.type === 'town_hall')
+  if (hasTownHall) {
     return kingdom
   }
 
   return {
     ...kingdom,
-    buildings: STARTER_BUILDINGS,
+    buildings: [...kingdom.buildings, ...STARTER_BUILDINGS],
   }
 }
 
