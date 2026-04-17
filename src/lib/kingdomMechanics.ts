@@ -116,7 +116,9 @@ function sumWeightedValue(
 export function getBuildingCatalog(
   kingdom: KingdomData
 ): BuildingCatalogEntry[] {
-  return (Object.keys(BUILDING_METADATA) as BuildingType[]).map((type) => {
+  return (Object.keys(BUILDING_METADATA) as BuildingType[])
+    .filter((type) => type !== 'town_hall')
+    .map((type) => {
     const placedCount = kingdom.buildings.filter(
       (building) => !building.isPlaceholder && building.type === type
     ).length;

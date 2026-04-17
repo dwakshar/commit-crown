@@ -730,8 +730,8 @@ export function HUD() {
               Advisory
             </div>
             <div className="mt-3 border border-[var(--b0)] bg-[rgba(255,255,255,0.02)] px-4 py-4 text-sm leading-6 text-[var(--silver-2)]">
-              Strong economies come from markets and town halls, pressure falls
-              when walls and barracks rise, and knowledge feeds stability
+              Strong economies rise from markets and forges, pressure falls
+              when walls and barracks stand firm, and knowledge feeds stability
               through libraries and observatories.
             </div>
           </div>
