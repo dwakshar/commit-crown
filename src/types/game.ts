@@ -7,13 +7,18 @@ export type BuildingType =
   | "observatory"
   | "market"
   | "wall"
-  | "monument";
+  | "monument"
+  | "royal_flagship"
+  | "sentinel_skiff"
+  | "bulwark_barge"
+  | "supply_tender";
 
 export interface BuildingData {
   id: string;
   type: BuildingType;
   x: number;
   y: number;
+  placementZone?: "board" | "water";
   level: 1 | 2 | 3 | 4 | 5;
   skinId?: string | null;
   name?: string;

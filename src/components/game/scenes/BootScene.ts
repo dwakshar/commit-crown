@@ -1026,6 +1026,143 @@ function generateMonument(g: G) {
 
 // ─── Prop textures (unchanged core props + improvements) ─────────────────────
 
+function generateRoyalFlagship(g: G) {
+  g.clear();
+  const cx = 96;
+
+  g.fillStyle(0x000000, 0.12);
+  g.fillEllipse(cx, 110, 96, 20);
+  g.fillStyle(0x89d8f0, 0.1);
+  g.fillEllipse(cx, 106, 118, 26);
+  g.fillStyle(0x55351c, 1);
+  g.fillPoints([
+    new Phaser.Geom.Point(cx - 50, 84),
+    new Phaser.Geom.Point(cx + 40, 84),
+    new Phaser.Geom.Point(cx + 54, 96),
+    new Phaser.Geom.Point(cx - 34, 104),
+    new Phaser.Geom.Point(cx - 62, 97),
+  ], true);
+  g.lineStyle(2, 0xd8b060, 0.55);
+  g.strokeLineShape(new Phaser.Geom.Line(cx - 44, 88, cx + 34, 88));
+  g.fillStyle(0xdac48a, 1);
+  g.fillRect(cx - 16, 58, 44, 12);
+  g.fillStyle(0xc09048, 0.95);
+  g.fillRect(cx - 6, 46, 28, 12);
+  g.fillStyle(0xeedca8, 0.95);
+  g.fillRect(cx + 2, 34, 18, 12);
+  g.fillStyle(0x8b5e28, 1);
+  g.fillRect(cx - 1, 28, 4, 60);
+  g.fillRect(cx + 18, 38, 4, 48);
+  g.fillStyle(0xf8f0d2, 0.96);
+  g.fillTriangle(cx + 3, 30, cx + 3, 72, cx + 46, 56);
+  g.fillStyle(0xe9dfbf, 0.88);
+  g.fillTriangle(cx + 22, 40, cx + 22, 77, cx + 58, 63);
+  g.lineStyle(2, 0xc82418, 0.95);
+  g.strokeLineShape(new Phaser.Geom.Line(cx + 3, 30, cx + 46, 56));
+  g.fillStyle(0xc82618, 0.92);
+  g.fillTriangle(cx + 18, 18, cx + 44, 25, cx + 18, 31);
+  g.fillStyle(0xffd86a, 0.95);
+  g.fillCircle(cx + 18, 18, 3);
+  g.fillStyle(0xe2c870, 0.94);
+  g.fillRect(cx - 10, 66, 22, 8);
+  g.fillStyle(0xb99230, 0.8);
+  g.fillCircle(cx, 70, 5);
+
+  g.generateTexture('royal_flagship', 192, 128);
+}
+
+function generateSentinelSkiff(g: G) {
+  g.clear();
+  const cx = 64;
+
+  g.fillStyle(0x000000, 0.1);
+  g.fillEllipse(cx, 102, 66, 14);
+  g.fillStyle(0x38566c, 1);
+  g.fillPoints([
+    new Phaser.Geom.Point(cx - 32, 82),
+    new Phaser.Geom.Point(cx + 20, 82),
+    new Phaser.Geom.Point(cx + 34, 90),
+    new Phaser.Geom.Point(cx - 12, 96),
+    new Phaser.Geom.Point(cx - 40, 92),
+  ], true);
+  g.fillStyle(0x5a7f9b, 0.95);
+  g.fillRect(cx - 6, 66, 20, 10);
+  g.fillStyle(0x2d4354, 0.95);
+  g.fillRect(cx + 2, 52, 4, 32);
+  g.fillStyle(0xa8dff6, 0.92);
+  g.fillTriangle(cx + 6, 54, cx + 6, 82, cx + 28, 68);
+  g.lineStyle(2, 0x7fe6ff, 0.45);
+  g.strokeLineShape(new Phaser.Geom.Line(cx - 26, 86, cx + 18, 86));
+  g.fillStyle(0x6ce8ff, 0.32);
+  g.fillCircle(cx - 10, 94, 6);
+
+  g.generateTexture('sentinel_skiff', 128, 128);
+}
+
+function generateBulwarkBarge(g: G) {
+  g.clear();
+  const cx = 64;
+
+  g.fillStyle(0x000000, 0.1);
+  g.fillEllipse(cx, 102, 74, 16);
+  g.fillStyle(0x4a3322, 1);
+  g.fillPoints([
+    new Phaser.Geom.Point(cx - 34, 82),
+    new Phaser.Geom.Point(cx + 22, 82),
+    new Phaser.Geom.Point(cx + 34, 92),
+    new Phaser.Geom.Point(cx - 18, 98),
+    new Phaser.Geom.Point(cx - 40, 92),
+  ], true);
+  g.fillStyle(0x7e5b38, 0.92);
+  g.fillRect(cx - 12, 64, 28, 12);
+  g.fillStyle(0x6b727d, 1);
+  g.fillRect(cx - 4, 52, 18, 12);
+  g.fillStyle(0x515862, 1);
+  g.fillRect(cx + 12, 58, 12, 10);
+  g.fillStyle(0xc4ccd8, 0.95);
+  g.fillRect(cx - 22, 60, 6, 24);
+  g.fillRect(cx + 18, 64, 6, 20);
+  g.fillStyle(0xe4b650, 0.88);
+  g.fillCircle(cx - 19, 58, 3);
+  g.fillCircle(cx + 21, 62, 3);
+  g.lineStyle(2, 0x9aa8ba, 0.42);
+  g.strokeLineShape(new Phaser.Geom.Line(cx - 28, 86, cx + 18, 86));
+
+  g.generateTexture('bulwark_barge', 128, 128);
+}
+
+function generateSupplyTender(g: G) {
+  g.clear();
+  const cx = 64;
+
+  g.fillStyle(0x000000, 0.1);
+  g.fillEllipse(cx, 102, 68, 14);
+  g.fillStyle(0x6e4724, 1);
+  g.fillPoints([
+    new Phaser.Geom.Point(cx - 30, 84),
+    new Phaser.Geom.Point(cx + 20, 84),
+    new Phaser.Geom.Point(cx + 30, 92),
+    new Phaser.Geom.Point(cx - 14, 98),
+    new Phaser.Geom.Point(cx - 36, 93),
+  ], true);
+  g.fillStyle(0xc99a48, 0.96);
+  g.fillRect(cx - 10, 68, 28, 12);
+  g.fillStyle(0xb67a34, 0.92);
+  g.fillRect(cx - 2, 54, 18, 12);
+  g.fillStyle(0x84501e, 1);
+  g.fillRect(cx + 6, 44, 4, 38);
+  g.fillStyle(0xf2dec0, 0.92);
+  g.fillTriangle(cx + 10, 46, cx + 10, 78, cx + 30, 64);
+  g.fillStyle(0xead4a8, 0.96);
+  g.fillRect(cx - 22, 70, 8, 8);
+  g.fillRect(cx - 20, 60, 8, 8);
+  g.fillRect(cx - 18, 50, 8, 8);
+  g.fillStyle(0x6cd2ea, 0.28);
+  g.fillCircle(cx - 4, 95, 5);
+
+  g.generateTexture('supply_tender', 128, 128);
+}
+
 function generatePropTextures(g: G) {
   // ── prop-tree (96×96) — grass-blade cluster ──────────────────────────────
   g.clear();
@@ -1297,6 +1434,10 @@ export class BootScene extends Phaser.Scene {
     generateMarket(g);
     generateWall(g);
     generateMonument(g);
+    generateRoyalFlagship(g);
+    generateSentinelSkiff(g);
+    generateBulwarkBarge(g);
+    generateSupplyTender(g);
 
     generatePropTextures(g);
     g.destroy();

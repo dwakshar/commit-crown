@@ -20,9 +20,12 @@ import { ProfileButton } from "@/src/components/ui/ProfileButton";
 import { RaidAlertModal } from "@/src/components/ui/RaidAlertModal";
 import { RealmTopNav } from "@/src/components/ui/RealmTopNav";
 import {
+  BUILDING_METADATA,
   BUILD_TIMES,
+  decodeWaterSlotPosition,
   getSyncCooldownRemaining,
   getUpgradeCost,
+  isWaterBuildingType,
 } from "@/src/lib/kingdom";
 import {
   getBoardSummary,
@@ -106,7 +109,9 @@ const MinimapPanel = memo(function MinimapPanel({
   const gridSize = 20;
   const occupancy = useMemo(() => {
     const map = new Map<string, BuildingData>();
-    buildings.forEach((b) => map.set(`${b.x}:${b.y}`, b));
+    buildings
+      .filter((building) => !isWaterBuildingType(building.type))
+      .forEach((b) => map.set(`${b.x}:${b.y}`, b));
     return map;
   }, [buildings]);
 
@@ -308,6 +313,9 @@ export function HUD() {
     structures.find((building) => !building.isPlaceholder) ??
     structures[0] ??
     null;
+  const activeBuildingIsWater = Boolean(
+    activeBuilding && isWaterBuildingType(activeBuilding.type)
+  );
   const upgradeCost =
     activeBuilding && !activeBuilding.isPlaceholder
       ? getUpgradeCost(activeBuilding)
@@ -400,8 +408,12 @@ export function HUD() {
   };
 
   const highlightedTileLabel =
-    buildModeType && activeBuilding
+    buildModeType && activeBuilding && !activeBuildingIsWater
       ? getTileLabel(kingdom, activeBuilding.x, activeBuilding.y)
+      : null;
+  const activeWaterSlot =
+    activeBuilding && activeBuildingIsWater
+      ? decodeWaterSlotPosition(activeBuilding.x, activeBuilding.y)
       : null;
 
   return (
@@ -512,7 +524,9 @@ export function HUD() {
               </div>
               <div className="mt-1 font-[var(--font-head)] text-lg text-[var(--silver-0)]">
                 {buildModeType
-                  ? "Choose a tile on the board"
+                  ? isWaterBuildingType(buildModeType)
+                    ? "Choose a berth in the ocean ring"
+                    : "Choose a tile on the board"
                   : "Select a district from the right"}
               </div>
             </div>
@@ -521,9 +535,12 @@ export function HUD() {
                 <>
                   Build mode is active for{" "}
                   <span className="text-[var(--silver-0)]">
-                    {buildModeType.replaceAll("_", " ")}
+                    {BUILDING_METADATA[buildModeType].label}
                   </span>
-                  . Click any empty or ruined tile to found that district.
+                  .{" "}
+                  {isWaterBuildingType(buildModeType)
+                    ? "Click a highlighted water berth inside the ocean square. Naval assets stay on the water surface only and never on the game board."
+                    : "Click any empty or ruined tile to found that district."}
                 </>
               ) : (
                 <>
@@ -558,6 +575,8 @@ export function HUD() {
             <div className="mt-2 text-sm italic text-[var(--silver-2)]">
               {activeBuilding?.isPlaceholder
                 ? "This ruined district can be reclaimed — select any structure from the foundry."
+                : activeBuildingIsWater
+                ? "Review this naval asset, strengthen it, or deploy more vessels from the foundry below."
                 : "Review the district, commit an upgrade, or expand the kingdom from the build list below."}
             </div>
           </div>
@@ -595,10 +614,12 @@ export function HUD() {
                   </div>
                   <div className="border border-[var(--b0)] bg-[rgba(255,255,255,0.02)] px-4 py-4">
                     <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--silver-3)]">
-                      Tile
+                      {activeBuildingIsWater ? "Water Slot" : "Tile"}
                     </div>
                     <div className="mt-2 font-[var(--font-head)] text-2xl text-[var(--silver-0)]">
-                      {activeBuilding.x},{activeBuilding.y}
+                      {activeBuildingIsWater
+                        ? `Berth ${activeWaterSlot !== null ? activeWaterSlot + 1 : "?"}`
+                        : `${activeBuilding.x},${activeBuilding.y}`}
                     </div>
                   </div>
                 </div>
@@ -624,7 +645,7 @@ export function HUD() {
               </>
             ) : (
               <div className="text-sm text-[var(--silver-2)]">
-                Select a district on the board to inspect it.
+                Select a district or naval asset to inspect it.
               </div>
             )}
           </div>
@@ -675,6 +696,11 @@ export function HUD() {
                         </div>
                         <div className="mt-1.5 text-[12px] leading-5 text-[var(--silver-3)]">
                           {entry.metadata.effect}
+                        </div>
+                        <div className="mt-2 text-[10px] uppercase tracking-[0.18em] text-[var(--silver-3)]">
+                          {isWaterBuildingType(entry.type)
+                            ? "Waterline asset"
+                            : "Board district"}
                         </div>
                         <div className="mt-2.5 flex items-center gap-3 text-[11px] uppercase tracking-[0.16em]">
                           <span

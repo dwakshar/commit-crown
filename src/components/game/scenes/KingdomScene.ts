@@ -1,4 +1,9 @@
 import { Building } from "@/src/components/game/entities/Building";
+import {
+  decodeWaterSlotPosition,
+  encodeWaterSlotPosition,
+  isWaterBuildingType,
+} from "@/src/lib/kingdom";
 import type { BuildingData, KingdomData } from "@/src/types/game";
 
 type PhaserModule = typeof import("phaser");
@@ -47,6 +52,13 @@ type TileClass =
   | "grass_lush"
   | "grass_deep";
 
+type TileSet = Set<string>;
+type WaterSlot = {
+  index: number;
+  x: number;
+  y: number;
+};
+
 export class KingdomScene extends Phaser.Scene {
   private readonly tileWidth = 64;
   private readonly tileHeight = 32;
@@ -59,6 +71,7 @@ export class KingdomScene extends Phaser.Scene {
   private terrainLayer?: PhaserGraphics;
   private decorLayer?: PhaserContainer;
   private waterLayer?: PhaserGraphics;
+  private waterSlotLayer?: PhaserGraphics;
   private selectionMarker?: PhaserGraphics;
   private placementMarker?: PhaserGraphics;
   private buildingMap = new Map<string, Building>();
@@ -92,6 +105,7 @@ export class KingdomScene extends Phaser.Scene {
 
     this.generateTerrainData();
     this.drawWaterLayer();
+    this.drawWaterSlots();
     this.drawTerrain();
     this.renderWorld(kingdomData);
     this.renderLighting();
@@ -163,6 +177,84 @@ export class KingdomScene extends Phaser.Scene {
   // Deterministic hash for a tile position (used for decoration seeding)
   private hashXY(x: number, y: number): number {
     return Math.abs(((x * 2971 + y * 2609) ^ (x * y * 1297 + x * 3571)) | 0);
+  }
+
+  private toTileKey(x: number, y: number): string {
+    return `${x}:${y}`;
+  }
+
+  private computeDecorBufferTiles(buildings: BuildingData[]): TileSet {
+    const reservedTiles = new Set<string>();
+
+    for (const building of buildings) {
+      if (building.isPlaceholder) continue;
+
+      const clearance =
+        building.type === "town_hall" || building.type === "monument" ? 1 : 0;
+
+      for (let dy = -clearance; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const tx = building.x + dx;
+          const ty = building.y + dy;
+
+          if (tx < 1 || ty < 1 || tx >= this.gridSize - 1 || ty >= this.gridSize - 1) {
+            continue;
+          }
+
+          if (Math.abs(dx) + Math.abs(dy) <= clearance + 1) {
+            reservedTiles.add(this.toTileKey(tx, ty));
+          }
+        }
+      }
+    }
+
+    return reservedTiles;
+  }
+
+  private drawOccupiedFoundation(
+    x: number,
+    y: number,
+    depth: number,
+    tileClass: TileClass
+  ): void {
+    if (!this.decorLayer) return;
+
+    const point = this.isoToScreen(x, y);
+    const elevation = this.terrainData[y]?.[x]?.elevation || 0;
+    const yOffset = -elevation * 20;
+    const centerY = point.y + yOffset + this.tileHeight / 2;
+    const foundation = this.add.graphics();
+
+    const palette =
+      tileClass === "stone_patch"
+        ? { fill: 0x918573, edge: 0x706452, glow: 0xb8ab95 }
+        : { fill: 0x7f775e, edge: 0x615741, glow: 0xa2977e };
+
+    foundation.fillStyle(palette.fill, 0.9);
+    foundation.fillPoints(
+      [
+        new Phaser.Geom.Point(point.x, point.y + yOffset + 2),
+        new Phaser.Geom.Point(point.x + 26, centerY),
+        new Phaser.Geom.Point(point.x, point.y + yOffset + 26),
+        new Phaser.Geom.Point(point.x - 26, centerY),
+      ],
+      true
+    );
+    foundation.lineStyle(2, palette.edge, 0.55);
+    foundation.strokePoints(
+      [
+        new Phaser.Geom.Point(point.x, point.y + yOffset + 2),
+        new Phaser.Geom.Point(point.x + 26, centerY),
+        new Phaser.Geom.Point(point.x, point.y + yOffset + 26),
+        new Phaser.Geom.Point(point.x - 26, centerY),
+      ],
+      true
+    );
+    foundation.fillStyle(palette.glow, 0.18);
+    foundation.fillEllipse(point.x, centerY - 1, 36, 12);
+    foundation.setDepth(depth - 1);
+
+    this.decorLayer.add(foundation);
   }
 
   // ─── Terrain classification ────────────────────────────────────────────────
@@ -248,22 +340,33 @@ export class KingdomScene extends Phaser.Scene {
     const worldBounds = this.getWorldBounds();
     const wg = this.add.graphics();
 
-    // Shallow water glow around the board — lighter blue near land
-    // Layered ellipses create a depth gradient effect
     const boardCenterX = worldBounds.centerX;
     const boardCenterY = worldBounds.centerY;
-
-    const glowLayers = [
-      { rx: 1200, ry: 560, color: 0x1e4a68, alpha: 0.6 },
-      { rx: 1000, ry: 470, color: 0x225572, alpha: 0.55 },
-      { rx: 820, ry: 390, color: 0x275e7a, alpha: 0.5 },
-      { rx: 660, ry: 320, color: 0x2c6882, alpha: 0.45 },
-      { rx: 520, ry: 250, color: 0x31708a, alpha: 0.4 },
+    const ringLayers = [
+      { inset: -460, color: 0x1b4562, alpha: 0.62 },
+      { inset: -340, color: 0x21526e, alpha: 0.56 },
+      { inset: -240, color: 0x275d78, alpha: 0.5 },
+      { inset: -155, color: 0x2c6680, alpha: 0.44 },
+      { inset: -85, color: 0x31708a, alpha: 0.38 },
     ];
 
-    for (const layer of glowLayers) {
+    const boardHalfWidth = (this.gridSize - 1) * (this.tileWidth / 2);
+    const boardHalfHeight = (this.gridSize - 1) * (this.tileHeight / 2);
+
+    for (const layer of ringLayers) {
+      const halfWidth = boardHalfWidth - layer.inset;
+      const halfHeight = boardHalfHeight - layer.inset * 0.5;
+
       wg.fillStyle(layer.color, layer.alpha);
-      wg.fillEllipse(boardCenterX, boardCenterY, layer.rx * 2, layer.ry * 2);
+      wg.fillPoints(
+        [
+          new Phaser.Geom.Point(boardCenterX, boardCenterY - halfHeight),
+          new Phaser.Geom.Point(boardCenterX + halfWidth, boardCenterY),
+          new Phaser.Geom.Point(boardCenterX, boardCenterY + halfHeight),
+          new Phaser.Geom.Point(boardCenterX - halfWidth, boardCenterY),
+        ],
+        true
+      );
     }
 
     wg.setDepth(-300);
@@ -280,7 +383,8 @@ export class KingdomScene extends Phaser.Scene {
     cy: number
   ): void {
     const numStrips = 9;
-    const boardRadius = 580;
+    const boardHalfWidth = (this.gridSize - 1) * (this.tileWidth / 2);
+    const boardHalfHeight = (this.gridSize - 1) * (this.tileHeight / 2);
 
     for (let i = 0; i < numStrips; i++) {
       const sg = this.add.graphics();
@@ -293,9 +397,11 @@ export class KingdomScene extends Phaser.Scene {
       const len = 60 + (i % 4) * 40;
       const halfLen = len / 2;
 
-      // Only draw shimmer outside the board diamond (approximate with ellipse check)
-      const distFromCenter = Math.sqrt((lx - cx) ** 2 + ((ly - cy) * 2) ** 2);
-      if (distFromCenter < boardRadius * 0.72) continue;
+      // Only draw shimmer outside the board diamond.
+      const diamondDistance =
+        Math.abs((lx - cx) / boardHalfWidth) +
+        Math.abs((ly - cy) / boardHalfHeight);
+      if (diamondDistance < 1.08) continue;
 
       sg.lineStyle(2, 0x78c8e8, 1);
       sg.beginPath();
@@ -479,9 +585,52 @@ export class KingdomScene extends Phaser.Scene {
     };
   }
 
+  private getBuildingRenderPoint(building: BuildingData): {
+    x: number;
+    y: number;
+    depth: number;
+  } {
+    if (isWaterBuildingType(building.type)) {
+      const slot = this.getWaterSlotPosition(building);
+      if (!slot) {
+        return { x: this.originX, y: this.originY, depth: this.originY };
+      }
+
+      return {
+        x: slot.x,
+        y: slot.y,
+        depth: slot.y + 12,
+      };
+    }
+
+    const elevation = this.terrainData[building.y]?.[building.x]?.elevation || 0;
+    const point = this.isoToScreen(building.x, building.y);
+    const yOffset = this.tileHeight / 2 - elevation * 20;
+    return {
+      x: point.x,
+      y: point.y + yOffset,
+      depth: point.y + yOffset,
+    };
+  }
+
   selectBuilding(building: BuildingData): void {
     const selectedBuilding = this.buildingMap.get(building.id);
     if (!selectedBuilding || !this.selectionMarker) return;
+
+    if (isWaterBuildingType(building.type)) {
+      const slot = this.getWaterSlotPosition(building);
+      if (!slot) return;
+
+      this.selectionMarker
+        .clear()
+        .lineStyle(2, 0xd4a574, 0.9)
+        .strokeEllipse(slot.x, slot.y, 72, 28)
+        .setDepth(selectedBuilding.depth - 1)
+        .setVisible(true);
+
+      this.game.events.emit("building-selected", building);
+      return;
+    }
 
     const screenPosition = this.isoToScreen(building.x, building.y);
     const yOffset =
@@ -595,6 +744,78 @@ export class KingdomScene extends Phaser.Scene {
     };
   }
 
+  private getWaterSlots(): WaterSlot[] {
+    const worldBounds = this.getWorldBounds();
+    const cx = worldBounds.centerX;
+    const cy = worldBounds.centerY;
+
+    const offsets = [
+      { x: -320, y: -70 },
+      { x: -255, y: -118 },
+      { x: -175, y: -152 },
+      { x: 175, y: -152 },
+      { x: 255, y: -118 },
+      { x: 320, y: -70 },
+      { x: 320, y: 70 },
+      { x: 255, y: 118 },
+      { x: 175, y: 152 },
+      { x: -175, y: 152 },
+      { x: -255, y: 118 },
+      { x: -320, y: 70 },
+    ];
+
+    return offsets.map((offset, index) => ({
+      index,
+      x: cx + offset.x,
+      y: cy + offset.y,
+    }));
+  }
+
+  private getWaterSlotPosition(building: BuildingData): WaterSlot | null {
+    const slotIndex = decodeWaterSlotPosition(building.x, building.y);
+    if (slotIndex === null) return null;
+    return this.getWaterSlots()[slotIndex] ?? null;
+  }
+
+  private getNearestWaterSlot(worldX: number, worldY: number): WaterSlot | null {
+    let nearest: WaterSlot | null = null;
+    let nearestDistance = Infinity;
+
+    for (const slot of this.getWaterSlots()) {
+      const distance = Phaser.Math.Distance.Between(worldX, worldY, slot.x, slot.y);
+      if (distance < nearestDistance) {
+        nearest = slot;
+        nearestDistance = distance;
+      }
+    }
+
+    return nearestDistance <= 72 ? nearest : null;
+  }
+
+  private drawWaterSlots(): void {
+    this.waterSlotLayer?.destroy();
+    const graphics = this.add.graphics();
+    const kingdomData = this.getKingdomData();
+    const occupied = new Set(
+      kingdomData.buildings
+        .filter((building) => isWaterBuildingType(building.type))
+        .map((building) => decodeWaterSlotPosition(building.x, building.y))
+        .filter((slot): slot is number => slot !== null)
+    );
+
+    for (const slot of this.getWaterSlots()) {
+      const color = occupied.has(slot.index) ? 0x58738a : 0x9edff3;
+      const alpha = occupied.has(slot.index) ? 0.18 : 0.28;
+      graphics.fillStyle(color, alpha);
+      graphics.fillEllipse(slot.x, slot.y, 54, 20);
+      graphics.lineStyle(2, color, occupied.has(slot.index) ? 0.22 : 0.4);
+      graphics.strokeEllipse(slot.x, slot.y, 54, 20);
+    }
+
+    graphics.setDepth(-140);
+    this.waterSlotLayer = graphics;
+  }
+
   // ─── Input ─────────────────────────────────────────────────────────────────
 
   private registerCameraDrag(): void {
@@ -653,9 +874,16 @@ export class KingdomScene extends Phaser.Scene {
     this.input.setDefaultCursor("default");
 
     if (this.buildModeType && pointer && !this.didCameraDrag) {
-      const tile = this.screenToTile(pointer.worldX, pointer.worldY);
-      if (tile && this.isTileAvailable(tile.x, tile.y)) {
-        this.game.events.emit("tile-selected", tile);
+      if (isWaterBuildingType(this.buildModeType)) {
+        const slot = this.getNearestWaterSlot(pointer.worldX, pointer.worldY);
+        if (slot && this.isWaterSlotAvailable(slot.index)) {
+          this.game.events.emit("tile-selected", encodeWaterSlotPosition(slot.index));
+        }
+      } else {
+        const tile = this.screenToTile(pointer.worldX, pointer.worldY);
+        if (tile && this.isTileAvailable(tile.x, tile.y)) {
+          this.game.events.emit("tile-selected", tile);
+        }
       }
     }
 
@@ -693,7 +921,7 @@ export class KingdomScene extends Phaser.Scene {
     this.selectionMarker?.setVisible(false);
 
     const sortedBuildings = [...kingdomData.buildings].sort(
-      (a, b) => a.x + a.y - (b.x + b.y)
+      (a, b) => this.getBuildingRenderPoint(a).depth - this.getBuildingRenderPoint(b).depth
     );
 
     sortedBuildings.forEach((buildingData) => {
@@ -711,12 +939,9 @@ export class KingdomScene extends Phaser.Scene {
           this.buildingMap.delete(buildingData.id);
         }
 
-        const elevation =
-          this.terrainData[buildingData.y]?.[buildingData.x]?.elevation || 0;
-        const point = this.isoToScreen(buildingData.x, buildingData.y);
-        const yOffset = this.tileHeight / 2 - elevation * 20;
-        const building = new Building(this, point.x, point.y + yOffset, buildingData);
-        building.setDepth(point.y + yOffset);
+        const renderPoint = this.getBuildingRenderPoint(buildingData);
+        const building = new Building(this, renderPoint.x, renderPoint.y, buildingData);
+        building.setDepth(renderPoint.depth);
         layer.add(building);
         this.buildingMap.set(buildingData.id, building);
       }
@@ -737,20 +962,19 @@ export class KingdomScene extends Phaser.Scene {
     const occupiedTiles = new Set(
       kingdomData.buildings
         .filter((b) => !b.isPlaceholder)
-        .map((b) => `${b.x}:${b.y}`)
+        .map((b) => this.toTileKey(b.x, b.y))
     );
     const placeholderTiles = new Set(
       kingdomData.buildings
         .filter((b) => b.isPlaceholder)
-        .map((b) => `${b.x}:${b.y}`)
+        .map((b) => this.toTileKey(b.x, b.y))
     );
+    const decorBufferTiles = this.computeDecorBufferTiles(kingdomData.buildings);
 
     const themeKey = kingdomData.themeId ?? "realm";
 
     for (let y = 1; y < this.gridSize - 1; y++) {
       for (let x = 1; x < this.gridSize - 1; x++) {
-        if (occupiedTiles.has(`${x}:${y}`)) continue;
-
         const point = this.isoToScreen(x, y);
         const elevation = this.terrainData[y]?.[x]?.elevation || 0;
         const yOffset = -elevation * 20;
@@ -758,9 +982,15 @@ export class KingdomScene extends Phaser.Scene {
         const tile = this.terrainData[y][x];
         const cls = this.classifyTile(x, y, tile);
         const depth = point.y + yOffset;
+        const tileKey = this.toTileKey(x, y);
+
+        if (occupiedTiles.has(tileKey)) {
+          this.drawOccupiedFoundation(x, y, depth, cls);
+          continue;
+        }
 
         // Ruins on placeholder tiles
-        if (placeholderTiles.has(`${x}:${y}`)) {
+        if (placeholderTiles.has(tileKey)) {
           const ruins = this.add
             .image(point.x, point.y + yOffset - 2, "prop-ruins")
             .setOrigin(0.5, 0.9)
@@ -779,6 +1009,8 @@ export class KingdomScene extends Phaser.Scene {
           cls === "transition"
         )
           continue;
+
+        if (decorBufferTiles.has(tileKey)) continue;
 
         // ── Pebble carpet on grey tiles ───────────────────────────────────────
         if (cls === "stone_patch") {
@@ -936,6 +1168,7 @@ export class KingdomScene extends Phaser.Scene {
     if (newKey !== this.occupiedKey) {
       this.renderDecor(kingdomData);
     }
+    this.drawWaterSlots();
     this.renderBuildings(kingdomData);
   }
 
@@ -959,7 +1192,9 @@ export class KingdomScene extends Phaser.Scene {
     this.waterShimmerTweens = [];
     this.waterShimmerGraphics = [];
     this.waterLayer = undefined;
+    this.waterSlotLayer = undefined;
     this.drawWaterLayer();
+    this.drawWaterSlots();
     this.drawTerrain();
     this.renderWorld(this.getKingdomData());
     this.renderLighting();
@@ -967,6 +1202,7 @@ export class KingdomScene extends Phaser.Scene {
 
   private handleShutdown(): void {
     this.destroyWaterLayer();
+    this.waterSlotLayer?.destroy();
     this.game.events.off("kingdom-updated", this.handleKingdomUpdated, this);
     this.game.events.off("focus-building", this.selectBuilding, this);
     this.game.events.off(
@@ -1002,6 +1238,17 @@ export class KingdomScene extends Phaser.Scene {
   private handlePlacementPointerMove(pointer: import("phaser").Input.Pointer) {
     if (!this.buildModeType || this.isDraggingCamera) {
       this.placementMarker?.setVisible(false);
+      return;
+    }
+
+    if (isWaterBuildingType(this.buildModeType)) {
+      const slot = this.getNearestWaterSlot(pointer.worldX, pointer.worldY);
+      if (!slot) {
+        this.placementMarker?.setVisible(false);
+        return;
+      }
+
+      this.drawWaterPlacementMarker(slot, this.isWaterSlotAvailable(slot.index));
       return;
     }
 
@@ -1065,6 +1312,20 @@ export class KingdomScene extends Phaser.Scene {
       .setVisible(true);
   }
 
+  private drawWaterPlacementMarker(slot: WaterSlot, isValid: boolean) {
+    const marker = this.placementMarker;
+    if (!marker) return;
+
+    const color = isValid ? 0x7cd3ec : 0xaa6767;
+
+    marker
+      .clear()
+      .lineStyle(2, color, 0.9)
+      .strokeEllipse(slot.x, slot.y, 68, 26)
+      .setDepth(slot.y + 20)
+      .setVisible(true);
+  }
+
   // ─── Tile picking ──────────────────────────────────────────────────────────
 
   private screenToTile(worldX: number, worldY: number) {
@@ -1089,6 +1350,15 @@ export class KingdomScene extends Phaser.Scene {
   private isTileAvailable(x: number, y: number) {
     return !this.getKingdomData().buildings.some(
       (b) => !b.isPlaceholder && b.x === x && b.y === y
+    );
+  }
+
+  private isWaterSlotAvailable(slotIndex: number) {
+    return !this.getKingdomData().buildings.some(
+      (building) =>
+        !building.isPlaceholder &&
+        isWaterBuildingType(building.type) &&
+        decodeWaterSlotPosition(building.x, building.y) === slotIndex
     );
   }
 }

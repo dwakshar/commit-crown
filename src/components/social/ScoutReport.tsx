@@ -85,7 +85,7 @@ export function ScoutReport({
 
   return (
     <>
-      <aside className="pointer-events-auto w-full max-w-[420px] overflow-hidden border border-[var(--b1)] bg-[linear-gradient(180deg,rgba(5,8,13,0.97),rgba(6,10,16,0.9))] text-[var(--silver-1)] shadow-[0_24px_90px_rgba(0,0,0,0.45)]">
+      <aside className="pointer-events-auto max-h-full w-full max-w-[420px] overflow-y-auto overflow-x-hidden border border-[var(--b1)] bg-[linear-gradient(180deg,rgba(5,8,13,0.97),rgba(6,10,16,0.9))] text-[var(--silver-1)] shadow-[0_24px_90px_rgba(0,0,0,0.45)]">
         <div className="border-b border-[var(--b1)] px-5 py-6">
           <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--silver-3)]">
             Scout Report

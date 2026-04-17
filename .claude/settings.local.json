@@ -3,7 +3,9 @@
     "allow": [
       "Bash(xargs grep:*)",
       "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); [print\\(r['page']\\) for r in d.get\\('dynamicRoutes',[]\\)+[{'page':r} for r in d.get\\('staticRoutes',[]\\)]]\")",
-      "Bash(node -e ':*)"
+      "Bash(node -e ':*)",
+      "Bash(grep -n \"policy.*buildings\\\\|buildings.*policy\" /d/Projects/commit-crown/supabase/migrations/*.sql)",
+      "Bash(grep -l \"buildings\" /d/Projects/commit-crown/supabase/migrations/*.sql)"
     ]
   }
 }

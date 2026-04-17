@@ -33,6 +33,10 @@ export const BUILDING_UNLOCK_REQUIREMENTS: Record<BuildingType, BuildingUnlockCh
   arcane_tower: () => true,
   wall:         () => true,
   monument:     () => true,
+  royal_flagship: () => true,
+  sentinel_skiff: () => true,
+  bulwark_barge: () => true,
+  supply_tender: () => true,
 }
 
 export const BUILDING_EFFECTS: Record<BuildingType, Record<1 | 2 | 3 | 4 | 5, string>> = {
@@ -99,6 +103,34 @@ export const BUILDING_EFFECTS: Record<BuildingType, Record<1 | 2 | 3 | 4 | 5, st
     4: 'Turns achievements into kingdom-wide pride.',
     5: 'Stands as a timeless symbol of unmatched greatness.',
   },
+  royal_flagship: {
+    1: 'Establishes naval command near the kingdom coast.',
+    2: 'Improves fleet coordination and maritime presence.',
+    3: 'Projects royal strength across nearby waters.',
+    4: 'Turns the harbor into a feared defensive anchor.',
+    5: 'Makes the fleet a legendary symbol of kingdom power.',
+  },
+  sentinel_skiff: {
+    1: 'Provides light coastal scouting and early warning.',
+    2: 'Improves fast patrol coverage around the kingdom.',
+    3: 'Expands naval sightlines for rapid response.',
+    4: 'Sharpens pursuit and interception at sea.',
+    5: 'Keeps the coastline under near-constant watch.',
+  },
+  bulwark_barge: {
+    1: 'Adds a floating defensive platform at the waterline.',
+    2: 'Strengthens harbor resistance against raids.',
+    3: 'Extends heavy naval cover along the coast.',
+    4: 'Turns the shoreline into a fortified barrier.',
+    5: 'Makes direct naval assaults costly and dangerous.',
+  },
+  supply_tender: {
+    1: 'Carries supplies and support crews for nearby districts.',
+    2: 'Improves maritime logistics and provisioning.',
+    3: 'Boosts sustained readiness around the harbor.',
+    4: 'Lets the fleet reinforce operations for longer.',
+    5: 'Transforms waterborne support into a strategic advantage.',
+  },
 }
 
 // Attack contribution per building level.
@@ -109,6 +141,9 @@ const ATTACK_BUILDING_WEIGHTS: Partial<Record<BuildingType, number>> = {
   arcane_tower: 9,
   observatory: 5,
   market: 3,
+  royal_flagship: 16,
+  sentinel_skiff: 8,
+  bulwark_barge: 10,
 }
 
 // Defense contribution per building level.
@@ -121,6 +156,10 @@ const DEFENSE_BUILDING_WEIGHTS: Partial<Record<BuildingType, number>> = {
   arcane_tower: 7,
   iron_forge: 5,
   library: 2,
+  royal_flagship: 12,
+  sentinel_skiff: 6,
+  bulwark_barge: 15,
+  supply_tender: 4,
 }
 
 /**

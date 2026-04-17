@@ -48,6 +48,10 @@ const ASSET_CONFIG: Record<
   market:        { dispW:  92, dispH:  96, spriteY: 21 },
   wall:          { dispW:  88, dispH:  80, spriteY: 15 },
   monument:      { dispW:  88, dispH: 108, spriteY: 25 },
+  royal_flagship:{ dispW: 126, dispH: 110, spriteY: 24 },
+  sentinel_skiff:{ dispW:  98, dispH:  82, spriteY: 18 },
+  bulwark_barge: { dispW: 108, dispH:  88, spriteY: 20 },
+  supply_tender: { dispW: 100, dispH:  86, spriteY: 19 },
 }
 
 export class Building extends Phaser.GameObjects.Container {

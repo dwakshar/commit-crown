@@ -2,7 +2,7 @@ import {
   calculateKingdomPower,
   type GitHubStats,
 } from "@/src/lib/gameEngine";
-import { BUILDING_METADATA } from "@/src/lib/kingdom";
+import { BUILDING_METADATA, isWaterBuildingType } from "@/src/lib/kingdom";
 
 import type {
   BuildingData,
@@ -42,6 +42,10 @@ const GOLD_WEIGHTS: Record<BuildingType, number> = {
   barracks: 3,
   observatory: 3,
   wall: 1,
+  royal_flagship: 5,
+  sentinel_skiff: 1,
+  bulwark_barge: 2,
+  supply_tender: 6,
 };
 
 // Prestige generated per building per level per hour.
@@ -56,6 +60,10 @@ const PRESTIGE_WEIGHTS: Record<BuildingType, number> = {
   market: 3,
   barracks: 2,
   wall: 1,
+  royal_flagship: 6,
+  sentinel_skiff: 2,
+  bulwark_barge: 3,
+  supply_tender: 2,
 };
 
 // Knowledge generated per building per level per hour.
@@ -70,6 +78,10 @@ const KNOWLEDGE_WEIGHTS: Record<BuildingType, number> = {
   barracks: 1,
   market: 1,
   wall: 0,
+  royal_flagship: 2,
+  sentinel_skiff: 3,
+  bulwark_barge: 1,
+  supply_tender: 2,
 };
 
 // Supply generated per building per level per hour.
@@ -84,6 +96,10 @@ const SUPPLY_WEIGHTS: Record<BuildingType, number> = {
   arcane_tower: 1,
   monument: 1,
   wall: 0,
+  royal_flagship: 4,
+  sentinel_skiff: 2,
+  bulwark_barge: 1,
+  supply_tender: 8,
 };
 
 function toGitHubStats(stats: GitHubStatsData | null | undefined): GitHubStats {
@@ -246,7 +262,7 @@ export function getBoardSummary(kingdom: KingdomData) {
 
 export function getTileLabel(kingdom: KingdomData, x: number, y: number) {
   const building = kingdom.buildings.find(
-    (entry) => entry.x === x && entry.y === y
+    (entry) => !isWaterBuildingType(entry.type) && entry.x === x && entry.y === y
   );
 
   if (building?.isPlaceholder) {

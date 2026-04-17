@@ -1,6 +1,51 @@
 import type { BuildingData, BuildingType } from '@/src/types/game'
 
 export const SYNC_COOLDOWN_MINUTES = 30
+export const WATER_SLOT_BASE = 100
+export const WATER_SLOT_COUNT = 12
+export const WATER_BUILDING_TYPES = [
+  'royal_flagship',
+  'sentinel_skiff',
+  'bulwark_barge',
+  'supply_tender',
+] as const satisfies readonly BuildingType[]
+
+export function isWaterBuildingType(type: BuildingType): boolean {
+  return (WATER_BUILDING_TYPES as readonly string[]).includes(type)
+}
+
+export function getPlacementZoneForBuilding(type: BuildingType): 'board' | 'water' {
+  return isWaterBuildingType(type) ? 'water' : 'board'
+}
+
+export function encodeWaterSlotPosition(slotIndex: number) {
+  return {
+    x: WATER_SLOT_BASE + slotIndex,
+    y: 0,
+  }
+}
+
+export function decodeWaterSlotPosition(x: number, y: number): number | null {
+  if (y !== 0) return null
+  const slotIndex = x - WATER_SLOT_BASE
+  return slotIndex >= 0 && slotIndex < WATER_SLOT_COUNT ? slotIndex : null
+}
+
+export function isValidPlacementCoordinate(
+  type: BuildingType,
+  x: number,
+  y: number
+): boolean {
+  if (!Number.isInteger(x) || !Number.isInteger(y)) {
+    return false
+  }
+
+  if (isWaterBuildingType(type)) {
+    return decodeWaterSlotPosition(x, y) !== null
+  }
+
+  return x >= 0 && x <= 19 && y >= 0 && y <= 19
+}
 
 // Build duration in seconds per building type (CoC-style construction time).
 export const BUILD_TIMES: Record<BuildingType, number> = {
@@ -13,6 +58,10 @@ export const BUILD_TIMES: Record<BuildingType, number> = {
   observatory:  420,  // 7 min
   arcane_tower: 480,  // 8 min
   monument:     600,  // 10 min
+  royal_flagship: 540,
+  sentinel_skiff: 210,
+  bulwark_barge: 330,
+  supply_tender: 240,
 }
 
 export const BUILDING_METADATA: Record<
@@ -77,6 +126,30 @@ export const BUILDING_METADATA: Record<
     icon: 'Star',
     effect: 'Immortalizes your achievements and raises prestige over time.',
     baseCost: 175,
+  },
+  royal_flagship: {
+    label: 'Royal Flagship',
+    icon: 'Crown',
+    effect: 'Anchors naval command with a regal warship built for the kingdom banner.',
+    baseCost: 240,
+  },
+  sentinel_skiff: {
+    label: 'Sentinel Skiff',
+    icon: 'Eye',
+    effect: 'Keeps fast watch over the coast with a light scout hull for rapid response.',
+    baseCost: 135,
+  },
+  bulwark_barge: {
+    label: 'Bulwark Barge',
+    icon: 'Shield',
+    effect: 'Patrols the waterline with a broad armored deck focused on defense.',
+    baseCost: 165,
+  },
+  supply_tender: {
+    label: 'Supply Tender',
+    icon: 'Coin',
+    effect: 'Supports nearby districts with a compact logistics craft and floating stores.',
+    baseCost: 145,
   },
 }
 

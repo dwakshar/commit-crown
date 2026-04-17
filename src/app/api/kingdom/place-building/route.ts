@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { BUILDING_METADATA } from "@/src/lib/kingdom";
+import {
+  BUILDING_METADATA,
+  isValidPlacementCoordinate,
+  isWaterBuildingType,
+} from "@/src/lib/kingdom";
 import { ensureKingdomForUser } from "@/src/lib/kingdomPersistence";
 import { supabaseAdmin } from "@/src/lib/supabaseAdmin";
 import type { BuildingType } from "@/src/types/game";
@@ -18,9 +22,13 @@ const placeBuildingSchema = z.object({
     "market",
     "wall",
     "monument",
+    "royal_flagship",
+    "sentinel_skiff",
+    "bulwark_barge",
+    "supply_tender",
   ]),
-  position_x: z.number().int().min(0).max(19),
-  position_y: z.number().int().min(0).max(19),
+  position_x: z.number().int(),
+  position_y: z.number().int(),
 });
 
 type PlaceBuildingTransactionRow = {
@@ -86,6 +94,19 @@ export async function POST(request: Request) {
     );
   }
 
+  if (
+    !isValidPlacementCoordinate(
+      parsed.data.type,
+      parsed.data.position_x,
+      parsed.data.position_y
+    )
+  ) {
+    return NextResponse.json(
+      { error: "Invalid placement position" },
+      { status: 400 }
+    );
+  }
+
   const { data: profile, error } = await supabase
     .from("profiles")
     .select(
@@ -144,6 +165,16 @@ export async function POST(request: Request) {
     if (hasTownHall) {
       return NextResponse.json(
         { error: "Town Hall already exists. You can only have one." },
+        { status: 400 }
+      );
+    }
+  }
+
+  if (isWaterBuildingType(parsed.data.type)) {
+    const hasMatchingVessel = buildings.some((b) => b.type === parsed.data.type);
+    if (hasMatchingVessel) {
+      return NextResponse.json(
+        { error: `${BUILDING_METADATA[parsed.data.type].label} already exists.` },
         { status: 400 }
       );
     }
@@ -216,6 +247,13 @@ export async function POST(request: Request) {
     if (transactionError.message === "Town Hall already exists") {
       return NextResponse.json(
         { error: "Town Hall already exists. You can only have one." },
+        { status: 400 }
+      );
+    }
+
+    if (transactionError.message.endsWith("already exists")) {
+      return NextResponse.json(
+        { error: transactionError.message },
         { status: 400 }
       );
     }

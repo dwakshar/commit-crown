@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 
+import { isValidPlacementCoordinate } from "@/src/lib/kingdom";
 import type {
   BuildingData,
   BuildingType,
@@ -138,14 +139,7 @@ export const useKingdomStore = create<KingdomStore>((set, get) => ({
       return null;
     }
 
-    if (
-      !Number.isInteger(x) ||
-      !Number.isInteger(y) ||
-      x < 0 ||
-      x > 19 ||
-      y < 0 ||
-      y > 19
-    ) {
+    if (!isValidPlacementCoordinate(buildingType, x, y)) {
       const message = "Invalid build tile selected";
       set({ placementError: message });
       return null;

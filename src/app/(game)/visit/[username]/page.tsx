@@ -5,6 +5,7 @@ import { ScoutReport } from '@/src/components/social/ScoutReport'
 import { PhaserGame } from '@/src/components/game/PhaserGame'
 import { getBuildingMetadata } from '@/src/lib/kingdom'
 import { fetchPersistedKingdomForUser } from '@/src/lib/kingdomPersistence'
+import { withStarterKingdomState } from '@/src/lib/onboarding'
 import { createClient } from '@/utils/supabase/server'
 
 import type { BuildingData, GitHubStatsData, KingdomData } from '@/src/types/game'
@@ -110,7 +111,7 @@ async function getVisitData(username: string) {
       ? (rankRows?.findIndex((row) => row.user_id === kingdom.user_id) ?? 0) + 1
       : 1
 
-  const kingdomData: KingdomData = {
+  const kingdomData: KingdomData = withStarterKingdomState({
     id: kingdom.id,
     userId: kingdom.user_id,
     name: kingdom.name,
@@ -129,7 +130,7 @@ async function getVisitData(username: string) {
     ownerCreatedAt: result.created_at,
     buildings,
     githubStats,
-  }
+  })
 
   return {
     kingdomData,
@@ -216,7 +217,7 @@ export default async function VisitPage({
       <div className="absolute inset-0">
         <PhaserGame kingdomData={kingdomData} userId={viewerId ?? 'visitor'} isOwner={false} />
       </div>
-      <div className="pointer-events-none absolute inset-y-0 right-0 z-20 flex w-full justify-end p-3 md:w-auto md:p-6">
+      <div className="pointer-events-none absolute inset-y-0 right-0 z-20 flex h-full w-full justify-end p-3 md:w-auto md:p-6">
         <ScoutReport
           kingdomData={kingdomData}
           prestigeRank={prestigeRank}

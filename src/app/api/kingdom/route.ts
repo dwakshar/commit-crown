@@ -8,7 +8,10 @@ import {
   type PersistedKingdomRow,
   tryEnsureKingdomForUser,
 } from '@/src/lib/kingdomPersistence'
-import { getBuildingMetadata } from '@/src/lib/kingdom'
+import {
+  getBuildingMetadata,
+  getPlacementZoneForBuilding,
+} from '@/src/lib/kingdom'
 import { withStarterKingdomState } from '@/src/lib/onboarding'
 import { createClient } from '@/utils/supabase/server'
 
@@ -91,9 +94,11 @@ export async function GET() {
     type: building.type,
     x: building.position_x,
     y: building.position_y,
+    placementZone: getPlacementZoneForBuilding(building.type),
     level: Math.min(5, Math.max(1, building.level)) as 1 | 2 | 3 | 4 | 5,
     skinId: building.skin_id,
     name: getBuildingMetadata(building.type).label,
+    builtAt: building.built_at,
   }))
 
   const typedGithubStats = (githubStats as GitHubStatsData | null) ?? null
@@ -124,4 +129,3 @@ export async function GET() {
     power,
   })
 }
-
