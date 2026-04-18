@@ -43,8 +43,8 @@ export function TutorialNav() {
   }, [])
 
   return (
-    <nav className="hidden lg:flex flex-col w-[220px] flex-shrink-0">
-      <div className="sticky top-8">
+    <nav className="hidden lg:flex flex-col w-[220px] flex-shrink-0 sticky top-8 self-start max-h-[calc(100vh-4rem)] overflow-y-auto">
+      <div>
         {/* Back link */}
         <Link
           href="/"
