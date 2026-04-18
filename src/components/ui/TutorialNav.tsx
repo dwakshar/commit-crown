@@ -24,19 +24,22 @@ export function TutorialNav() {
   const [active, setActive] = useState('step-01')
 
   useEffect(() => {
-    const obs = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting) setActive(e.target.id)
+    function onScroll() {
+      const threshold = window.innerHeight * 0.3
+      let current = NAV[0].id
+      for (const { id } of NAV) {
+        const el = document.getElementById(id)
+        if (!el) continue
+        if (el.getBoundingClientRect().top <= threshold) {
+          current = id
         }
-      },
-      { rootMargin: '-30% 0px -65% 0px' },
-    )
-    NAV.forEach(({ id }) => {
-      const el = document.getElementById(id)
-      if (el) obs.observe(el)
-    })
-    return () => obs.disconnect()
+      }
+      setActive(current)
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true })
+    onScroll()
+    return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
   return (

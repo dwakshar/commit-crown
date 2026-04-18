@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { TutorialNav } from "@/src/components/ui/TutorialNav";
-import { GitHubSignInButton } from "@/src/components/auth/GitHubSignInButton";
 
 export const metadata = {
   title: "The Ruler's Handbook · CommitCrown",
@@ -636,55 +635,96 @@ export default function TutorialPage() {
     <div className="min-h-screen bg-[var(--steel-0)] text-[var(--silver-1)] font-[var(--font-body)]">
 
       {/* ── Page header ── */}
-      <header className="border-b border-[var(--b1)] bg-[var(--abyss)] px-8 py-6">
+      <header className="border-b border-[var(--b1)] bg-[var(--abyss)] px-8 py-5">
         <div className="mx-auto max-w-6xl flex items-center justify-between">
           <Link
             href="/"
-            className="flex items-center gap-2 font-[var(--font-head)] text-sm text-[var(--silver-3)] hover:text-[var(--silver-1)] transition-colors">
+            className="flex items-center gap-2 font-[var(--font-head)] text-[11px] tracking-[0.14em] uppercase text-[var(--silver-4)] hover:text-[var(--silver-1)] transition-colors">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
               <path d="M9 2L4 7L9 12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             CommitCrown
           </Link>
-          <div className="hidden sm:flex items-center gap-2 text-[10px] uppercase tracking-widest text-[var(--steel-6)]">
-            <span>Documentation</span>
-            <span className="text-[var(--b1)]">·</span>
-            <span className="text-[var(--ember)]">Ruler's Handbook</span>
+          <div className="flex items-center gap-6">
+            <span className="hidden sm:block text-[10px] uppercase tracking-[0.22em] text-[var(--ember)] font-[var(--font-head)]">
+              The Ruler&apos;s Handbook
+            </span>
+            <a
+              href="#enlist"
+              className="realm-button realm-button-primary px-5 py-2 text-[11px]">
+              Sign In
+            </a>
           </div>
         </div>
       </header>
 
       {/* ── Hero strip ── */}
       <div className="relative border-b border-[var(--b1)] bg-[var(--abyss)] overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_100%_at_50%_0%,rgba(200,88,26,0.08)_0%,transparent_65%)] pointer-events-none" />
-        <div className="mx-auto max-w-6xl px-8 py-16 relative">
-          <div className="inline-flex items-center gap-4 mb-6">
-            <div className="h-px w-8 bg-[var(--ember-lo)]" />
-            <span className="text-[10px] uppercase tracking-[0.28em] text-[var(--ember)] font-[var(--font-head)]">
-              Complete Guide
-            </span>
-          </div>
-          <h1 className="realm-display text-[clamp(2.4rem,6vw,4.8rem)] font-bold leading-[0.9] text-[var(--silver-0)] mb-5">
-            The Ruler&apos;s<br />
-            <span className="text-[var(--ember)]">Handbook</span>
-          </h1>
-          <p className="realm-lore max-w-lg text-[17px] leading-relaxed text-[var(--silver-2)]">
-            Everything you need to know about CommitCrown — from signing in for
-            the first time to conquering the global leaderboard. 13 steps,
-            fully illustrated, with game-UI previews for every concept.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-6 text-[11px] uppercase tracking-widest text-[var(--silver-3)]">
-            <span>13 steps</span>
-            <span className="text-[var(--b1)]">·</span>
-            <span>~12 min read</span>
-            <span className="text-[var(--b1)]">·</span>
-            <span>All skill levels</span>
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_120%_at_50%_0%,rgba(200,88,26,0.09)_0%,transparent_60%)] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--ember-lo)] to-transparent" />
+        <div className="mx-auto max-w-6xl px-8 py-20 relative">
+          <div className="grid lg:grid-cols-[1fr_auto] gap-12 items-end">
+            <div>
+              <div className="inline-flex items-center gap-3 mb-7">
+                <div className="w-5 h-5 border border-[var(--ember-lo)] bg-[rgba(200,88,26,0.1)] flex items-center justify-center text-[10px] text-[var(--ember)]">📖</div>
+                <span className="text-[10px] uppercase tracking-[0.28em] text-[var(--ember)] font-[var(--font-head)]">Complete Guide</span>
+              </div>
+              <h1 className="realm-display text-[clamp(2.8rem,7vw,5.2rem)] font-bold leading-[0.88] text-[var(--silver-0)] mb-6">
+                The Ruler&apos;s<br />
+                <span className="text-[var(--ember)]">Handbook</span>
+              </h1>
+              <p className="realm-lore max-w-xl text-[17px] leading-relaxed text-[var(--silver-2)] mb-8">
+                Everything you need to know about CommitCrown — from signing in for
+                the first time to conquering the global leaderboard. 13 steps,
+                fully illustrated, with live game-UI previews.
+              </p>
+              <div className="flex flex-wrap gap-5">
+                {[
+                  { v: "13", l: "Steps" },
+                  { v: "~12 min", l: "Read time" },
+                  { v: "All levels", l: "Skill range" },
+                ].map(s => (
+                  <div key={s.l} className="border border-[var(--b1)] px-4 py-2.5 flex flex-col items-center gap-0.5">
+                    <span className="font-[var(--font-head)] text-[var(--silver-0)] text-sm">{s.v}</span>
+                    <span className="text-[9px] uppercase tracking-widest text-[var(--steel-6)]">{s.l}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Right: table of contents mini-preview */}
+            <div className="hidden lg:block w-[200px] flex-shrink-0 border border-[var(--b1)] overflow-hidden">
+              <div className="bg-[var(--steel-2)] px-3 py-2 text-[8px] uppercase tracking-[0.22em] text-[var(--steel-6)]">
+                Contents
+              </div>
+              {[
+                "Sign In With GitHub",
+                "Kingdom Creation",
+                "Dashboard Overview",
+                "Resources Explained",
+                "Placing Buildings",
+                "Upgrading Buildings",
+                "Streaks & Army Power",
+              ].map((title, i) => (
+                <a
+                  key={title}
+                  href={`#step-0${i + 1}`}
+                  className="flex items-center gap-2.5 px-3 py-2 border-t border-[var(--b0)] hover:bg-[var(--steel-2)] transition-colors group">
+                  <span className="text-[8px] font-[var(--font-head)] text-[var(--steel-6)] group-hover:text-[var(--ember)] transition-colors w-4">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span className="text-[10px] text-[var(--silver-4)] group-hover:text-[var(--silver-2)] transition-colors leading-snug">{title}</span>
+                </a>
+              ))}
+              <div className="border-t border-[var(--b0)] px-3 py-2 text-[9px] text-[var(--steel-6)] text-center">
+                + 6 more steps
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       {/* ── Main layout ── */}
-      <div className="mx-auto max-w-6xl px-8 py-16 flex gap-16 items-start">
+      <div className="mx-auto max-w-6xl px-8 py-14 flex gap-16 items-start">
 
         {/* Left: sticky sidebar nav */}
         <TutorialNav />
@@ -1169,79 +1209,79 @@ export default function TutorialPage() {
               creation, building placement, raiding, and the leaderboard.
             </p>
 
-            {/* 16:9 video placeholder */}
-            <div className="relative w-full aspect-video bg-[var(--steel-1)] border border-[var(--b1)] overflow-hidden group">
-              {/* Background texture */}
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_50%,rgba(200,88,26,0.06)_0%,transparent_70%)]" />
+            {/* 16:9 video embed — replace this div with an <iframe> when the video is ready */}
+            <div className="relative w-full aspect-video bg-[var(--abyss)] border border-[var(--b1)] overflow-hidden group">
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_70%_at_50%_50%,rgba(200,88,26,0.07)_0%,transparent_68%)]" />
               <div className="absolute inset-0" style={{
-                backgroundImage: "radial-gradient(circle, rgba(100,130,160,0.05) 1px, transparent 1px)",
-                backgroundSize: "24px 24px",
+                backgroundImage: "radial-gradient(circle, rgba(100,130,160,0.045) 1px, transparent 1px)",
+                backgroundSize: "28px 28px",
               }} />
-              {/* Placeholder content */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-6">
-                <div className="w-20 h-20 border-2 border-[var(--ember)] flex items-center justify-center group-hover:bg-[var(--ember)] transition-colors">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" className="text-[var(--ember)] group-hover:text-white ml-1 transition-colors">
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
+              {/* Thin ember top edge */}
+              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--ember-lo)] to-transparent" />
+              {/* Center play button + labels */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-7">
+                <div className="relative">
+                  <div className="w-24 h-24 border border-[var(--ember)] flex items-center justify-center group-hover:bg-[var(--ember)] transition-all duration-300 group-hover:scale-105">
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor" className="text-[var(--ember)] group-hover:text-white ml-1.5 transition-colors duration-300">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </div>
+                  {/* Outer pulse ring */}
+                  <div className="absolute inset-[-6px] border border-[var(--ember-lo)] opacity-40 group-hover:opacity-0 transition-opacity" />
                 </div>
                 <div className="text-center space-y-2">
-                  <div className="font-[var(--font-head)] text-[var(--silver-0)] text-lg tracking-wide">
+                  <div className="font-[var(--font-head)] text-[var(--silver-0)] text-base tracking-[0.08em]">
                     Full Gameplay Walkthrough
                   </div>
-                  <div className="text-[var(--silver-3)] text-sm">
-                    CommitCrown · Official Tutorial · ~15 min
+                  <div className="text-[var(--silver-4)] text-[11px] uppercase tracking-[0.2em]">
+                    CommitCrown · Official · ~15 min
                   </div>
-                  <div className="text-[10px] uppercase tracking-widest text-[var(--ember)] mt-3 border border-[var(--ember-lo)] px-4 py-2 inline-block">
-                    Video Coming Soon
+                  <div className="mt-4 inline-flex items-center gap-2 border border-[var(--ember-lo)] bg-[rgba(200,88,26,0.08)] px-5 py-2 text-[10px] uppercase tracking-[0.22em] text-[var(--ember)]">
+                    <span className="w-1.5 h-1.5 bg-[var(--ember)] animate-[pulse_2s_ease-in-out_infinite]" />
+                    Coming Soon
                   </div>
                 </div>
               </div>
-              {/* Corner labels */}
-              <div className="absolute top-3 left-3 text-[9px] uppercase tracking-widest text-[var(--steel-6)]">
-                16 : 9
-              </div>
-              <div className="absolute bottom-3 right-3 text-[9px] uppercase tracking-widest text-[var(--steel-6)]">
-                Upload your video here
-              </div>
             </div>
-
-            <Note>
-              To embed your video, replace the placeholder above with a standard
-              YouTube or Vimeo <code className="tut-code">&lt;iframe&gt;</code>{" "}
-              embed. The container is a fixed 16:9 aspect ratio and will scale
-              responsively at any viewport width.
-            </Note>
           </section>
 
           {/* ────────────────────────────────────────────────
-              FOOTER CTA
+              END OF HANDBOOK
               ──────────────────────────────────────────────── */}
-          <div className="border-t border-[var(--b1)] pt-16 text-center space-y-6">
-            <div className="font-[var(--font-head)] text-[10px] uppercase tracking-[0.28em] text-[var(--steel-6)]">
-              You are ready.
+          <div className="border-t border-[var(--b0)] pt-10 flex items-center justify-between">
+            <Link
+              href="/"
+              className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-[var(--silver-4)] hover:text-[var(--silver-1)] transition-colors font-[var(--font-head)]">
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                <path d="M9 2L4 7L9 12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              Back to Home
+            </Link>
+            <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--steel-6)]">
+              End of Handbook
             </div>
-            <h2 className="realm-page-title text-[clamp(1.8rem,4vw,3rem)] font-bold text-[var(--silver-0)]">
-              Claim Your Kingdom
-            </h2>
-            <p className="realm-lore mx-auto max-w-md text-[15px] leading-relaxed text-[var(--silver-2)]">
-              Your GitHub history is already a fortress waiting to rise. Sign in
-              and let CommitCrown forge it into legend.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
-              <GitHubSignInButton initialError={null} />
-              <Link
-                href="/"
-                className="realm-button realm-button-secondary border border-[var(--b1)] px-10 py-4 text-sm">
-                Back to Home
-              </Link>
-            </div>
-            <p className="text-[10px] tracking-[0.22em] uppercase text-[var(--silver-4)]">
-              Free forever · No credit card · Only commits
-            </p>
           </div>
 
         </article>
       </div>
+
+      {/* ── Page footer ── */}
+      <footer className="border-t border-[var(--b0)] bg-[var(--abyss)] px-8 py-6">
+        <div className="mx-auto max-w-6xl flex items-center justify-between">
+          <div className="flex items-center gap-3 font-[var(--font-head)] text-[11px] text-[var(--silver-4)]">
+            <div className="realm-orb h-5 w-5 border border-[var(--b1)]" />
+            CommitCrown
+          </div>
+          <p className="text-[9px] tracking-[0.14em] uppercase text-[var(--steel-6)]">
+            The Ruler&apos;s Handbook · 13 Steps
+          </p>
+          <Link
+            href="/"
+            className="text-[10px] tracking-[0.18em] uppercase text-[var(--silver-4)] hover:text-[var(--silver-2)] transition-colors font-[var(--font-head)]">
+            Back to Home
+          </Link>
+        </div>
+      </footer>
     </div>
   );
 }
