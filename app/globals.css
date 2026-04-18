@@ -681,4 +681,329 @@ h4 {
   overflow: hidden;
 }
 
-/* (features section uses inline Tailwind — see page.tsx) */
+/* ─── Scroll-reveal: card entry animation ─── */
+
+@keyframes card-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Hidden by default; JS adds .is-visible to the grid wrapper */
+.reveal-card {
+  opacity: 0;
+  position: relative;
+  /* Absorbs transition-colors; we own all transitions here */
+  transition: background-color 0.35s ease, box-shadow 0.35s ease;
+}
+
+/* Respect reduced-motion preference — skip animation, just show */
+@media (prefers-reduced-motion: reduce) {
+  .reveal-card {
+    opacity: 1 !important;
+    animation: none !important;
+  }
+}
+
+/* Play card-reveal when parent grid becomes visible */
+.is-visible .reveal-card {
+  animation: card-reveal 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Stagger: each successive card delays by 80 ms */
+.is-visible .reveal-card:nth-child(1) { animation-delay:   0ms; }
+.is-visible .reveal-card:nth-child(2) { animation-delay:  80ms; }
+.is-visible .reveal-card:nth-child(3) { animation-delay: 160ms; }
+.is-visible .reveal-card:nth-child(4) { animation-delay: 240ms; }
+.is-visible .reveal-card:nth-child(5) { animation-delay: 320ms; }
+.is-visible .reveal-card:nth-child(6) { animation-delay: 400ms; }
+
+/* ─── Hover: inset ember glow ─── */
+.reveal-card:hover {
+  box-shadow:
+    inset 0 0 0 1px rgba(200, 88, 26, 0.14),
+    inset 0 0 52px rgba(200, 88, 26, 0.045),
+    0 18px 56px rgba(0, 0, 0, 0.32);
+}
+
+/* ─── Hover: top ember line slides in from left ─── */
+.reveal-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    var(--ember-hi)  0%,
+    var(--ember)     55%,
+    transparent     100%
+  );
+  transition: width 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.reveal-card:hover::before {
+  width: 100%;
+}
+
+/* ─── Hover: ghost number drifts up ─── */
+.card-ghost {
+  transition:
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    color 0.35s ease;
+}
+
+.reveal-card:hover .card-ghost {
+  transform: translateY(-10px);
+  color: var(--steel-4);
+}
+
+/* ─── Hover: icon scales ─── */
+.card-icon {
+  display: block;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reveal-card:hover .card-icon {
+  transform: scale(1.15);
+}
+
+/* ─── Hover: ember label brightens ─── */
+.card-label {
+  transition: color 0.3s ease;
+}
+
+.reveal-card:hover .card-label {
+  color: var(--ember-hi);
+}
+
+/* ═══════════════════════════════════════════════
+   TUTORIAL PAGE
+   ═══════════════════════════════════════════════ */
+
+/* ─── Step section ─── */
+.tut-step {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ─── Step number badge ─── */
+.tut-step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid var(--ember-lo);
+  background: rgba(200, 88, 26, 0.08);
+  font-family: var(--font-head);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  color: var(--ember);
+  flex-shrink: 0;
+}
+
+/* ─── Step headings ─── */
+.tut-h2 {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 3.5vw, 2.1rem);
+  font-weight: 700;
+  color: var(--silver-0);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+
+/* ─── Body text ─── */
+.tut-lead {
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: var(--silver-1);
+}
+
+.tut-body {
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  line-height: 1.75;
+  color: var(--silver-2);
+}
+
+/* ─── Inline code ─── */
+.tut-code {
+  font-family: var(--font-geist-mono);
+  font-size: 0.8em;
+  background: rgba(100, 130, 160, 0.1);
+  border: 1px solid var(--b1);
+  padding: 0.1em 0.4em;
+  color: var(--plate-gleam);
+}
+
+/* ─── Lists ─── */
+.tut-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding-left: 0;
+  list-style: none;
+}
+
+.tut-list li {
+  display: flex;
+  gap: 0.875rem;
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: var(--silver-2);
+  padding-left: 1rem;
+  position: relative;
+}
+
+.tut-list li::before {
+  content: "▸";
+  position: absolute;
+  left: 0;
+  color: var(--ember);
+  flex-shrink: 0;
+}
+
+/* ─── Formula block ─── */
+.tut-formula {
+  font-family: var(--font-head);
+  font-size: 0.9375rem;
+  letter-spacing: 0.06em;
+  color: var(--silver-0);
+  border: 1px solid var(--ember-lo);
+  background: rgba(200, 88, 26, 0.05);
+  padding: 1rem 1.5rem;
+  text-align: center;
+}
+
+/* ─── Callout boxes ─── */
+.tut-tip,
+.tut-note,
+.tut-warning {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem 1.25rem;
+  font-size: 0.875rem;
+  line-height: 1.65;
+  border-left: 2px solid;
+}
+
+.tut-tip {
+  background: rgba(100, 130, 160, 0.06);
+  border-color: var(--plate-hi);
+  color: var(--silver-2);
+}
+
+.tut-note {
+  background: rgba(100, 130, 160, 0.05);
+  border-color: var(--steel-5);
+  color: var(--silver-3);
+}
+
+.tut-warning {
+  background: rgba(200, 88, 26, 0.06);
+  border-color: var(--ember);
+  color: var(--silver-2);
+}
+
+.tut-tip-label,
+.tut-note-label,
+.tut-warning-label {
+  font-family: var(--font-head);
+  font-size: 0.625rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.tut-tip-label    { color: var(--plate-hi); }
+.tut-note-label   { color: var(--steel-6);  }
+.tut-warning-label{ color: var(--ember);    }
+
+/* ─── Tables ─── */
+.tut-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--b1);
+}
+
+.tut-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.tut-table th {
+  background: var(--steel-2);
+  color: var(--silver-3);
+  font-family: var(--font-head);
+  font-size: 0.625rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 0.625rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--b1);
+}
+
+.tut-table td {
+  padding: 0.625rem 1rem;
+  color: var(--silver-2);
+  border-bottom: 1px solid var(--b0);
+}
+
+.tut-table tr:last-child td {
+  border-bottom: none;
+}
+
+.tut-table tr:hover td {
+  background: rgba(100, 130, 160, 0.04);
+}
+
+/* ─── Game mockup chrome ─── */
+.tut-mock {
+  border: 1px solid var(--b1);
+  background: var(--steel-1);
+  overflow: hidden;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.48), 0 0 0 1px var(--b0);
+}
+
+.tut-mock-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--steel-2);
+  border-bottom: 1px solid var(--b0);
+}
+
+.tut-mock-dot {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.tut-mock-url {
+  margin-left: 0.5rem;
+  font-family: var(--font-geist-mono);
+  font-size: 0.625rem;
+  color: var(--silver-4);
+  letter-spacing: 0.04em;
+  flex: 1;
+  text-align: center;
+}
+
+.tut-mock-body {
+  /* inherits from parent, children set their own padding */
+}

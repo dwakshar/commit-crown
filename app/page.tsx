@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { GitHubSignInButton } from "@/src/components/auth/GitHubSignInButton";
 import { HeroCanvas } from "@/src/components/ui/HeroCanvas";
+import { RevealGrid } from "@/src/components/ui/RevealGrid";
 import { createClient } from "@/utils/supabase/server";
 
 const MARQUEE_ITEMS = [
@@ -314,6 +315,11 @@ export default async function Home({
                 {link.label}
               </a>
             ))}
+            <Link
+              href="/tutorial"
+              className="text-[11px] tracking-[0.2em] uppercase text-[var(--ember)] hover:text-[var(--ember-hi)] transition-colors">
+              Tutorial
+            </Link>
           </div>
           <a
             href="#enlist"
@@ -433,17 +439,17 @@ export default async function Home({
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-px bg-[var(--b0)] border border-[var(--b1)] overflow-hidden">
+          <RevealGrid className="grid md:grid-cols-3 gap-px bg-[var(--b0)] border border-[var(--b1)] overflow-hidden">
             {STEPS.map((step) => (
               <div
                 key={step.num}
-                className="relative bg-[var(--steel-1)] p-10 xl:p-12 group hover:bg-[var(--steel-2)] transition-colors overflow-hidden">
+                className="reveal-card relative bg-[var(--steel-1)] p-10 xl:p-12 group hover:bg-[var(--steel-2)] overflow-hidden">
                 {/* Ghost number */}
-                <div className="absolute top-4 right-6 font-[var(--font-display)] text-[6rem] leading-none text-[var(--steel-3)] select-none pointer-events-none">
+                <div className="card-ghost absolute top-4 right-6 font-[var(--font-display)] text-[6rem] leading-none text-[var(--steel-3)] select-none pointer-events-none">
                   {step.num}
                 </div>
-                <div className="text-3xl mb-5">{step.icon}</div>
-                <div className="font-[var(--font-head)] text-[10px] tracking-[0.22em] uppercase text-[var(--ember)] mb-3">
+                <div className="card-icon text-3xl mb-5">{step.icon}</div>
+                <div className="card-label font-[var(--font-head)] text-[10px] tracking-[0.22em] uppercase text-[var(--ember)] mb-3">
                   Step {step.num} — {step.tag}
                 </div>
                 <h3 className="font-[var(--font-head)] text-[1.15rem] text-[var(--silver-0)] mb-4 leading-snug">
@@ -457,7 +463,7 @@ export default async function Home({
                 </div>
               </div>
             ))}
-          </div>
+          </RevealGrid>
         </div>
       </section>
 
@@ -626,17 +632,17 @@ export default async function Home({
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-px bg-[var(--b0)] border border-[var(--b1)] overflow-hidden">
+          <RevealGrid className="grid md:grid-cols-2 xl:grid-cols-3 gap-px bg-[var(--b0)] border border-[var(--b1)] overflow-hidden">
             {FEATURES.map((feat) => (
               <div
                 key={feat.title}
-                className="relative bg-[var(--steel-1)] p-10 xl:p-12 group hover:bg-[var(--steel-2)] transition-colors overflow-hidden">
+                className="reveal-card relative bg-[var(--steel-1)] p-10 xl:p-12 group hover:bg-[var(--steel-2)] overflow-hidden">
                 {/* Ghost number */}
-                <div className="absolute top-4 right-6 font-[var(--font-display)] text-[6rem] leading-none text-[var(--steel-3)] select-none pointer-events-none">
+                <div className="card-ghost absolute top-4 right-6 font-[var(--font-display)] text-[6rem] leading-none text-[var(--steel-3)] select-none pointer-events-none">
                   {feat.num}
                 </div>
-                <div className="text-3xl mb-5">{feat.icon}</div>
-                <div className="font-[var(--font-head)] text-[10px] tracking-[0.22em] uppercase text-[var(--ember)] mb-3">
+                <div className="card-icon text-3xl mb-5">{feat.icon}</div>
+                <div className="card-label font-[var(--font-head)] text-[10px] tracking-[0.22em] uppercase text-[var(--ember)] mb-3">
                   {feat.num} — {feat.tag}
                 </div>
                 <h3 className="font-[var(--font-head)] text-[1.15rem] text-[var(--silver-0)] mb-4 leading-snug">
@@ -650,8 +656,90 @@ export default async function Home({
                 </div>
               </div>
             ))}
-          </div>
+          </RevealGrid>
 
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════
+          TUTORIAL TEASER
+          ═══════════════════════════════════════════════ */}
+      <section className="relative px-6 py-24 border-b border-[var(--b0)] overflow-hidden">
+        <div className="absolute inset-0 bg-[linear-gradient(135deg,var(--steel-1)_0%,var(--abyss)_60%)]" />
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--ember-lo)] to-transparent" />
+        <div className="relative mx-auto max-w-6xl">
+          <div className="grid lg:grid-cols-[1fr_auto] gap-12 items-center">
+
+            {/* Left: text */}
+            <div>
+              <div className="inline-flex items-center gap-4 mb-6">
+                <div className="h-px w-8 bg-[var(--ember-lo)]" />
+                <span className="realm-label text-[var(--ember)]">Ruler&apos;s Handbook</span>
+              </div>
+              <h2 className="realm-page-title text-[clamp(1.8rem,4vw,3rem)] font-bold text-[var(--silver-0)] mb-5 leading-tight">
+                New to CommitCrown?<br />
+                <span className="text-[var(--ember)]">Start Here.</span>
+              </h2>
+              <p className="realm-lore max-w-lg text-[15px] leading-relaxed text-[var(--silver-2)] mb-8">
+                The Ruler&apos;s Handbook walks you through every mechanic — from
+                signing in to conquering the leaderboard — with step-by-step
+                explanations and live game-UI previews for every concept.
+              </p>
+              <div className="flex flex-wrap gap-6 mb-10">
+                {[
+                  { num: "13", label: "Game mechanics" },
+                  { num: "12",  label: "Min read" },
+                  { num: "∞",  label: "All skill levels" },
+                ].map((stat) => (
+                  <div key={stat.label} className="border border-[var(--b1)] px-5 py-3 text-center">
+                    <div className="font-[var(--font-display)] text-[1.6rem] text-[var(--ember)] leading-none">{stat.num}</div>
+                    <div className="text-[9px] tracking-[0.18em] uppercase text-[var(--silver-4)] mt-1">{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+              <Link
+                href="/tutorial"
+                className="realm-button realm-button-primary px-10 py-4 text-sm inline-flex items-center gap-3">
+                Open the Handbook
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M3 7h8M7 3l4 4-4 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </Link>
+            </div>
+
+            {/* Right: step preview cards */}
+            <div className="hidden lg:flex flex-col gap-px w-[280px] border border-[var(--b1)] overflow-hidden">
+              {[
+                { n: "01", title: "Sign In With GitHub",  icon: "⚡" },
+                { n: "02", title: "Kingdom Creation",     icon: "🏰" },
+                { n: "03", title: "Dashboard Overview",   icon: "🗺️" },
+                { n: "04", title: "Resources Explained",  icon: "⚒️" },
+                { n: "05", title: "Placing Buildings",    icon: "🔨" },
+              ].map((step, i) => (
+                <Link
+                  key={step.n}
+                  href={`/tutorial#step-0${i + 1}`}
+                  className="flex items-center gap-4 px-4 py-3.5 bg-[var(--steel-1)] hover:bg-[var(--steel-2)] transition-colors group">
+                  <span className="font-[var(--font-head)] text-[9px] tracking-[0.16em] text-[var(--steel-6)] w-5 flex-shrink-0 group-hover:text-[var(--ember)] transition-colors">
+                    {step.n}
+                  </span>
+                  <span className="text-base flex-shrink-0">{step.icon}</span>
+                  <span className="text-[11px] text-[var(--silver-3)] group-hover:text-[var(--silver-1)] transition-colors leading-snug">
+                    {step.title}
+                  </span>
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                    <path d="M2 5h6M5 2l3 3-3 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--ember)]" />
+                  </svg>
+                </Link>
+              ))}
+              <Link
+                href="/tutorial"
+                className="flex items-center justify-center gap-2 px-4 py-3 bg-[var(--steel-2)] hover:bg-[var(--steel-3)] transition-colors text-[10px] tracking-[0.18em] uppercase text-[var(--ember)] hover:text-[var(--ember-hi)]">
+                View all 13 steps →
+              </Link>
+            </div>
+
+          </div>
         </div>
       </section>
 
@@ -788,16 +876,26 @@ export default async function Home({
           </p>
           <div className="flex gap-6">
             {[
-              { label: "Features", href: "#features" },
+              { label: "Features",    href: "#features"    },
               { label: "Leaderboard", href: "#leaderboard" },
-              { label: "Sign In", href: "#enlist" },
+              { label: "Tutorial",    href: "/tutorial"    },
+              { label: "Sign In",     href: "#enlist"      },
             ].map((link) => (
+              link.href.startsWith('/') ? (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="text-[10px] tracking-[0.16em] uppercase text-[var(--silver-4)] hover:text-[var(--silver-2)] transition-colors">
+                  {link.label}
+                </Link>
+              ) : (
               <a
                 key={link.href}
                 href={link.href}
                 className="text-[10px] tracking-[0.16em] uppercase text-[var(--silver-4)] hover:text-[var(--silver-2)] transition-colors">
                 {link.label}
               </a>
+              )
             ))}
           </div>
         </div>
