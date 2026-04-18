@@ -110,7 +110,6 @@ export class KingdomScene extends Phaser.Scene {
 
     this.generateTerrainData();
     this.drawWaterLayer();
-    this.drawWaterSlots();
     this.drawTerrain();
     this.renderWorld(kingdomData);
     this.renderLighting();
@@ -761,16 +760,18 @@ export class KingdomScene extends Phaser.Scene {
     const cy = worldBounds.centerY;
 
     // Board diamond half-extents: halfW=736, halfH=368 (for a 24×24 iso grid).
-    // All offsets satisfy |dx/736| + |dy/368| > 1 (outside the board) while
-    // staying inside the water ring (|dx/1196| + |dy/598| < 1).
+    // The 4 slots are positioned just outside each diagonal edge of the board,
+    // in the visible water ring. Each zone sits perpendicular to its board edge:
+    //   |dx/736| + |dy/368| > 1  →  outside board  ✓
+    //   |dx/1196| + |dy/598| < 1  →  inside water  ✓
     //
-    // Slot 0 — Royal Flagship  (large, left side)
-    // Slots 1-3 — smaller vessels (top, right, bottom)
+    // Slot 0 — Royal Flagship (NW edge zone, largest)
+    // Slots 1-3 — smaller vessels (NE, SW, SE edge zones)
     return [
-      { index: 0, x: cx - 850, y: cy,        w: 200, h: 60 },
-      { index: 1, x: cx,       y: cy - 450,  w: 90,  h: 40 },
-      { index: 2, x: cx + 850, y: cy,        w: 90,  h: 40 },
-      { index: 3, x: cx,       y: cy + 450,  w: 90,  h: 40 },
+      { index: 0, x: cx - 430, y: cy - 280, w: 300, h: 120 },
+      { index: 1, x: cx + 430, y: cy - 280, w: 240, h: 100 },
+      { index: 2, x: cx - 430, y: cy + 280, w: 240, h: 100 },
+      { index: 3, x: cx + 430, y: cy + 280, w: 240, h: 100 },
     ];
   }
 
@@ -792,47 +793,44 @@ export class KingdomScene extends Phaser.Scene {
       validIndices.includes(s.index)
     );
 
-    let nearest: WaterSlot | null = null;
-    let nearestDistance = Infinity;
-
+    // Highlight when cursor is inside the zone rectangle (with a margin).
+    // This mirrors how board tiles highlight on hover — no arbitrary distance.
+    const margin = 28;
     for (const slot of candidates) {
-      const distance = Phaser.Math.Distance.Between(
-        worldX,
-        worldY,
-        slot.x,
-        slot.y
-      );
-      if (distance < nearestDistance) {
-        nearest = slot;
-        nearestDistance = distance;
+      if (
+        worldX >= slot.x - slot.w / 2 - margin &&
+        worldX <= slot.x + slot.w / 2 + margin &&
+        worldY >= slot.y - slot.h / 2 - margin &&
+        worldY <= slot.y + slot.h / 2 + margin
+      ) {
+        return slot;
       }
     }
-
-    // Snap threshold: half the largest dimension of the nearest slot + margin.
-    const threshold = nearest
-      ? Math.max(nearest.w, nearest.h) * 0.75 + 20
-      : 0;
-    return nearestDistance <= threshold ? nearest : null;
+    return null;
   }
 
-  private drawWaterSlots(): void {
+  /**
+   * Draw subtle zone outlines for valid water slots when the player is in water
+   * build mode. Pass null (or a non-water type) to hide all slot indicators.
+   * Never called outside of build-mode entry/exit — slots are invisible at rest,
+   * exactly like board tile highlights.
+   */
+  private drawWaterSlots(buildType: BuildingData["type"] | null = null): void {
     this.waterSlotLayer?.destroy();
+    this.waterSlotLayer = undefined;
+
+    if (!buildType || !isWaterBuildingType(buildType)) return;
+
     const graphics = this.add.graphics();
-    const kingdomData = this.getKingdomData();
-    const occupied = new Set(
-      kingdomData.buildings
-        .filter((building) => isWaterBuildingType(building.type))
-        .map((building) => decodeWaterSlotPosition(building.x, building.y))
-        .filter((slot): slot is number => slot !== null)
-    );
+    const validIndices = getValidWaterSlotsForType(buildType);
 
     for (const slot of this.getWaterSlots()) {
-      const color = occupied.has(slot.index) ? 0x58738a : 0x9edff3;
-      const alpha = occupied.has(slot.index) ? 0.18 : 0.28;
-      graphics.fillStyle(color, alpha);
-      graphics.fillRect(slot.x - slot.w / 2, slot.y - slot.h / 2, slot.w, slot.h);
-      graphics.lineStyle(2, color, occupied.has(slot.index) ? 0.22 : 0.4);
+      if (!validIndices.includes(slot.index)) continue;
+      // Subtle dashed-style outline — same visual language as the board tile highlights
+      graphics.lineStyle(1.5, 0x9edff3, 0.4);
       graphics.strokeRect(slot.x - slot.w / 2, slot.y - slot.h / 2, slot.w, slot.h);
+      graphics.fillStyle(0x9edff3, 0.08);
+      graphics.fillRect(slot.x - slot.w / 2, slot.y - slot.h / 2, slot.w, slot.h);
     }
 
     graphics.setDepth(-140);
@@ -1149,7 +1147,6 @@ export class KingdomScene extends Phaser.Scene {
     if (newKey !== this.occupiedKey) {
       this.renderDecor(kingdomData);
     }
-    this.drawWaterSlots();
     this.renderBuildings(kingdomData);
   }
 
@@ -1175,7 +1172,7 @@ export class KingdomScene extends Phaser.Scene {
     this.waterLayer = undefined;
     this.waterSlotLayer = undefined;
     this.drawWaterLayer();
-    this.drawWaterSlots();
+    this.drawWaterSlots(this.buildModeType);
     this.drawTerrain();
     this.renderWorld(this.getKingdomData());
     this.renderLighting();
@@ -1214,6 +1211,9 @@ export class KingdomScene extends Phaser.Scene {
   private handleBuildModeChanged(buildModeType: BuildingData["type"] | null) {
     this.buildModeType = buildModeType;
     this.placementMarker?.setVisible(false);
+    // Show zone outlines only when placing a water building, like how the board
+    // shows tile highlights only during land build mode.
+    this.drawWaterSlots(buildModeType);
   }
 
   private handlePlacementPointerMove(pointer: import("phaser").Input.Pointer) {
@@ -1337,12 +1337,10 @@ export class KingdomScene extends Phaser.Scene {
     );
   }
 
-  private isWaterSlotAvailable(slotIndex: number) {
-    return !this.getKingdomData().buildings.some(
-      (building) =>
-        !building.isPlaceholder &&
-        isWaterBuildingType(building.type) &&
-        decodeWaterSlotPosition(building.x, building.y) === slotIndex
-    );
+  private isWaterSlotAvailable(_slotIndex: number) {
+    // Water slots have no occupancy limit — multiple vessels can share a zone,
+    // matching the board's behaviour where tiles are only blocked by the same
+    // building occupying the exact encoded position in the DB.
+    return true;
   }
 }

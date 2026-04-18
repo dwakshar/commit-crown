@@ -129,9 +129,9 @@ export function DragonBannerModal({ item, onClose }: BannerModalProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ itemId: item.id }),
       });
-      const data = (await res.json()) as { error?: string };
+      const data = (await res.json()) as { error?: string; equipped?: boolean };
       if (!res.ok) throw new Error(data.error ?? "Failed to equip");
-      setEquipped(true);
+      setEquipped(data.equipped ?? true);
       addNotification({
         id: `dragon-banner-equip-${Date.now()}`,
         user_id: "local",
