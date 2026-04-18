@@ -809,7 +809,20 @@ export default async function Home({
           FINAL CTA
           ═══════════════════════════════════════════════ */}
       <section className="relative px-6 py-36 overflow-hidden border-b border-[var(--b0)]">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_80%_at_50%_50%,rgba(200,88,26,0.07)_0%,transparent_70%),linear-gradient(180deg,var(--abyss)_0%,var(--steel-1)_50%,var(--abyss)_100%)]" />
+
+        {/* ── Layer 1: Game screenshot background ── */}
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: "url('/kingdom-bg.jpg')" }}
+        />
+
+        {/* ── Layer 2: Dark overlay — top heavy so text reads cleanly ── */}
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,4,6,0.82)_0%,rgba(3,4,6,0.70)_50%,rgba(3,4,6,0.88)_100%)]" />
+
+        {/* ── Layer 3: Ember vignette from center ── */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_70%_at_50%_50%,rgba(200,88,26,0.06)_0%,transparent_65%)]" />
+
+        {/* ── Edge rules ── */}
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--ember-lo)] to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--steel-6)] to-transparent" />
 
@@ -829,8 +842,24 @@ export default async function Home({
             One sign-in is all it takes to raise your walls.
           </p>
 
-          <div className="flex flex-col items-center gap-5">
-            <GitHubSignInButton initialError={authErrorMessage} />
+          <div className="flex flex-col items-center gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 items-center">
+              <GitHubSignInButton initialError={authErrorMessage} />
+              {/* Star on GitHub */}
+              <a
+                href="https://github.com/dwakshar/commit-crown"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="realm-button realm-button-secondary border border-[var(--b1)] px-8 py-4 text-sm inline-flex items-center gap-2.5 hover:border-[var(--silver-4)] transition-colors">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="opacity-70">
+                  <path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.387-1.333-1.756-1.333-1.756-1.09-.745.083-.73.083-.73 1.205.085 1.838 1.236 1.838 1.236 1.07 1.835 2.807 1.305 3.492.998.108-.776.42-1.305.763-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12" />
+                </svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[var(--ember)]">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+                Star on GitHub
+              </a>
+            </div>
             <p className="text-[10px] tracking-[0.22em] uppercase text-[var(--silver-4)]">
               Free forever · No credit card · Only commits
             </p>
