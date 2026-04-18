@@ -12,7 +12,10 @@
       "Bash(npx tsc:*)",
       "Bash(npx next:*)",
       "Bash(grep -E \"\\(Error|error|^\\\\s+○|^\\\\s+ƒ\\\\s+/$\\)\")",
-      "Bash(grep -v \"^$\")"
+      "Bash(grep -v \"^$\")",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)",
+      "Bash(git push:*)"
     ]
   }
 }
