@@ -608,78 +608,50 @@ export default async function Home({
       {/* ═══════════════════════════════════════════════
           FEATURES
           ═══════════════════════════════════════════════ */}
-      <section id="features" className="feat-section px-6 pt-24 pb-28 bg-[var(--abyss)] border-b border-[var(--b0)]">
+      <section id="features" className="px-6 py-28 bg-[var(--abyss)] border-b border-[var(--b0)]">
         <div className="mx-auto max-w-6xl">
 
-          {/* ── Section header ── */}
-          <div className="mb-16">
-            {/* Top rule with ember lead */}
-            <div className="flex items-center gap-0 mb-10">
-              <div className="h-px w-8 bg-[var(--ember)]" />
-              <div className="h-px flex-1 bg-gradient-to-r from-[var(--b2)] to-transparent" />
+          <div className="text-center mb-20">
+            <div className="inline-flex items-center gap-5 mb-5">
+              <div className="h-px w-10 bg-gradient-to-r from-transparent via-[var(--ember-lo)] to-transparent" />
+              <span className="realm-label text-[var(--silver-3)]">The Pillars of the Realm</span>
+              <div className="h-px w-10 bg-gradient-to-r from-transparent via-[var(--ember-lo)] to-transparent" />
             </div>
-
-            <div className="flex flex-col lg:flex-row lg:items-end gap-8 lg:gap-20">
-              {/* Left: large count + label */}
-              <div className="flex-shrink-0 select-none">
-                <div
-                  className="font-[var(--font-display)] leading-none text-[var(--steel-4)]"
-                  style={{ fontSize: 'clamp(4rem, 8vw, 6.5rem)' }}
-                  aria-hidden>
-                  06
-                </div>
-                <div className="realm-label text-[var(--ember)] mt-1 tracking-[0.3em]">
-                  Pillars of the Realm
-                </div>
-              </div>
-
-              {/* Right: heading + subtitle */}
-              <div className="pb-1">
-                <h2 className="realm-page-title font-bold text-[var(--silver-0)]"
-                  style={{ fontSize: 'clamp(2rem,4.5vw,3.4rem)' }}>
-                  How The Kingdom<br className="hidden sm:block" /> Is Forged
-                </h2>
-                <p className="realm-lore mt-4 max-w-lg text-[15px] leading-relaxed text-[var(--silver-2)]">
-                  From raw commits to castle spires — your craft is the only
-                  currency that matters in this realm.
-                </p>
-              </div>
-            </div>
-
-            {/* Bottom rule */}
-            <div className="h-px bg-gradient-to-r from-transparent via-[var(--b1)] to-transparent mt-10" />
+            <h2 className="realm-page-title text-[clamp(2rem,5vw,3.4rem)] font-bold text-[var(--silver-0)]">
+              How The Kingdom Is Forged
+            </h2>
+            <p className="realm-lore mx-auto mt-5 max-w-lg text-base leading-relaxed text-[var(--silver-2)]">
+              From raw commits to castle spires — your craft is the only
+              currency that matters in this realm.
+            </p>
           </div>
 
-          {/* ── Feature cards grid ── */}
-          <div className="features-grid">
+          <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-px bg-[var(--b0)] border border-[var(--b1)] overflow-hidden">
             {FEATURES.map((feat) => (
-              <div key={feat.title} className="feat-card group">
-
-                {/* Ghost number — decorative, bottom-right */}
-                <div className="feat-ghost-num" aria-hidden>{feat.num}</div>
-
-                {/* Number label */}
-                <span className="feat-num">{feat.num}</span>
-
-                {/* Icon box */}
-                <div className="feat-icon-box">
-                  <span aria-hidden>{feat.icon}</span>
+              <div
+                key={feat.title}
+                className="relative bg-[var(--steel-1)] p-10 xl:p-12 group hover:bg-[var(--steel-2)] transition-colors overflow-hidden">
+                {/* Ghost number */}
+                <div className="absolute top-4 right-6 font-[var(--font-display)] text-[6rem] leading-none text-[var(--steel-3)] select-none pointer-events-none">
+                  {feat.num}
                 </div>
-
-                {/* Title */}
-                <h3 className="feat-title">{feat.title}</h3>
-
-                {/* Animated rule */}
-                <div className="feat-rule" />
-
-                {/* Description */}
-                <p className="feat-desc">{feat.desc}</p>
-
-                {/* Category tag */}
-                <span className="feat-tag">{feat.tag}</span>
+                <div className="text-3xl mb-5">{feat.icon}</div>
+                <div className="font-[var(--font-head)] text-[10px] tracking-[0.22em] uppercase text-[var(--ember)] mb-3">
+                  {feat.num} — {feat.tag}
+                </div>
+                <h3 className="font-[var(--font-head)] text-[1.15rem] text-[var(--silver-0)] mb-4 leading-snug">
+                  {feat.title}
+                </h3>
+                <p className="text-[var(--silver-2)] leading-relaxed text-sm">
+                  {feat.desc}
+                </p>
+                <div className="mt-7 pt-5 border-t border-[var(--b0)] text-[10px] tracking-[0.18em] uppercase text-[var(--steel-6)]">
+                  {feat.tag}
+                </div>
               </div>
             ))}
           </div>
+
         </div>
       </section>
 
