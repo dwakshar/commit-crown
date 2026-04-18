@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { GitHubSignInButton } from "@/src/components/auth/GitHubSignInButton";
+import { HeroCanvas } from "@/src/components/ui/HeroCanvas";
 import { createClient } from "@/utils/supabase/server";
 
 const MARQUEE_ITEMS = [
@@ -135,19 +136,67 @@ export default async function Home({
       {/* ═══════════════════════════════════════════════
           HERO
           ═══════════════════════════════════════════════ */}
-      <section className="relative min-h-screen flex flex-col">
-        {/* Deep space background */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_90%_70%_at_50%_-10%,rgba(20,30,50,0.75)_0%,transparent_65%),radial-gradient(ellipse_60%_50%_at_20%_60%,rgba(8,12,20,0.85)_0%,transparent_60%),radial-gradient(ellipse_60%_50%_at_80%_60%,rgba(8,12,20,0.85)_0%,transparent_60%),linear-gradient(180deg,#030408_0%,#06080f_18%,#0a0e18_45%,#070a12_75%,#040507_100%)]" />
+      <section className="relative min-h-screen flex flex-col overflow-hidden">
 
-        <div className="absolute inset-0 pointer-events-none" id="stars" />
+        {/* ── Layer 1: Deep base gradient ── */}
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,#030408_0%,#05070e_22%,#080d17_52%,#060910_78%,#030406_100%)]" />
 
-        {/* Mist layers */}
-        <div className="absolute bottom-0 left-[-25%] right-[-25%] h-[48%] bg-[radial-gradient(ellipse_80%_100%_at_50%_100%,rgba(90,115,145,0.06)_0%,transparent_70%)] animate-[mist-drift_16s_ease-in-out_infinite_alternate]" />
-        <div className="absolute bottom-[8%] left-[-15%] right-[-15%] h-[30%] bg-[radial-gradient(ellipse_60%_100%_at_30%_100%,rgba(70,90,120,0.05)_0%,transparent_70%)] animate-[mist-drift_22s_ease-in-out_infinite_alternate-reverse]" />
-        <div className="absolute bottom-[20%] left-0 right-0 h-[20%] bg-[radial-gradient(ellipse_40%_100%_at_65%_100%,rgba(60,80,110,0.04)_0%,transparent_70%)] animate-[mist-drift_30s_ease-in-out_infinite_alternate]" />
+        {/* ── Layer 2: Dot grid (masked to center fade) ── */}
+        <div className="lp-dot-grid" />
 
-        {/* Mountain + Castle SVG */}
-        <div className="absolute bottom-0 left-0 right-0 h-[62%] pointer-events-none">
+        {/* ── Layer 3: Canvas star field ── */}
+        <HeroCanvas />
+
+        {/* ── Layer 4: Ambient ember orb (top center, breathing) ── */}
+        <div className="lp-orb-ember" />
+
+        {/* ── Layer 5: Cool steel orbs (left + right accents) ── */}
+        <div className="lp-orb-steel-l" />
+        <div className="lp-orb-steel-r" />
+
+        {/* ── Layer 6: Perspective grid (horizon converging lines) ── */}
+        <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 4 }}>
+          <svg
+            viewBox="0 0 1440 900"
+            preserveAspectRatio="xMidYMax slice"
+            xmlns="http://www.w3.org/2000/svg"
+            className="absolute inset-0 w-full h-full">
+            {/* Radiating lines from vanishing point (center top) */}
+            {[0, 160, 320, 480, 640, 720, 800, 960, 1120, 1280, 1440].map((bx, i) => (
+              <line
+                key={`r${i}`}
+                x1={720} y1={0}
+                x2={bx} y2={900}
+                stroke="rgba(100,130,160,0.04)"
+                strokeWidth="1"
+              />
+            ))}
+            {/* Horizontal depth lines — narrow near top, full-width at bottom */}
+            {[180, 320, 460, 580, 690, 780, 860].map((y, i) => {
+              const d = y / 900
+              const lx = +(720 - 720 * d).toFixed(1)
+              const rx = +(720 + 720 * d).toFixed(1)
+              const op = (d * 0.09).toFixed(3)
+              return (
+                <line
+                  key={`h${i}`}
+                  x1={lx} y1={y}
+                  x2={rx} y2={y}
+                  stroke={`rgba(100,130,160,${op})`}
+                  strokeWidth="1"
+                />
+              )
+            })}
+          </svg>
+        </div>
+
+        {/* ── Layer 7: Mist drift layers ── */}
+        <div className="absolute bottom-0 left-[-25%] right-[-25%] h-[48%] pointer-events-none bg-[radial-gradient(ellipse_80%_100%_at_50%_100%,rgba(90,115,145,0.06)_0%,transparent_70%)] animate-[mist-drift_16s_ease-in-out_infinite_alternate]" style={{ zIndex: 5 }} />
+        <div className="absolute bottom-[8%] left-[-15%] right-[-15%] h-[30%] pointer-events-none bg-[radial-gradient(ellipse_60%_100%_at_30%_100%,rgba(70,90,120,0.05)_0%,transparent_70%)] animate-[mist-drift_22s_ease-in-out_infinite_alternate-reverse]" style={{ zIndex: 5 }} />
+        <div className="absolute bottom-[20%] left-0 right-0 h-[20%] pointer-events-none bg-[radial-gradient(ellipse_40%_100%_at_65%_100%,rgba(60,80,110,0.04)_0%,transparent_70%)] animate-[mist-drift_30s_ease-in-out_infinite_alternate]" style={{ zIndex: 5 }} />
+
+        {/* ── Layer 8: Mountain + Castle SVG ── */}
+        <div className="absolute bottom-0 left-0 right-0 h-[62%] pointer-events-none" style={{ zIndex: 6 }}>
           <svg
             viewBox="0 0 1440 480"
             preserveAspectRatio="none"
@@ -169,42 +218,73 @@ export default async function Home({
             </defs>
             <polygon
               points="0,480 90,220 180,285 310,140 420,230 550,85 680,175 800,65 920,145 1050,100 1160,185 1290,140 1380,195 1440,170 1440,480"
-              fill="url(#mtn1)"
-              opacity="0.6"
-            />
+              fill="url(#mtn1)" opacity="0.6" />
             <polygon
               points="0,480 150,280 300,330 450,220 590,300 730,195 870,265 1020,200 1180,255 1340,215 1440,240 1440,480"
-              fill="url(#mtn2)"
-              opacity="0.85"
-            />
+              fill="url(#mtn2)" opacity="0.85" />
             <polygon
               points="0,480 200,350 420,390 620,320 820,375 1000,305 1200,360 1440,330 1440,480"
-              fill="url(#mtn3)"
-            />
+              fill="url(#mtn3)" />
+            {/* Castle body */}
             <rect x="590" y="370" width="260" height="20" fill="#040507" />
-            <rect x="600" y="365" width="240" height="8" fill="#06080c" />
+            <rect x="600" y="365" width="240" height="8"  fill="#06080c" />
             <rect x="605" y="300" width="230" height="70" fill="#050709" />
-            <rect x="590" y="255" width="56" height="115" fill="#060810" />
+            <rect x="590" y="255" width="56"  height="115" fill="#060810" />
             <polygon points="590,240 646,240 634,205 602,205" fill="#04060a" />
-            <rect x="794" y="255" width="56" height="115" fill="#060810" />
+            <rect x="794" y="255" width="56"  height="115" fill="#060810" />
             <polygon points="794,240 850,240 848,205 796,205" fill="#04060a" />
             <rect x="660" y="210" width="120" height="160" fill="#07090f" />
             <polygon points="660,202 780,202 770,160 670,160" fill="#05070c" />
-            <rect x="707" y="140" width="26" height="64" fill="#08090f" />
+            <rect x="707" y="140" width="26"  height="64"  fill="#08090f" />
             <polygon points="705,133 735,133 720,88" fill="#06080e" />
-            <rect x="698" y="326" width="44" height="44" fill="#030405" />
+            <rect x="698" y="326" width="44"  height="44"  fill="#030405" />
             <ellipse cx="720" cy="326" rx="22" ry="14" fill="#030405" />
-            <rect x="682" y="235" width="10" height="13" fill="#c85a1a" opacity="0.20" rx="1" />
-            <rect x="748" y="235" width="10" height="13" fill="#c85a1a" opacity="0.18" rx="1" />
-            <rect x="715" y="235" width="10" height="13" fill="#c85a1a" opacity="0.22" rx="1" />
-            <ellipse cx="720" cy="370" rx="80" ry="12" fill="#c85a1a" opacity="0.06" />
+            {/* Castle windows — ember-lit */}
+            <rect x="682" y="235" width="10" height="13" fill="#c85a1a" opacity="0.22" rx="1" />
+            <rect x="748" y="235" width="10" height="13" fill="#c85a1a" opacity="0.19" rx="1" />
+            <rect x="715" y="235" width="10" height="13" fill="#c85a1a" opacity="0.24" rx="1" />
+            <ellipse cx="720" cy="370" rx="80" ry="12" fill="#c85a1a" opacity="0.07" />
           </svg>
         </div>
 
-        <div className="absolute inset-0 pointer-events-none" id="embers" />
+        {/* ── Layer 9: Castle ember pool glow ── */}
+        <div className="lp-orb-castle" />
 
-        {/* Navigation */}
-        <nav className="relative z-20 flex items-center justify-between px-8 py-7">
+        {/* ── Layer 10: CSS ember particles rising from castle ── */}
+        <div className="absolute pointer-events-none" style={{ bottom: '30%', left: '50%', transform: 'translateX(-50%)', width: '180px', height: 0, zIndex: 7 }}>
+          {[
+            { left: '10%', dur: '3.2s', delay: '0s',    drift: '18px'  },
+            { left: '28%', dur: '4.0s', delay: '0.7s',  drift: '-14px' },
+            { left: '45%', dur: '3.6s', delay: '1.4s',  drift: '22px'  },
+            { left: '55%', dur: '4.4s', delay: '0.3s',  drift: '-20px' },
+            { left: '70%', dur: '3.0s', delay: '1.1s',  drift: '12px'  },
+            { left: '82%', dur: '4.8s', delay: '1.8s',  drift: '-16px' },
+            { left: '35%', dur: '3.8s', delay: '2.2s',  drift: '24px'  },
+            { left: '62%', dur: '3.4s', delay: '0.9s',  drift: '-10px' },
+          ].map((e, i) => (
+            <div
+              key={i}
+              className="absolute opacity-0 bg-[var(--ember)]"
+              style={{
+                left: e.left,
+                width: i % 3 === 0 ? '2px' : '1.5px',
+                height: i % 3 === 0 ? '2px' : '1.5px',
+                animationName: 'ember-rise',
+                animationDuration: e.dur,
+                animationDelay: e.delay,
+                animationIterationCount: 'infinite',
+                animationTimingFunction: 'ease-out',
+                '--ember-drift': e.drift,
+              } as React.CSSProperties}
+            />
+          ))}
+        </div>
+
+        {/* ── Layer 11: Edge vignette ── */}
+        <div className="lp-vignette" />
+
+        {/* ── Navigation ── */}
+        <nav className="relative flex items-center justify-between px-8 py-7" style={{ zIndex: 20 }}>
           <div className="flex items-center gap-3 font-[var(--font-head)] text-[15px] tracking-[0.05em] text-[var(--silver-0)]">
             <div className="realm-orb h-8 w-8 border border-[var(--b2)]" />
             CommitCrown
@@ -212,8 +292,8 @@ export default async function Home({
           <div className="hidden md:flex items-center gap-8">
             {[
               { label: "How It Works", href: "#how-it-works" },
-              { label: "Features", href: "#features" },
-              { label: "Leaderboard", href: "#leaderboard" },
+              { label: "Features",     href: "#features"     },
+              { label: "Leaderboard",  href: "#leaderboard"  },
             ].map((link) => (
               <a
                 key={link.href}
@@ -230,36 +310,32 @@ export default async function Home({
           </a>
         </nav>
 
-        {/* Hero content */}
-        <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 text-center pb-24">
-          {/* Badge */}
-          <div className="mb-8 inline-flex items-center gap-3 border border-[var(--b1)] bg-[rgba(22,28,40,0.72)] px-5 py-2">
+        {/* ── Hero content ── */}
+        <div className="relative flex-1 flex flex-col items-center justify-center px-6 text-center pb-24" style={{ zIndex: 10 }}>
+
+          <div className="lp-hero-badge mb-8 inline-flex items-center gap-3 border border-[var(--b1)] bg-[rgba(16,20,30,0.8)] px-5 py-2 backdrop-blur-[2px]">
             <span className="w-1.5 h-1.5 bg-[var(--ember)] inline-block animate-[pulse_2s_ease-in-out_infinite]" />
             <span className="text-[11px] tracking-[0.22em] uppercase text-[var(--silver-2)] font-[var(--font-head)]">
               GitHub → Kingdom → Legend
             </span>
           </div>
 
-          {/* Headline */}
-          <h1 className="realm-display text-[clamp(56px,10vw,108px)] font-bold leading-[0.92] tracking-[-0.02em] text-[var(--silver-0)]">
+          <h1 className="lp-hero-h1 realm-display text-[clamp(56px,10vw,108px)] font-bold leading-[0.92] tracking-[-0.02em] text-[var(--silver-0)]">
             Commit<span className="text-[var(--ember)]">Crown</span>
           </h1>
 
-          {/* Tagline */}
-          <div className="mt-6 flex items-center gap-5 text-[11px] uppercase tracking-[0.42em] text-[var(--plate-hi)]">
+          <div className="lp-hero-tagline mt-6 flex items-center gap-5 text-[11px] uppercase tracking-[0.42em] text-[var(--plate-hi)]">
             <div className="h-px w-14 bg-gradient-to-r from-transparent to-[var(--steel-6)]" />
             Your Code. Your Kingdom.
             <div className="h-px w-14 bg-gradient-to-l from-transparent to-[var(--steel-6)]" />
           </div>
 
-          {/* Body */}
-          <p className="realm-lore mt-7 max-w-xl text-[clamp(16px,2vw,19px)] leading-relaxed text-[var(--silver-2)]">
+          <p className="lp-hero-body realm-lore mt-7 max-w-xl text-[clamp(16px,2vw,19px)] leading-relaxed text-[var(--silver-2)]">
             Every commit lays stone. Every repository raises a tower. Your
             GitHub history builds a realm that breathes, battles, and endures.
           </p>
 
-          {/* CTAs */}
-          <div id="enlist" className="mt-10 flex flex-col sm:flex-row gap-4 items-center">
+          <div id="enlist" className="lp-hero-cta mt-10 flex flex-col sm:flex-row gap-4 items-center">
             <GitHubSignInButton initialError={authErrorMessage} />
             <Link
               href="#how-it-works"
@@ -268,24 +344,19 @@ export default async function Home({
             </Link>
           </div>
 
-          <p className="mt-5 text-xs tracking-[0.14em] uppercase text-[var(--silver-4)]">
+          <p className="lp-hero-sub mt-5 text-xs tracking-[0.14em] uppercase text-[var(--silver-4)]">
             Free forever · No credit card · Only commits
           </p>
         </div>
 
-        {/* Scroll indicator */}
+        {/* ── Scroll indicator ── */}
         <a
           href="#how-it-works"
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-[10px] uppercase tracking-[0.28em] text-[var(--silver-4)] hover:text-[var(--silver-2)] transition-colors z-20">
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-[10px] uppercase tracking-[0.28em] text-[var(--silver-4)] hover:text-[var(--silver-2)] transition-colors"
+          style={{ zIndex: 20 }}>
           SCROLL
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path
-              d="M3 5L8 11L13 5"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+            <path d="M3 5L8 11L13 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </a>
       </section>

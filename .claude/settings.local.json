@@ -11,7 +11,8 @@
       "Bash(npx supabase:*)",
       "Bash(npx tsc:*)",
       "Bash(npx next:*)",
-      "Bash(grep -E \"\\(Error|error|^\\\\s+○|^\\\\s+ƒ\\\\s+/$\\)\")"
+      "Bash(grep -E \"\\(Error|error|^\\\\s+○|^\\\\s+ƒ\\\\s+/$\\)\")",
+      "Bash(grep -v \"^$\")"
     ]
   }
 }

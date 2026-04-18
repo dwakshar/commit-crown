@@ -67,17 +67,13 @@ body {
   font-family: var(--font-body), Georgia, serif;
   line-height: 1.7;
   cursor: var(--cursor-realm);
-  background-image: radial-gradient(
-      ellipse at top,
-      rgba(24, 34, 52, 0.78) 0%,
-      transparent 54%
-    ),
-    radial-gradient(
-      ellipse at bottom right,
-      rgba(200, 88, 26, 0.06) 0%,
-      transparent 34%
-    ),
+  /* Page-wide dot grid + ambient gradients */
+  background-image:
+    radial-gradient(circle, rgba(100, 130, 160, 0.09) 1px, transparent 1px),
+    radial-gradient(ellipse at top, rgba(24, 34, 52, 0.82) 0%, transparent 54%),
+    radial-gradient(ellipse at bottom right, rgba(200, 88, 26, 0.05) 0%, transparent 34%),
     linear-gradient(180deg, var(--abyss) 0%, var(--steel-0) 48%, #080a10 100%);
+  background-size: 28px 28px, auto, auto, auto;
   min-height: 100vh;
 }
 
@@ -506,6 +502,155 @@ h4 {
 
 .advanced-cursor-layer.is-pressed .advanced-cursor-core {
   filter: brightness(0.92);
+}
+
+/* ─── Hero: ambient orb animations ─── */
+
+@keyframes orb-breathe {
+  0%, 100% {
+    opacity: 0.5;
+    transform: translateX(-50%) scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: translateX(-50%) scale(1.12);
+  }
+}
+
+@keyframes orb-float-l {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  40%       { transform: translate(28px, -22px) scale(1.06); }
+  70%       { transform: translate(-12px, 14px) scale(0.96); }
+}
+
+@keyframes orb-float-r {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  35%       { transform: translate(-20px, 18px) scale(1.04); }
+  65%       { transform: translate(14px, -10px) scale(0.97); }
+}
+
+/* ─── Hero: content entry animations ─── */
+
+@keyframes hero-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lp-hero-badge   { animation: hero-fade-up 0.65s cubic-bezier(0.22, 1, 0.36, 1) both 0.08s; }
+.lp-hero-h1      { animation: hero-fade-up 0.65s cubic-bezier(0.22, 1, 0.36, 1) both 0.22s; }
+.lp-hero-tagline { animation: hero-fade-up 0.65s cubic-bezier(0.22, 1, 0.36, 1) both 0.36s; }
+.lp-hero-body    { animation: hero-fade-up 0.65s cubic-bezier(0.22, 1, 0.36, 1) both 0.48s; }
+.lp-hero-cta     { animation: hero-fade-up 0.65s cubic-bezier(0.22, 1, 0.36, 1) both 0.60s; }
+.lp-hero-sub     { animation: hero-fade-up 0.65s cubic-bezier(0.22, 1, 0.36, 1) both 0.70s; }
+
+/* ─── Hero: background layers ─── */
+
+/* Dot grid — fades from center, invisible at edges */
+.lp-dot-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle, rgba(100, 130, 160, 0.13) 1px, transparent 1px);
+  background-size: 30px 30px;
+  mask-image: radial-gradient(ellipse 85% 70% at 50% 35%, black 25%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 85% 70% at 50% 35%, black 25%, transparent 100%);
+  z-index: 2;
+}
+
+/* Ember orb — large warm glow from top center, slowly breathing */
+.lp-orb-ember {
+  position: absolute;
+  width: min(800px, 100vw);
+  height: 560px;
+  top: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: radial-gradient(
+    ellipse at 50% 30%,
+    rgba(200, 88, 26, 0.18) 0%,
+    rgba(200, 88, 26, 0.07) 38%,
+    transparent 68%
+  );
+  filter: blur(56px);
+  pointer-events: none;
+  animation: orb-breathe 10s ease-in-out infinite;
+  z-index: 3;
+}
+
+/* Steel orb — cool left edge accent */
+.lp-orb-steel-l {
+  position: absolute;
+  width: 520px;
+  height: 420px;
+  top: 20%;
+  left: -80px;
+  background: radial-gradient(
+    ellipse at 40% 50%,
+    rgba(50, 64, 78, 0.22) 0%,
+    rgba(30, 38, 54, 0.08) 52%,
+    transparent 72%
+  );
+  filter: blur(72px);
+  pointer-events: none;
+  animation: orb-float-l 18s ease-in-out infinite;
+  z-index: 3;
+}
+
+/* Steel orb — cool right edge accent */
+.lp-orb-steel-r {
+  position: absolute;
+  width: 400px;
+  height: 340px;
+  top: 30%;
+  right: -60px;
+  background: radial-gradient(
+    ellipse at 60% 50%,
+    rgba(39, 48, 64, 0.2) 0%,
+    transparent 68%
+  );
+  filter: blur(64px);
+  pointer-events: none;
+  animation: orb-float-r 22s ease-in-out infinite;
+  z-index: 3;
+}
+
+/* Castle ember pool — warm glow that emanates up from the castle floor */
+.lp-orb-castle {
+  position: absolute;
+  width: 360px;
+  height: 120px;
+  bottom: 28%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: radial-gradient(
+    ellipse at 50% 100%,
+    rgba(200, 88, 26, 0.12) 0%,
+    rgba(200, 88, 26, 0.04) 55%,
+    transparent 75%
+  );
+  filter: blur(28px);
+  pointer-events: none;
+  animation: orb-breathe 7s ease-in-out infinite 1.5s;
+  z-index: 6;
+}
+
+/* Edge vignette — darkens all four edges for focus */
+.lp-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 110% 100% at 50% 50%,
+    transparent 38%,
+    rgba(3, 4, 6, 0.55) 100%
+  );
+  z-index: 7;
 }
 
 /* ─── Landing page: marquee ticker ─── */
