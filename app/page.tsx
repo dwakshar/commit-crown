@@ -49,32 +49,44 @@ const STEPS = [
 
 const FEATURES = [
   {
+    num: "01",
     icon: "⚒️",
+    tag: "GitHub Integration",
     title: "GitHub Forges Your Keep",
     desc: "Each commit adds stone. Each repository raises a new district. Every streak strengthens your walls against the siege of time.",
   },
   {
+    num: "02",
     icon: "⚔️",
+    tag: "PvP Combat",
     title: "Wage War on Rivals",
     desc: "Challenge kingdoms with equivalent code output. The battle lasts seven days. Only consistent commits determine the victor.",
   },
   {
+    num: "03",
     icon: "🏰",
+    tag: "Kingdom Builder",
     title: "Build Without Limit",
     desc: "Forge towers, granaries, training grounds, and observatories. Each structure grants prestige bonuses and passive abilities.",
   },
   {
+    num: "04",
     icon: "📜",
+    tag: "Dev History",
     title: "The Chronicle",
     desc: "An unbroken record of every language wielded, every milestone crossed. Your history cannot be erased — only extended.",
   },
   {
+    num: "05",
     icon: "🌍",
+    tag: "Social Layer",
     title: "Explore Other Realms",
     desc: "Traverse the world map and visit allied kingdoms. Study their architecture. Challenge them. Forge pacts. Compete for dominance.",
   },
   {
+    num: "06",
     icon: "🏆",
+    tag: "Prestige System",
     title: "Hall of Legend",
     desc: "The mightiest realms inscribed in the Hall of Legend. Weekly conquest. Seasonal campaigns. Your name carved in iron.",
   },
@@ -596,29 +608,75 @@ export default async function Home({
       {/* ═══════════════════════════════════════════════
           FEATURES
           ═══════════════════════════════════════════════ */}
-      <section id="features" className="px-6 py-28 bg-[var(--abyss)] border-b border-[var(--b0)]">
+      <section id="features" className="feat-section px-6 pt-24 pb-28 bg-[var(--abyss)] border-b border-[var(--b0)]">
         <div className="mx-auto max-w-6xl">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-6 text-[var(--silver-3)] text-xs uppercase tracking-[0.25em] mb-5">
-              <div className="h-px w-10 bg-gradient-to-r from-transparent via-[var(--b2)] to-transparent" />
-              The Pillars of the Realm
-              <div className="h-px w-10 bg-gradient-to-l from-transparent via-[var(--b2)] to-transparent" />
+
+          {/* ── Section header ── */}
+          <div className="mb-16">
+            {/* Top rule with ember lead */}
+            <div className="flex items-center gap-0 mb-10">
+              <div className="h-px w-8 bg-[var(--ember)]" />
+              <div className="h-px flex-1 bg-gradient-to-r from-[var(--b2)] to-transparent" />
             </div>
-            <h2 className="realm-page-title text-[clamp(2.2rem,5vw,3.6rem)] font-bold text-[var(--silver-0)]">
-              How The Kingdom Is Forged
-            </h2>
-            <p className="realm-lore mx-auto mt-5 max-w-xl text-base leading-relaxed text-[var(--silver-2)]">
-              From raw commits to castle spires — your craft is the only
-              currency that matters in this realm.
-            </p>
+
+            <div className="flex flex-col lg:flex-row lg:items-end gap-8 lg:gap-20">
+              {/* Left: large count + label */}
+              <div className="flex-shrink-0 select-none">
+                <div
+                  className="font-[var(--font-display)] leading-none text-[var(--steel-4)]"
+                  style={{ fontSize: 'clamp(4rem, 8vw, 6.5rem)' }}
+                  aria-hidden>
+                  06
+                </div>
+                <div className="realm-label text-[var(--ember)] mt-1 tracking-[0.3em]">
+                  Pillars of the Realm
+                </div>
+              </div>
+
+              {/* Right: heading + subtitle */}
+              <div className="pb-1">
+                <h2 className="realm-page-title font-bold text-[var(--silver-0)]"
+                  style={{ fontSize: 'clamp(2rem,4.5vw,3.4rem)' }}>
+                  How The Kingdom<br className="hidden sm:block" /> Is Forged
+                </h2>
+                <p className="realm-lore mt-4 max-w-lg text-[15px] leading-relaxed text-[var(--silver-2)]">
+                  From raw commits to castle spires — your craft is the only
+                  currency that matters in this realm.
+                </p>
+              </div>
+            </div>
+
+            {/* Bottom rule */}
+            <div className="h-px bg-gradient-to-r from-transparent via-[var(--b1)] to-transparent mt-10" />
           </div>
 
+          {/* ── Feature cards grid ── */}
           <div className="features-grid">
             {FEATURES.map((feat) => (
-              <div key={feat.title} className="feature-card">
-                <span className="feat-icon">{feat.icon}</span>
-                <div className="feat-title">{feat.title}</div>
+              <div key={feat.title} className="feat-card group">
+
+                {/* Ghost number — decorative, bottom-right */}
+                <div className="feat-ghost-num" aria-hidden>{feat.num}</div>
+
+                {/* Number label */}
+                <span className="feat-num">{feat.num}</span>
+
+                {/* Icon box */}
+                <div className="feat-icon-box">
+                  <span aria-hidden>{feat.icon}</span>
+                </div>
+
+                {/* Title */}
+                <h3 className="feat-title">{feat.title}</h3>
+
+                {/* Animated rule */}
+                <div className="feat-rule" />
+
+                {/* Description */}
                 <p className="feat-desc">{feat.desc}</p>
+
+                {/* Category tag */}
+                <span className="feat-tag">{feat.tag}</span>
               </div>
             ))}
           </div>
