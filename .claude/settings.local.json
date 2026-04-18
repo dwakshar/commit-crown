@@ -5,7 +5,11 @@
       "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); [print\\(r['page']\\) for r in d.get\\('dynamicRoutes',[]\\)+[{'page':r} for r in d.get\\('staticRoutes',[]\\)]]\")",
       "Bash(node -e ':*)",
       "Bash(grep -n \"policy.*buildings\\\\|buildings.*policy\" /d/Projects/commit-crown/supabase/migrations/*.sql)",
-      "Bash(grep -l \"buildings\" /d/Projects/commit-crown/supabase/migrations/*.sql)"
+      "Bash(grep -l \"buildings\" /d/Projects/commit-crown/supabase/migrations/*.sql)",
+      "Bash(find /d/Projects/commit-crown/supabase/migrations -name \"*.sql\" -exec grep -l \"equipped\\\\|banner\" {} \\\\;)",
+      "Bash(find /d/Projects/commit-crown/supabase/migrations -name \"*.sql\" -exec grep -l \"banner\\\\|equipped\" {} \\\\;)",
+      "Bash(npx supabase:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

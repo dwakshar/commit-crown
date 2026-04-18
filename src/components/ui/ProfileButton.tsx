@@ -132,7 +132,9 @@ export function ProfileButton({
           </div>
 
           <div className="p-5 space-y-3">
-            <button className="realm-button realm-button-secondary w-full py-3 text-sm">
+            <button
+              onClick={() => { setOpen(false); router.push("/profile/edit"); }}
+              className="realm-button realm-button-secondary w-full border border-[var(--b1)] py-3 text-sm">
               Edit Profile
             </button>
 

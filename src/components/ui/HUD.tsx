@@ -13,6 +13,8 @@ import {
 import { formatDistanceToNowStrict } from "date-fns";
 import Link from "next/link";
 
+import { getBannerKey } from "@/src/components/banners";
+import { DragonCrownRealm } from "@/src/components/banners/DragonBanner/panels/DragonCrownRealm";
 import { AchievementToast } from "@/src/components/ui/AchievementToast";
 import { GoldClaimWidget } from "@/src/components/ui/GoldClaimWidget";
 import { NotificationBell } from "@/src/components/ui/NotificationBell";
@@ -407,6 +409,8 @@ export function HUD() {
     }
   };
 
+  const bannerKey = getBannerKey(kingdom.equippedBannerName);
+
   const highlightedTileLabel =
     buildModeType && activeBuilding && !activeBuildingIsWater
       ? getTileLabel(kingdom, activeBuilding.x, activeBuilding.y)
@@ -424,19 +428,27 @@ export function HUD() {
 
       <div className="pointer-events-auto border-b border-[var(--b1)] bg-[rgba(6,9,14,0.92)]">
         <div className="grid min-h-[84px] grid-cols-1 xl:grid-cols-[minmax(300px,340px)_1fr_auto]">
-          <div className="border-b border-[var(--b0)] px-5 py-4 xl:border-b-0 xl:border-r">
-            <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--silver-3)]">
-              Crown Realm
+          {bannerKey === "dragon" ? (
+            <DragonCrownRealm
+              kingdomName={kingdom.name}
+              ownerName={kingdom.ownerName}
+              control={boardSummary.control}
+            />
+          ) : (
+            <div className="border-b border-[var(--b0)] px-5 py-4 xl:border-b-0 xl:border-r">
+              <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--silver-3)]">
+                Crown Realm
+              </div>
+              <div className="mt-2 font-[var(--font-head)] text-[2rem] leading-none text-[var(--silver-0)]">
+                {kingdom.name}
+              </div>
+              <div className="mt-2 text-sm italic text-[var(--silver-2)]">
+                Commanded by @
+                {kingdom.ownerName.toLowerCase().replace(/\s+/g, "")} /{" "}
+                {boardSummary.control}
+              </div>
             </div>
-            <div className="mt-2 font-[var(--font-head)] text-[2rem] leading-none text-[var(--silver-0)]">
-              {kingdom.name}
-            </div>
-            <div className="mt-2 text-sm italic text-[var(--silver-2)]">
-              Commanded by @
-              {kingdom.ownerName.toLowerCase().replace(/\s+/g, "")} /{" "}
-              {boardSummary.control}
-            </div>
-          </div>
+          )}
 
           <div className="grid grid-cols-2 sm:grid-cols-4">
             <StatCell

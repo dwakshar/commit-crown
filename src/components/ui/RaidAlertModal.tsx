@@ -140,6 +140,18 @@ export function RaidAlertModal() {
           }`}
         />
 
+        {/* Close button */}
+        <button
+          type="button"
+          onClick={dismiss}
+          className="absolute right-3 top-3 z-20 flex h-7 w-7 items-center justify-center text-[var(--silver-3)] transition hover:text-[var(--silver-0)]"
+          aria-label="Close">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+
         <div className="relative px-8 py-10 text-center">
           {/* Icon */}
           <div
@@ -206,6 +218,7 @@ export function RaidAlertModal() {
           </p>
 
           <button
+            type="button"
             onClick={dismiss}
             className="mt-7 w-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] px-6 py-3 text-[10px] uppercase tracking-[0.3em] text-[var(--silver-2)] transition hover:border-[rgba(255,255,255,0.16)] hover:bg-[rgba(255,255,255,0.07)] hover:text-[var(--silver-0)]">
             Return to Kingdom

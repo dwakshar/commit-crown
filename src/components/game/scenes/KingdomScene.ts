@@ -2,6 +2,7 @@ import { Building } from "@/src/components/game/entities/Building";
 import {
   decodeWaterSlotPosition,
   encodeWaterSlotPosition,
+  getValidWaterSlotsForType,
   isWaterBuildingType,
 } from "@/src/lib/kingdom";
 import type { BuildingData, KingdomData } from "@/src/types/game";
@@ -57,6 +58,10 @@ type WaterSlot = {
   index: number;
   x: number;
   y: number;
+  /** Visual rect width for slot highlight and placement marker */
+  w: number;
+  /** Visual rect height for slot highlight and placement marker */
+  h: number;
 };
 
 export class KingdomScene extends Phaser.Scene {
@@ -630,7 +635,7 @@ export class KingdomScene extends Phaser.Scene {
       this.selectionMarker
         .clear()
         .lineStyle(2, 0xd4a574, 0.9)
-        .strokeEllipse(slot.x, slot.y, 72, 28)
+        .strokeRect(slot.x - slot.w / 2, slot.y - slot.h / 2, slot.w, slot.h)
         .setDepth(selectedBuilding.depth - 1)
         .setVisible(true);
 
@@ -755,26 +760,18 @@ export class KingdomScene extends Phaser.Scene {
     const cx = worldBounds.centerX;
     const cy = worldBounds.centerY;
 
-    const offsets = [
-      { x: -320, y: -70 },
-      { x: -255, y: -118 },
-      { x: -175, y: -152 },
-      { x: 175, y: -152 },
-      { x: 255, y: -118 },
-      { x: 320, y: -70 },
-      { x: 320, y: 70 },
-      { x: 255, y: 118 },
-      { x: 175, y: 152 },
-      { x: -175, y: 152 },
-      { x: -255, y: 118 },
-      { x: -320, y: 70 },
+    // Board diamond half-extents: halfW=736, halfH=368 (for a 24×24 iso grid).
+    // All offsets satisfy |dx/736| + |dy/368| > 1 (outside the board) while
+    // staying inside the water ring (|dx/1196| + |dy/598| < 1).
+    //
+    // Slot 0 — Royal Flagship  (large, left side)
+    // Slots 1-3 — smaller vessels (top, right, bottom)
+    return [
+      { index: 0, x: cx - 850, y: cy,        w: 200, h: 60 },
+      { index: 1, x: cx,       y: cy - 450,  w: 90,  h: 40 },
+      { index: 2, x: cx + 850, y: cy,        w: 90,  h: 40 },
+      { index: 3, x: cx,       y: cy + 450,  w: 90,  h: 40 },
     ];
-
-    return offsets.map((offset, index) => ({
-      index,
-      x: cx + offset.x,
-      y: cy + offset.y,
-    }));
   }
 
   private getWaterSlotPosition(building: BuildingData): WaterSlot | null {
@@ -787,10 +784,18 @@ export class KingdomScene extends Phaser.Scene {
     worldX: number,
     worldY: number
   ): WaterSlot | null {
+    if (!this.buildModeType) return null;
+
+    // Only consider slots valid for the current vessel type.
+    const validIndices = getValidWaterSlotsForType(this.buildModeType);
+    const candidates = this.getWaterSlots().filter((s) =>
+      validIndices.includes(s.index)
+    );
+
     let nearest: WaterSlot | null = null;
     let nearestDistance = Infinity;
 
-    for (const slot of this.getWaterSlots()) {
+    for (const slot of candidates) {
       const distance = Phaser.Math.Distance.Between(
         worldX,
         worldY,
@@ -803,7 +808,11 @@ export class KingdomScene extends Phaser.Scene {
       }
     }
 
-    return nearestDistance <= 72 ? nearest : null;
+    // Snap threshold: half the largest dimension of the nearest slot + margin.
+    const threshold = nearest
+      ? Math.max(nearest.w, nearest.h) * 0.75 + 20
+      : 0;
+    return nearestDistance <= threshold ? nearest : null;
   }
 
   private drawWaterSlots(): void {
@@ -821,9 +830,9 @@ export class KingdomScene extends Phaser.Scene {
       const color = occupied.has(slot.index) ? 0x58738a : 0x9edff3;
       const alpha = occupied.has(slot.index) ? 0.18 : 0.28;
       graphics.fillStyle(color, alpha);
-      graphics.fillEllipse(slot.x, slot.y, 54, 20);
+      graphics.fillRect(slot.x - slot.w / 2, slot.y - slot.h / 2, slot.w, slot.h);
       graphics.lineStyle(2, color, occupied.has(slot.index) ? 0.22 : 0.4);
-      graphics.strokeEllipse(slot.x, slot.y, 54, 20);
+      graphics.strokeRect(slot.x - slot.w / 2, slot.y - slot.h / 2, slot.w, slot.h);
     }
 
     graphics.setDepth(-140);
@@ -1118,22 +1127,6 @@ export class KingdomScene extends Phaser.Scene {
       worldBounds.height
     );
 
-    // Vignette — darken edges via 4 corner overlays
-    const vw = worldBounds.width * 0.55;
-    const vh = worldBounds.height * 0.55;
-    const corners = [
-      { x: worldBounds.x, y: worldBounds.y },
-      { x: worldBounds.x + worldBounds.width, y: worldBounds.y },
-      { x: worldBounds.x, y: worldBounds.y + worldBounds.height },
-      {
-        x: worldBounds.x + worldBounds.width,
-        y: worldBounds.y + worldBounds.height,
-      },
-    ];
-    for (const corner of corners) {
-      this.lightingOverlay.fillStyle(0x020810, 0.14);
-      this.lightingOverlay.fillEllipse(corner.x, corner.y, vw, vh);
-    }
 
     // Center warmth — soft golden glow to highlight the playfield
     this.lightingOverlay.fillStyle(0xffe8a0, 0.028);
@@ -1312,8 +1305,8 @@ export class KingdomScene extends Phaser.Scene {
     marker
       .clear()
       .lineStyle(2, color, 0.9)
-      .strokeEllipse(slot.x, slot.y, 68, 26)
-      .setDepth(slot.y + 20)
+      .strokeRect(slot.x - slot.w / 2, slot.y - slot.h / 2, slot.w, slot.h)
+      .setDepth(slot.y + slot.h)
       .setVisible(true);
   }
 

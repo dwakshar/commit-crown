@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/src/lib/supabaseAdmin'
 import type { BuildingData, GitHubStatsData, KingdomData } from '@/src/types/game'
 
 export const KINGDOM_WITH_BUILDINGS_SELECT =
-  'id, user_id, name, gold, prestige, population, defense_rating, attack_rating, building_slots, last_synced_at, theme_id, buildings(id, type, level, position_x, position_y, skin_id, built_at)'
+  'id, user_id, name, gold, prestige, population, defense_rating, attack_rating, building_slots, last_synced_at, theme_id, equipped_banner_id, buildings(id, type, level, position_x, position_y, skin_id, built_at)'
 export const KINGDOM_WITH_BUILDINGS_SELECT_FALLBACK =
   'id, user_id, name, gold, prestige, population, defense_rating, attack_rating, building_slots, last_synced_at, buildings(id, type, level, position_x, position_y, skin_id, built_at)'
 
@@ -20,6 +20,7 @@ export type PersistedKingdomRow = {
   building_slots: number
   last_synced_at: string | null
   theme_id: string | null
+  equipped_banner_id: string | null
   buildings:
     | {
         id: string

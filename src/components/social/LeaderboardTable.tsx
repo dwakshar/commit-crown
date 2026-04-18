@@ -4,6 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+import { DragonLeaderboardRow } from "@/src/components/banners/DragonBanner/panels/DragonLeaderboardRow";
+
 type LeaderboardRow = {
   user_id: string;
   username: string;
@@ -12,7 +14,12 @@ type LeaderboardRow = {
   prestige: number;
   top_language: string;
   raid_wins: number;
+  banner_name?: string | null;
 };
+
+function hasDragonBanner(row: LeaderboardRow) {
+  return Boolean(row.banner_name?.toLowerCase().includes("dragon"));
+}
 
 export function LeaderboardTable({
   rows,
@@ -71,6 +78,25 @@ export function LeaderboardTable({
             {rows.map((row, index) => {
               const rank = (page - 1) * 25 + index + 1;
               const isCurrentUser = row.user_id === currentUserId;
+              const isDragon = hasDragonBanner(row);
+
+              if (isDragon) {
+                return (
+                  <DragonLeaderboardRow
+                    key={`${row.user_id}-${row.top_language}-${rank}`}
+                    rank={rank}
+                    username={row.username}
+                    avatarUrl={row.avatar_url}
+                    kingdomName={row.kingdom_name}
+                    prestige={row.prestige}
+                    topLanguage={row.top_language}
+                    raidWins={row.raid_wins}
+                    isCurrentUser={isCurrentUser}
+                    languageClass={getLanguageClass(row.top_language)}
+                    onRowClick={() => router.push(`/visit/${row.username}`)}
+                  />
+                );
+              }
 
               return (
                 <tr
@@ -80,7 +106,8 @@ export function LeaderboardTable({
                     isCurrentUser
                       ? "bg-[var(--ember-mist)]"
                       : "hover:bg-[var(--steel-glow)]"
-                  }`}>
+                  }`}
+                >
                   <td className="border-b border-[rgba(80,105,130,0.06)] px-4 py-4 font-[var(--font-head)] text-base text-[var(--silver-0)]">
                     {rank}
                   </td>
@@ -131,11 +158,8 @@ export function LeaderboardTable({
                     </span>
                   </td>
                   <td
-                    className={`border-b border-[rgba(80,105,130,0.06)] px-4 py-4 font-[var(--font-head)] text-xl font-semibold ${
-                      isCurrentUser
-                        ? "text-[var(--ember)]"
-                        : "text-[var(--silver-0)]"
-                    }`}>
+                    className="border-b border-[rgba(80,105,130,0.06)] px-4 py-4 font-[var(--font-head)] text-xl"
+                    style={{ color: isCurrentUser ? "var(--ember)" : "var(--silver-0)" }}>
                     {row.prestige.toLocaleString()}
                   </td>
                   <td className="border-b border-[rgba(80,105,130,0.06)] px-4 py-4 font-[var(--font-head)] text-sm text-[var(--silver-3)]">
@@ -143,14 +167,17 @@ export function LeaderboardTable({
                   </td>
                   <td className="border-b border-[rgba(80,105,130,0.06)] px-4 py-4">
                     <Link
-                      href={
-                        isCurrentUser ? "/kingdom" : `/visit/${row.username}`
-                      }
-                      className={`realm-button inline-flex rounded-[2px] border px-6 py-2 text-[11px] ${
-                        isCurrentUser
-                          ? "border-[var(--ember)] bg-[rgba(44,21,13,0.72)] text-[var(--ember)]"
-                          : "border-[var(--b1)] bg-transparent text-[var(--silver-3)] hover:text-[var(--silver-1)]"
-                      }`}
+                      href={isCurrentUser ? "/kingdom" : `/visit/${row.username}`}
+                      className="realm-button inline-flex rounded-[2px] border px-6 py-2 text-[11px]"
+                      style={isCurrentUser ? {
+                        borderColor: "var(--ember)",
+                        background: "rgba(44,21,13,0.72)",
+                        color: "var(--ember)",
+                      } : {
+                        borderColor: "var(--b1)",
+                        background: "transparent",
+                        color: "var(--silver-3)",
+                      }}
                       onClick={(event) => event.stopPropagation()}>
                       {isCurrentUser ? "Your Keep" : "Visit"}
                     </Link>

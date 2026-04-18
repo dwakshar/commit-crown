@@ -2,7 +2,10 @@ import type { BuildingData, BuildingType } from '@/src/types/game'
 
 export const SYNC_COOLDOWN_MINUTES = 30
 export const WATER_SLOT_BASE = 100
-export const WATER_SLOT_COUNT = 12
+// 4 slots: 0 = Royal Flagship (large), 1-3 = smaller vessels
+export const WATER_SLOT_COUNT = 4
+export const FLAGSHIP_SLOT_INDEX = 0
+export const SMALL_VESSEL_SLOT_INDICES = [1, 2, 3] as const
 export const WATER_BUILDING_TYPES = [
   'royal_flagship',
   'sentinel_skiff',
@@ -16,6 +19,12 @@ export function isWaterBuildingType(type: BuildingType): boolean {
 
 export function getPlacementZoneForBuilding(type: BuildingType): 'board' | 'water' {
   return isWaterBuildingType(type) ? 'water' : 'board'
+}
+
+/** Returns the valid slot indices for a given water building type. */
+export function getValidWaterSlotsForType(type: BuildingType): number[] {
+  if (type === 'royal_flagship') return [FLAGSHIP_SLOT_INDEX]
+  return [...SMALL_VESSEL_SLOT_INDICES]
 }
 
 export function encodeWaterSlotPosition(slotIndex: number) {

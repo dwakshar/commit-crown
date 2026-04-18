@@ -53,6 +53,13 @@ export default async function KingdomPage({
         .maybeSingle(),
     ]);
 
+  // Resolve equipped banner name for visual effects
+  async function resolveEquippedBannerName(bannerId: string | null | undefined): Promise<string | null> {
+    if (!bannerId) return null;
+    const { data } = await supabase.from("shop_items").select("name").eq("id", bannerId).maybeSingle();
+    return (data as { name: string } | null)?.name ?? null;
+  }
+
   if (!profile?.onboarding_done) {
     redirect("/onboarding");
   }
@@ -93,6 +100,8 @@ export default async function KingdomPage({
     })
   );
 
+  const equippedBannerName = await resolveEquippedBannerName(kingdomRow.equipped_banner_id);
+
   const kingdomData = withStarterKingdomState({
     id: kingdomRow.id,
     userId: kingdomRow.user_id,
@@ -106,6 +115,7 @@ export default async function KingdomPage({
     raids_enabled: Boolean((profile as { raids_enabled?: boolean } | null)?.raids_enabled ?? true),
     last_synced_at: kingdomRow.last_synced_at,
     themeId: kingdomRow.theme_id,
+    equippedBannerName,
     ownerName: profile?.username ?? "Code Monarch",
     ownerAvatarUrl: profile?.avatar_url ?? null,
     buildings,

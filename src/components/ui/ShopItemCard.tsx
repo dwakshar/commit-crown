@@ -6,6 +6,7 @@ import Image from 'next/image'
 
 import { useNotificationStore } from '@/src/store/notificationStore'
 
+import { resolveBannerPreviewImage } from '@/src/components/banners'
 import {
   formatPrice,
   getShopItemLabel,
@@ -107,27 +108,36 @@ export function ShopItemCard({
   }
 
   const handleEquip = async () => {
-    if (!item.targetId || !item.targetType) {
-      showToast('This item cannot be equipped yet.')
-      return
-    }
-
     setIsEquipping(true)
 
     try {
-      const response = await fetch('/api/shop/equip', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          itemId: item.id,
-          targetId: item.targetId,
-          targetType: item.targetType,
-        }),
-      })
+      let response: Response
 
-      const payload = (await response.json()) as EquipResponse
+      if (item.type === 'banner') {
+        // Banners use a dedicated endpoint that toggles equip/unequip
+        response = await fetch('/api/shop/equip-banner', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ itemId: item.id }),
+        })
+      } else {
+        if (!item.targetId || !item.targetType) {
+          showToast('This item cannot be equipped yet.')
+          setIsEquipping(false)
+          return
+        }
+        response = await fetch('/api/shop/equip', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            itemId: item.id,
+            targetId: item.targetId,
+            targetType: item.targetType,
+          }),
+        })
+      }
+
+      const payload = (await response.json()) as EquipResponse & { equipped?: boolean }
 
       if (!response.ok) {
         throw new Error(payload.error ?? 'Unable to equip item')
@@ -141,7 +151,8 @@ export function ShopItemCard({
         )
       }
 
-      showToast(item.equipped ? `${item.name} remains equipped.` : `${item.name} equipped.`)
+      const nowEquipped = item.type === 'banner' ? (payload.equipped ?? !item.equipped) : true
+      showToast(nowEquipped ? `${item.name} equipped.` : `${item.name} unequipped.`)
       await onRefreshRequested?.()
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Unable to equip item')
@@ -168,20 +179,30 @@ export function ShopItemCard({
 
   const renderAction = () => {
     if (item.owned) {
+      const isBanner = item.type === 'banner'
+      const canEquip = isBanner || (!!item.targetId && !!item.targetType)
+      const label = isEquipping
+        ? item.equipped ? 'Unequipping...' : 'Equipping...'
+        : item.equipped
+          ? isBanner ? 'Unequip' : 'Equipped'
+          : 'Equip'
+
       return (
         <button
           type="button"
           onClick={handleEquip}
-          disabled={isEquipping || !item.targetId || !item.targetType}
+          disabled={isEquipping || !canEquip}
           className={[
             'realm-button border px-4 py-3 text-[11px] transition',
             item.equipped
-              ? 'border-[#C9A84C]/40 bg-[#3a2e15] text-[#f4d98d]'
+              ? isBanner
+                ? 'border-[rgba(200,50,10,.5)] bg-[rgba(50,10,5,.7)] text-[#ff9070] hover:bg-[rgba(70,12,6,.8)]'
+                : 'border-[#C9A84C]/40 bg-[#3a2e15] text-[#f4d98d]'
               : 'border-[var(--ember)] bg-[rgba(44,21,13,0.72)] text-[var(--ember)] hover:bg-[rgba(60,28,16,0.85)]',
-            (isEquipping || !item.targetId || !item.targetType) ? 'cursor-not-allowed opacity-60' : '',
+            (isEquipping || !canEquip) ? 'cursor-not-allowed opacity-60' : '',
           ].join(' ')}
         >
-          {isEquipping ? 'Equipping...' : item.equipped ? 'Equipped' : 'Equip'}
+          {label}
         </button>
       )
     }
@@ -223,28 +244,40 @@ export function ShopItemCard({
 
       <div className="relative min-h-[216px] overflow-hidden border-b border-[var(--b1)] bg-[radial-gradient(circle_at_top,rgba(120,145,170,0.08),transparent_42%),linear-gradient(180deg,rgba(17,23,34,0.9),rgba(10,14,21,0.96))]">
         <div className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(176,196,214,0.24),transparent)]" />
-        {isPreviewImage(item.assetKey) ? (
-          <Image
-            src={item.assetKey ?? ''}
-            alt={item.name}
-            width={640}
-            height={416}
-            unoptimized
-            className="h-[216px] w-full object-cover opacity-95 transition duration-500 group-hover:scale-[1.03]"
-          />
-        ) : (
-          <div className="flex h-[216px] items-center justify-center px-6 text-center">
-            <div>
-              <div className="mx-auto flex h-14 w-14 items-center justify-center border border-[var(--b1)] bg-[rgba(255,255,255,0.02)] font-[var(--font-head)] text-xs uppercase tracking-[0.18em] text-[var(--plate-hi)]">
-                {getShopItemLabel(item.type)
-                  .split(' ')
-                  .map((part) => part[0])
-                  .join('')}
+        {(() => {
+          const previewSrc = isPreviewImage(item.assetKey)
+            ? (item.assetKey ?? '')
+            : item.type === 'banner'
+            ? resolveBannerPreviewImage(item.name)
+            : null
+
+          if (previewSrc) {
+            return (
+              <Image
+                src={previewSrc}
+                alt={item.name}
+                width={640}
+                height={416}
+                unoptimized
+                className="h-[216px] w-full object-cover opacity-95 transition duration-500 group-hover:scale-[1.03]"
+              />
+            )
+          }
+
+          return (
+            <div className="flex h-[216px] items-center justify-center px-6 text-center">
+              <div>
+                <div className="mx-auto flex h-14 w-14 items-center justify-center border border-[var(--b1)] bg-[rgba(255,255,255,0.02)] font-[var(--font-head)] text-xs uppercase tracking-[0.18em] text-[var(--plate-hi)]">
+                  {getShopItemLabel(item.type)
+                    .split(' ')
+                    .map((part) => part[0])
+                    .join('')}
+                </div>
+                <p className="realm-page-title mt-4 text-2xl">{item.name}</p>
               </div>
-              <p className="realm-page-title mt-4 text-2xl">{item.name}</p>
             </div>
-          </div>
-        )}
+          )
+        })()}
       </div>
 
       <div className="border-b border-[rgba(80,105,130,0.08)] bg-[rgba(16,22,34,0.46)] px-4 py-4">

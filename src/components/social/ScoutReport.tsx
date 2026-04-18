@@ -5,6 +5,8 @@ import { useMemo, useState } from "react";
 import { formatDistanceToNowStrict } from "date-fns";
 import Image from "next/image";
 
+import { getBannerKey } from "@/src/components/banners";
+import { DragonScoutReport } from "@/src/components/banners/DragonBanner/panels/DragonScoutReport";
 import { RaidConfirmModal } from "@/src/components/ui/RaidConfirmModal";
 import type { KingdomData } from "@/src/types/game";
 
@@ -33,6 +35,8 @@ export function ScoutReport({
   attackerAttackRating,
   attackerGold,
 }: ScoutReportProps) {
+  const bannerKey = getBannerKey(kingdomData.equippedBannerName);
+
   const [isFlagging, setIsFlagging] = useState(false);
   const [hasFlagged, setHasFlagged] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -77,16 +81,39 @@ export function ScoutReport({
     }
   };
 
+  if (bannerKey === "dragon") {
+    return (
+      <DragonScoutReport
+        kingdomData={kingdomData}
+        prestigeRank={prestigeRank}
+        totalBuildings={totalBuildings}
+        topLanguage={topLanguage}
+        recentVisitors={recentVisitors}
+        canLeaveFlag={canLeaveFlag}
+        canRaid={canRaid}
+        attackerName={attackerName}
+        attackerAttackRating={attackerAttackRating}
+        attackerGold={attackerGold}
+      />
+    );
+  }
+
   const commandHandle =
     kingdomData.ownerGithubUsername ?? kingdomData.ownerName;
-  const kingdomStatus = "Open for battle";
   const defenseLabel = kingdomData.defense_rating.toLocaleString();
   const treasuryLabel = kingdomData.gold.toLocaleString();
 
   return (
     <>
-      <aside className="pointer-events-auto max-h-full w-full max-w-[420px] overflow-y-auto overflow-x-hidden border border-[var(--b1)] bg-[linear-gradient(180deg,rgba(5,8,13,0.97),rgba(6,10,16,0.9))] text-[var(--silver-1)] shadow-[0_24px_90px_rgba(0,0,0,0.45)]">
-        <div className="border-b border-[var(--b1)] px-5 py-6">
+      <aside
+        className="pointer-events-auto max-h-full w-full max-w-[420px] overflow-y-auto overflow-x-hidden text-[var(--silver-1)] shadow-[0_24px_90px_rgba(0,0,0,0.55)]"
+        style={{
+          border: "1px solid var(--b1)",
+          background: "linear-gradient(180deg,rgba(5,8,13,0.97),rgba(6,10,16,0.9))",
+        }}
+      >
+        {/* Header */}
+        <div className="relative border-b px-5 py-6" style={{ borderColor: "var(--b1)" }}>
           <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--silver-3)]">
             Scout Report
           </div>
@@ -94,11 +121,12 @@ export function ScoutReport({
             {kingdomData.name}
           </div>
           <div className="mt-2 text-sm italic text-[var(--silver-2)]">
-            Commanded by @{commandHandle.toLowerCase()} / {kingdomStatus}
+            Commanded by @{commandHandle.toLowerCase()} / Open for battle
           </div>
         </div>
 
-        <div className="border-b border-[var(--b0)] px-5 py-5">
+        {/* Commander */}
+        <div className="border-b px-5 py-5" style={{ borderColor: "var(--b0)" }}>
           <div className="flex items-center gap-4">
             {kingdomData.ownerAvatarUrl ? (
               <Image
@@ -106,24 +134,23 @@ export function ScoutReport({
                 alt={kingdomData.ownerName}
                 width={72}
                 height={72}
-                className="h-[72px] w-[72px] rounded-[22px] border border-[var(--b1)] object-cover"
+                className="h-[72px] w-[72px] object-cover"
+                style={{ border: "1px solid var(--b1)", borderRadius: 22 }}
               />
             ) : (
-              <div className="flex h-[72px] w-[72px] items-center justify-center rounded-[22px] border border-[var(--b1)] bg-[var(--steel-3)] text-2xl font-[var(--font-head)] text-[var(--silver-0)]">
+              <div
+                className="flex h-[72px] w-[72px] items-center justify-center text-2xl font-[var(--font-head)]"
+                style={{ border: "1px solid var(--b1)", background: "var(--steel-3)", color: "var(--silver-0)" }}
+              >
                 {kingdomData.ownerName.slice(0, 1).toUpperCase()}
               </div>
             )}
-
             <div>
-              <div className="text-[10px] uppercase tracking-[0.2em] text-[var(--silver-3)]">
-                Commander
-              </div>
+              <div className="text-[10px] uppercase tracking-[0.2em] text-[var(--silver-3)]">Commander</div>
               <h1 className="mt-2 font-[var(--font-head)] text-[1.5rem] leading-none text-[var(--silver-0)]">
                 {kingdomData.ownerName}
               </h1>
-              <p className="mt-2 text-sm text-[var(--silver-2)]">
-                @{commandHandle}
-              </p>
+              <p className="mt-2 text-sm text-[var(--silver-2)]">@{commandHandle}</p>
               <p className="mt-1 text-[11px] uppercase tracking-[0.16em] text-[var(--silver-3)]">
                 Defense {defenseLabel} / Treasury {treasuryLabel}
               </p>
@@ -131,45 +158,26 @@ export function ScoutReport({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-px border-b border-[var(--b0)] bg-[var(--b0)]">
-          <div className="bg-[rgba(7,10,16,0.96)] px-5 py-4">
-            <div className="text-[10px] uppercase tracking-[0.2em] text-[var(--silver-3)]">
-              Prestige Rank
+        {/* Stats grid */}
+        <div className="grid grid-cols-2 gap-px border-b" style={{ borderColor: "var(--b0)", background: "var(--b0)" }}>
+          {[
+            { label: "Prestige Rank", value: `#${prestigeRank}` },
+            { label: "Structures", value: String(totalBuildings) },
+            { label: "Top Language", value: topLanguage },
+            { label: "Account Age", value: accountAge, small: true },
+          ].map(({ label, value, small }) => (
+            <div key={label} className="px-5 py-4" style={{ background: "rgba(7,10,16,0.96)" }}>
+              <div className="text-[10px] uppercase tracking-[0.2em] text-[var(--silver-3)]">{label}</div>
+              <div className={`mt-2 font-[var(--font-head)] ${small ? "text-sm font-semibold" : "text-2xl"} text-[var(--silver-0)]`}>
+                {value}
+              </div>
             </div>
-            <div className="mt-2 font-[var(--font-head)] text-2xl text-[var(--silver-0)]">
-              #{prestigeRank}
-            </div>
-          </div>
-          <div className="bg-[rgba(7,10,16,0.96)] px-5 py-4">
-            <div className="text-[10px] uppercase tracking-[0.2em] text-[var(--silver-3)]">
-              Structures
-            </div>
-            <div className="mt-2 font-[var(--font-head)] text-2xl text-[var(--silver-0)]">
-              {totalBuildings}
-            </div>
-          </div>
-          <div className="bg-[rgba(7,10,16,0.96)] px-5 py-4">
-            <div className="text-[10px] uppercase tracking-[0.2em] text-[var(--silver-3)]">
-              Top Language
-            </div>
-            <div className="mt-2 font-[var(--font-head)] text-2xl text-[var(--silver-0)]">
-              {topLanguage}
-            </div>
-          </div>
-          <div className="bg-[rgba(7,10,16,0.96)] px-5 py-4">
-            <div className="text-[10px] uppercase tracking-[0.2em] text-[var(--silver-3)]">
-              Account Age
-            </div>
-            <div className="mt-2 text-sm font-semibold text-[var(--silver-1)]">
-              {accountAge}
-            </div>
-          </div>
+          ))}
         </div>
 
-        <div className="border-b border-[var(--b0)] px-5 py-5">
-          <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--silver-3)]">
-            Operation Window
-          </div>
+        {/* Operations */}
+        <div className="border-b px-5 py-5" style={{ borderColor: "var(--b0)" }}>
+          <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--silver-3)]">Operation Window</div>
           <div className="mt-2 text-sm text-[var(--silver-2)]">
             Leave your banner, survey this kingdom, or launch a raid.
           </div>
@@ -179,72 +187,72 @@ export function ScoutReport({
                 type="button"
                 onClick={handleLeaveFlag}
                 disabled={isFlagging || hasFlagged}
-                className="realm-button border border-[var(--b1)] bg-[rgba(255,255,255,0.02)] px-5 py-3 text-sm text-[var(--silver-2)] transition hover:text-[var(--silver-0)] disabled:cursor-not-allowed disabled:opacity-45">
-                {isFlagging
-                  ? "Leaving Flag..."
-                  : hasFlagged
-                  ? "Flag Planted"
-                  : "Leave A Flag"}
+                className="realm-button border px-5 py-3 text-sm transition disabled:cursor-not-allowed disabled:opacity-45"
+                style={{ borderColor: "var(--b1)", background: "rgba(255,255,255,0.02)", color: "var(--silver-2)" }}
+              >
+                {isFlagging ? "Leaving Flag..." : hasFlagged ? "Flag Planted" : "Leave A Flag"}
               </button>
             ) : (
-              <div className="rounded-[20px] border border-[var(--b0)] bg-[rgba(255,255,255,0.02)] px-4 py-3 text-sm text-[var(--silver-2)]">
-                Sign in with a different account to leave a flag on this
-                kingdom.
+              <div
+                className="border px-4 py-3 text-sm text-[var(--silver-2)]"
+                style={{ borderColor: "var(--b0)", background: "rgba(255,255,255,0.02)" }}
+              >
+                Sign in with a different account to leave a flag on this kingdom.
               </div>
             )}
-
             {canRaid ? (
               <button
                 type="button"
                 onClick={() => setIsRaidOpen(true)}
-                className="realm-button border border-[rgba(200,88,26,0.58)] bg-[linear-gradient(180deg,rgba(36,16,10,0.86),rgba(24,10,6,0.92))] px-5 py-3 text-sm text-[var(--ember-hi)] transition hover:border-[var(--ember)] hover:text-[#ffd2ad]">
+                className="realm-button border px-5 py-3 text-sm transition"
+                style={{
+                  borderColor: "rgba(200,88,26,0.58)",
+                  background: "linear-gradient(180deg,rgba(36,16,10,0.86),rgba(24,10,6,0.92))",
+                  color: "var(--ember-hi)",
+                }}
+              >
                 Raid This Kingdom
               </button>
             ) : (
-              <div className="rounded-[20px] border border-[rgba(120,140,160,0.12)] bg-[rgba(255,255,255,0.01)] px-4 py-3 text-sm text-[var(--silver-3)]">
+              <div
+                className="border px-4 py-3 text-sm text-[var(--silver-3)]"
+                style={{ borderColor: "rgba(120,140,160,0.12)", background: "rgba(255,255,255,0.01)" }}
+              >
                 Sign in to raid this kingdom.
               </div>
             )}
           </div>
-
-          {errorMessage ? (
-            <p className="mt-3 text-sm text-[#ff9696]">{errorMessage}</p>
-          ) : null}
+          {errorMessage ? <p className="mt-3 text-sm text-[#ff9696]">{errorMessage}</p> : null}
         </div>
 
-        <div className="border-b border-[var(--b0)] px-5 py-5">
-          <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--silver-3)]">
-            Advisory
-          </div>
-          <div className="mt-3 rounded-[20px] border border-[var(--b0)] bg-[rgba(255,255,255,0.02)] px-4 py-4 text-sm leading-6 text-[var(--silver-2)]">
-            Strong treasuries support prolonged raids, while high defense makes
-            this keep harder to crack. Use the board view to inspect district
-            density before committing troops.
+        {/* Advisory */}
+        <div className="border-b px-5 py-5" style={{ borderColor: "var(--b0)" }}>
+          <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--silver-3)]">Advisory</div>
+          <div
+            className="mt-3 border px-4 py-4 text-sm leading-6 text-[var(--silver-2)]"
+            style={{ borderColor: "var(--b0)", background: "rgba(255,255,255,0.02)" }}
+          >
+            Strong treasuries support prolonged raids, while high defense makes this keep harder to crack. Use the
+            board view to inspect district density before committing troops.
           </div>
         </div>
 
+        {/* Recent Flags */}
         <div className="px-5 py-5">
-          <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--silver-3)]">
-            Recent Flags
-          </div>
+          <div className="text-[10px] uppercase tracking-[0.24em] text-[var(--silver-3)]">Recent Flags</div>
           <div className="mt-3 flex flex-wrap gap-2">
             {recentVisitors.length > 0 ? (
-              [...new Set(recentVisitors)].map(
-                (
-                  visitor,
-                  index // removes duplicates
-                ) => (
-                  <span
-                    key={`${visitor}-${index}`}
-                    className="border border-[var(--b1)] bg-[rgba(255,255,255,0.03)] px-3 py-1 text-sm text-[var(--silver-2)]">
-                    @{visitor}
-                  </span>
-                )
-              )
+              [...new Set(recentVisitors)].map((visitor, index) => (
+                <span
+                  key={`${visitor}-${index}`}
+                  className="border px-3 py-1 text-sm text-[var(--silver-2)]"
+                  style={{ borderColor: "var(--b1)", background: "rgba(255,255,255,0.03)" }}
+                >
+                  @{visitor}
+                </span>
+              ))
             ) : (
-              <span className="text-sm text-[var(--silver-3)]">
-                No scouts have left a flag yet.
-              </span>
+              <span className="text-sm text-[var(--silver-3)]">No scouts have left a flag yet.</span>
             )}
           </div>
         </div>

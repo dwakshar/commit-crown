@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { LeaderboardPodium } from "@/src/components/social/LeaderboardPodium";
 import { LeaderboardTable } from "@/src/components/social/LeaderboardTable";
 import { createClient } from "@/utils/supabase/server";
 
@@ -15,6 +16,7 @@ type LeaderboardRow = {
   raid_wins: number;
   languages?: Record<string, number> | null;
   top_language?: string | null;
+  banner_name?: string | null;
 };
 
 function extractTopLanguage(row: LeaderboardRow) {
@@ -76,9 +78,41 @@ export default async function LeaderboardPage({
     tab in queryMap ? (tab as keyof typeof queryMap) : "global";
   const { data, count } = await queryMap[selectedTab]();
 
-  const rows = ((data as LeaderboardRow[] | null) ?? []).map((row) => ({
+  const baseRows = ((data as LeaderboardRow[] | null) ?? []).map((row) => ({
     ...row,
     top_language: extractTopLanguage(row),
+  }));
+
+  // Fetch equipped banner names for all displayed users (batch query)
+  const userIds = baseRows.map((r) => r.user_id);
+  let bannerNameByUserId: Record<string, string | null> = {};
+  if (userIds.length > 0) {
+    const { data: kingdomBanners } = await supabase
+      .from("kingdoms")
+      .select("user_id, equipped_banner_id")
+      .in("user_id", userIds)
+      .not("equipped_banner_id", "is", null);
+
+    if (kingdomBanners && (kingdomBanners as { user_id: string; equipped_banner_id: string }[]).length > 0) {
+      const typedBanners = kingdomBanners as { user_id: string; equipped_banner_id: string }[];
+      const bannerItemIds = typedBanners.map((b) => b.equipped_banner_id);
+      const { data: bannerItems } = await supabase
+        .from("shop_items")
+        .select("id, name")
+        .in("id", bannerItemIds);
+
+      const itemNameById = new Map(
+        ((bannerItems as { id: string; name: string }[] | null) ?? []).map((i) => [i.id, i.name])
+      );
+      bannerNameByUserId = Object.fromEntries(
+        typedBanners.map((b) => [b.user_id, itemNameById.get(b.equipped_banner_id) ?? null])
+      );
+    }
+  }
+
+  const rows = baseRows.map((r) => ({
+    ...r,
+    banner_name: bannerNameByUserId[r.user_id] ?? null,
   }));
   const podiumRows = getPodiumRows(rows);
 
@@ -165,74 +199,7 @@ export default async function LeaderboardPage({
 
       <div className="mx-auto max-w-[1840px] px-6 py-16 md:px-9">
         <section className="mb-10">
-          <div className="mx-auto flex max-w-3xl items-end justify-center gap-4">
-            {podiumRows[1] ? (
-              <div className="flex max-w-[220px] flex-1 flex-col items-center gap-3">
-                <div className="flex h-[60px] w-[60px] items-center justify-center rounded-full border-2 border-[var(--plate-sheen)] bg-[var(--steel-3)] font-[var(--font-head)] text-2xl text-[var(--silver-1)]">
-                  {podiumRows[1].username.slice(0, 2).toUpperCase()}
-                </div>
-                <div className="text-center">
-                  <p className="font-[var(--font-head)] text-sm uppercase tracking-[0.05em] text-[var(--silver-0)]">
-                    @{podiumRows[1].username}
-                  </p>
-                  <p className="mt-1 text-sm italic text-[var(--silver-3)]">
-                    {podiumRows[1].kingdom_name}
-                  </p>
-                  <p className="mt-3 font-[var(--font-display)] text-3xl text-[var(--plate-sheen)]">
-                    {podiumRows[1].prestige.toLocaleString()}
-                  </p>
-                </div>
-                <div className="flex h-12 w-full items-center justify-center border border-[var(--plate-hi)] border-b-0 bg-[var(--steel-2)] font-[var(--font-display)] text-3xl text-[var(--plate-hi)]">
-                  II
-                </div>
-              </div>
-            ) : null}
-
-            {podiumRows[0] ? (
-              <div className="flex max-w-[220px] flex-1 flex-col items-center gap-4">
-                <div className="relative flex h-[76px] w-[76px] items-center justify-center rounded-full border-2 border-[var(--ember)] bg-[linear-gradient(135deg,var(--steel-4),var(--steel-5))] font-[var(--font-head)] text-[30px] text-[var(--silver-0)] shadow-[0_0_36px_rgba(200,88,26,0.3),0_0_60px_rgba(200,88,26,0.1)]">
-                  <span className="absolute -top-5 text-lg">⚔</span>
-                  {podiumRows[0].username.slice(0, 2).toUpperCase()}
-                </div>
-                <div className="text-center">
-                  <p className="font-[var(--font-head)] text-sm uppercase tracking-[0.05em] text-[var(--silver-0)]">
-                    @{podiumRows[0].username}
-                  </p>
-                  <p className="mt-1 text-sm italic text-[var(--silver-3)]">
-                    {podiumRows[0].kingdom_name}
-                  </p>
-                  <p className="mt-3 font-[var(--font-display)] text-[2.25rem] text-[var(--silver-0)]">
-                    {podiumRows[0].prestige.toLocaleString()}
-                  </p>
-                </div>
-                <div className="flex h-[68px] w-full items-center justify-center border border-[var(--ember-lo)] border-b-0 bg-[var(--steel-2)] font-[var(--font-display)] text-4xl text-[var(--ember-lo)]">
-                  I
-                </div>
-              </div>
-            ) : null}
-
-            {podiumRows[2] ? (
-              <div className="flex max-w-[220px] flex-1 flex-col items-center gap-3">
-                <div className="flex h-[60px] w-[60px] items-center justify-center rounded-full border-2 border-[var(--wood-3)] bg-[var(--steel-3)] font-[var(--font-head)] text-2xl text-[var(--silver-2)]">
-                  {podiumRows[2].username.slice(0, 2).toUpperCase()}
-                </div>
-                <div className="text-center">
-                  <p className="font-[var(--font-head)] text-sm uppercase tracking-[0.05em] text-[var(--silver-0)]">
-                    @{podiumRows[2].username}
-                  </p>
-                  <p className="mt-1 text-sm italic text-[var(--silver-3)]">
-                    {podiumRows[2].kingdom_name}
-                  </p>
-                  <p className="mt-3 font-[var(--font-display)] text-3xl text-[var(--wood-3)]">
-                    {podiumRows[2].prestige.toLocaleString()}
-                  </p>
-                </div>
-                <div className="flex h-[34px] w-full items-center justify-center border border-[var(--b1)] border-b-0 bg-[var(--steel-2)] font-[var(--font-display)] text-3xl text-[var(--silver-3)]">
-                  III
-                </div>
-              </div>
-            ) : null}
-          </div>
+          <LeaderboardPodium podiumRows={podiumRows} />
         </section>
 
         <div>

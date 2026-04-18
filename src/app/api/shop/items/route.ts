@@ -27,6 +27,7 @@ type BuildingRow = {
 type KingdomRow = {
   id: string
   theme_id: string | null
+  equipped_banner_id: string | null
   buildings: BuildingRow[] | null
 }
 
@@ -36,7 +37,7 @@ async function loadMarketplaceKingdom(
 ) {
   const primaryQuery = await supabase
     .from('kingdoms')
-    .select('id, theme_id, buildings(id, skin_id)')
+    .select('id, theme_id, equipped_banner_id, buildings(id, skin_id)')
     .eq('user_id', userId)
     .maybeSingle()
 
@@ -63,7 +64,7 @@ async function loadMarketplaceKingdom(
 
   return {
     kingdom: fallbackQuery.data
-      ? ({ ...(fallbackQuery.data as Omit<KingdomRow, 'theme_id'>), theme_id: null } as KingdomRow)
+      ? ({ ...(fallbackQuery.data as Omit<KingdomRow, 'theme_id' | 'equipped_banner_id'>), theme_id: null, equipped_banner_id: null } as KingdomRow)
       : null,
     themeColumnAvailable: false,
     error: fallbackQuery.error,
@@ -124,6 +125,8 @@ export async function GET() {
         targetId = kingdomRow?.id ?? null
         targetType = 'kingdom'
         equipped = kingdomRow?.theme_id === item.id
+      } else if (item.type === 'banner') {
+        equipped = kingdomRow?.equipped_banner_id === item.id
       }
 
       return {

@@ -56,6 +56,7 @@ export interface KingdomData {
   raids_enabled?: boolean;
   last_synced_at: string | null;
   themeId?: string | null;
+  equippedBannerName?: string | null;
   ownerName: string;
   ownerAvatarUrl: string | null;
   ownerGithubUsername?: string | null;

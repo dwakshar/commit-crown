@@ -104,6 +104,18 @@ async function getVisitData(username: string) {
       }
     : null
 
+  // Resolve equipped banner name for visual effects on scout report
+  let equippedBannerName: string | null = null
+  const equippedBannerId = (kingdom as { equipped_banner_id?: string | null } | null)?.equipped_banner_id ?? null
+  if (equippedBannerId) {
+    const { data: bannerItem } = await supabase
+      .from('shop_items')
+      .select('name')
+      .eq('id', equippedBannerId)
+      .maybeSingle()
+    equippedBannerName = (bannerItem as { name: string } | null)?.name ?? null
+  }
+
   const topLanguage =
     Object.entries(githubStats?.languages ?? {}).sort(([, a], [, b]) => b - a)[0]?.[0] ?? 'Unknown'
   const prestigeRank =
@@ -124,6 +136,7 @@ async function getVisitData(username: string) {
     raids_enabled: Boolean(result.raids_enabled),
     last_synced_at: kingdom.last_synced_at,
     themeId: kingdom.theme_id,
+    equippedBannerName,
     ownerName: result.username,
     ownerAvatarUrl: result.avatar_url,
     ownerGithubUsername: result.github_username,
