@@ -41,7 +41,7 @@ export function GitHubSignInButton({ initialError }: { initialError?: string | n
         type="button"
         onClick={handleSignIn}
         disabled={isLoading}
-        className="realm-button realm-button-primary rounded-[18px] px-5 py-3 disabled:cursor-not-allowed disabled:opacity-55"
+        className="realm-button realm-button-primary rounded-none px-10 py-4 text-sm disabled:cursor-not-allowed disabled:opacity-55"
       >
         {isLoading ? 'Connecting to GitHub...' : 'Sign In With GitHub'}
       </button>

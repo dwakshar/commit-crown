@@ -9,7 +9,9 @@
       "Bash(find /d/Projects/commit-crown/supabase/migrations -name \"*.sql\" -exec grep -l \"equipped\\\\|banner\" {} \\\\;)",
       "Bash(find /d/Projects/commit-crown/supabase/migrations -name \"*.sql\" -exec grep -l \"banner\\\\|equipped\" {} \\\\;)",
       "Bash(npx supabase:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(npx next:*)",
+      "Bash(grep -E \"\\(Error|error|^\\\\s+○|^\\\\s+ƒ\\\\s+/$\\)\")"
     ]
   }
 }

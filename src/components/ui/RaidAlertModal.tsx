@@ -2,6 +2,8 @@
 
 import { startTransition, useEffect, useRef, useState } from "react";
 
+import { useRouter } from "next/navigation";
+
 import { createClient } from "@/lib/supabase";
 import { useNotificationStore } from "@/src/store/notificationStore";
 import type { NotificationData } from "@/src/types/game";
@@ -26,6 +28,7 @@ function markSeen(id: string): void {
 }
 
 export function RaidAlertModal() {
+  const router = useRouter();
   const [raid, setRaid] = useState<NotificationData | null>(null);
   const [attackerName, setAttackerName] = useState<string | null>(null);
   // IDs shown in this browser session (before they're persisted on dismiss)
@@ -219,7 +222,7 @@ export function RaidAlertModal() {
 
           <button
             type="button"
-            onClick={dismiss}
+            onClick={() => { dismiss(); router.push("/kingdom"); }}
             className="mt-7 w-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] px-6 py-3 text-[10px] uppercase tracking-[0.3em] text-[var(--silver-2)] transition hover:border-[rgba(255,255,255,0.16)] hover:bg-[rgba(255,255,255,0.07)] hover:text-[var(--silver-0)]">
             Return to Kingdom
           </button>
