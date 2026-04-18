@@ -109,20 +109,24 @@ export function DragonLeaderboardRow({
         {raidWins}
       </td>
 
-      {/* Action — gold dragon button */}
+      {/* Action */}
       <td className="border-b border-[rgba(80,105,130,0.06)] px-4 py-4">
         <Link
           href={isCurrentUser ? '/kingdom' : `/visit/${username}`}
           className="realm-button inline-flex rounded-[2px] border px-6 py-2 text-[11px]"
-          style={{
+          style={isCurrentUser ? {
             borderColor: 'rgba(212,140,30,.65)',
             background: 'linear-gradient(135deg,rgba(50,10,2,.85),rgba(80,18,4,.75))',
             color: '#d4a830',
             boxShadow: '0 0 14px rgba(200,100,10,.3)',
+          } : {
+            borderColor: 'var(--b1)',
+            background: 'transparent',
+            color: 'var(--silver-3)',
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          🐉 Your Keep
+          {isCurrentUser ? '🐉 Your Keep' : 'Visit'}
         </Link>
       </td>
     </tr>
