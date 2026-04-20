@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -94,11 +95,41 @@ const FEATURES = [
 ];
 
 const MOCK_RANKS = [
-  { rank: 1, ruler: "dragonheart_dev", kingdom: "Iron Bastion", prestige: "128,440", raids: "24W" },
-  { rank: 2, ruler: "codesmith_rin", kingdom: "Silver Keep", prestige: "115,200", raids: "21W" },
-  { rank: 3, ruler: "forge_master", kingdom: "Ember Citadel", prestige: "98,360", raids: "18W" },
-  { rank: 4, ruler: "null_pointer_99", kingdom: "Shadow Hold", prestige: "87,100", raids: "15W" },
-  { rank: 5, ruler: "bitweaver_k", kingdom: "Storm Rampart", prestige: "76,800", raids: "12W" },
+  {
+    rank: 1,
+    ruler: "dragonheart_dev",
+    kingdom: "Iron Bastion",
+    prestige: "128,440",
+    raids: "24W",
+  },
+  {
+    rank: 2,
+    ruler: "codesmith_rin",
+    kingdom: "Silver Keep",
+    prestige: "115,200",
+    raids: "21W",
+  },
+  {
+    rank: 3,
+    ruler: "forge_master",
+    kingdom: "Ember Citadel",
+    prestige: "98,360",
+    raids: "18W",
+  },
+  {
+    rank: 4,
+    ruler: "null_pointer_99",
+    kingdom: "Shadow Hold",
+    prestige: "87,100",
+    raids: "15W",
+  },
+  {
+    rank: 5,
+    ruler: "bitweaver_k",
+    kingdom: "Storm Rampart",
+    prestige: "76,800",
+    raids: "12W",
+  },
 ];
 
 const RANK_COLORS = [
@@ -145,12 +176,10 @@ export default async function Home({
 
   return (
     <main className="min-h-screen overflow-x-hidden text-[var(--silver-1)] font-[var(--font-body)]">
-
       {/* ═══════════════════════════════════════════════
           HERO
           ═══════════════════════════════════════════════ */}
       <section className="relative min-h-screen flex flex-col overflow-hidden">
-
         {/* ── Layer 1: Deep base gradient ── */}
         <div className="absolute inset-0 bg-[linear-gradient(180deg,#030408_0%,#05070e_22%,#080d17_52%,#060910_78%,#030406_100%)]" />
 
@@ -168,48 +197,67 @@ export default async function Home({
         <div className="lp-orb-steel-r" />
 
         {/* ── Layer 6: Perspective grid (horizon converging lines) ── */}
-        <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 4 }}>
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ zIndex: 4 }}>
           <svg
             viewBox="0 0 1440 900"
             preserveAspectRatio="xMidYMax slice"
             xmlns="http://www.w3.org/2000/svg"
             className="absolute inset-0 w-full h-full">
             {/* Radiating lines from vanishing point (center top) */}
-            {[0, 160, 320, 480, 640, 720, 800, 960, 1120, 1280, 1440].map((bx, i) => (
-              <line
-                key={`r${i}`}
-                x1={720} y1={0}
-                x2={bx} y2={900}
-                stroke="rgba(100,130,160,0.04)"
-                strokeWidth="1"
-              />
-            ))}
-            {/* Horizontal depth lines — narrow near top, full-width at bottom */}
-            {[180, 320, 460, 580, 690, 780, 860].map((y, i) => {
-              const d = y / 900
-              const lx = +(720 - 720 * d).toFixed(1)
-              const rx = +(720 + 720 * d).toFixed(1)
-              const op = (d * 0.09).toFixed(3)
-              return (
+            {[0, 160, 320, 480, 640, 720, 800, 960, 1120, 1280, 1440].map(
+              (bx, i) => (
                 <line
-                  key={`h${i}`}
-                  x1={lx} y1={y}
-                  x2={rx} y2={y}
-                  stroke={`rgba(100,130,160,${op})`}
+                  key={`r${i}`}
+                  x1={720}
+                  y1={0}
+                  x2={bx}
+                  y2={900}
+                  stroke="rgba(100,130,160,0.04)"
                   strokeWidth="1"
                 />
               )
+            )}
+            {/* Horizontal depth lines — narrow near top, full-width at bottom */}
+            {[180, 320, 460, 580, 690, 780, 860].map((y, i) => {
+              const d = y / 900;
+              const lx = +(720 - 720 * d).toFixed(1);
+              const rx = +(720 + 720 * d).toFixed(1);
+              const op = (d * 0.09).toFixed(3);
+              return (
+                <line
+                  key={`h${i}`}
+                  x1={lx}
+                  y1={y}
+                  x2={rx}
+                  y2={y}
+                  stroke={`rgba(100,130,160,${op})`}
+                  strokeWidth="1"
+                />
+              );
             })}
           </svg>
         </div>
 
         {/* ── Layer 7: Mist drift layers ── */}
-        <div className="absolute bottom-0 left-[-25%] right-[-25%] h-[48%] pointer-events-none bg-[radial-gradient(ellipse_80%_100%_at_50%_100%,rgba(90,115,145,0.06)_0%,transparent_70%)] animate-[mist-drift_16s_ease-in-out_infinite_alternate]" style={{ zIndex: 5 }} />
-        <div className="absolute bottom-[8%] left-[-15%] right-[-15%] h-[30%] pointer-events-none bg-[radial-gradient(ellipse_60%_100%_at_30%_100%,rgba(70,90,120,0.05)_0%,transparent_70%)] animate-[mist-drift_22s_ease-in-out_infinite_alternate-reverse]" style={{ zIndex: 5 }} />
-        <div className="absolute bottom-[20%] left-0 right-0 h-[20%] pointer-events-none bg-[radial-gradient(ellipse_40%_100%_at_65%_100%,rgba(60,80,110,0.04)_0%,transparent_70%)] animate-[mist-drift_30s_ease-in-out_infinite_alternate]" style={{ zIndex: 5 }} />
+        <div
+          className="absolute bottom-0 left-[-25%] right-[-25%] h-[48%] pointer-events-none bg-[radial-gradient(ellipse_80%_100%_at_50%_100%,rgba(90,115,145,0.06)_0%,transparent_70%)] animate-[mist-drift_16s_ease-in-out_infinite_alternate]"
+          style={{ zIndex: 5 }}
+        />
+        <div
+          className="absolute bottom-[8%] left-[-15%] right-[-15%] h-[30%] pointer-events-none bg-[radial-gradient(ellipse_60%_100%_at_30%_100%,rgba(70,90,120,0.05)_0%,transparent_70%)] animate-[mist-drift_22s_ease-in-out_infinite_alternate-reverse]"
+          style={{ zIndex: 5 }}
+        />
+        <div
+          className="absolute bottom-[20%] left-0 right-0 h-[20%] pointer-events-none bg-[radial-gradient(ellipse_40%_100%_at_65%_100%,rgba(60,80,110,0.04)_0%,transparent_70%)] animate-[mist-drift_30s_ease-in-out_infinite_alternate]"
+          style={{ zIndex: 5 }}
+        />
 
         {/* ── Layer 8: Mountain + Castle SVG ── */}
-        <div className="absolute bottom-0 left-0 right-0 h-[62%] pointer-events-none" style={{ zIndex: 6 }}>
+        <div
+          className="absolute bottom-0 left-0 right-0 h-[62%] pointer-events-none"
+          style={{ zIndex: 6 }}>
           <svg
             viewBox="0 0 1440 480"
             preserveAspectRatio="none"
@@ -231,32 +279,68 @@ export default async function Home({
             </defs>
             <polygon
               points="0,480 90,220 180,285 310,140 420,230 550,85 680,175 800,65 920,145 1050,100 1160,185 1290,140 1380,195 1440,170 1440,480"
-              fill="url(#mtn1)" opacity="0.6" />
+              fill="url(#mtn1)"
+              opacity="0.6"
+            />
             <polygon
               points="0,480 150,280 300,330 450,220 590,300 730,195 870,265 1020,200 1180,255 1340,215 1440,240 1440,480"
-              fill="url(#mtn2)" opacity="0.85" />
+              fill="url(#mtn2)"
+              opacity="0.85"
+            />
             <polygon
               points="0,480 200,350 420,390 620,320 820,375 1000,305 1200,360 1440,330 1440,480"
-              fill="url(#mtn3)" />
+              fill="url(#mtn3)"
+            />
             {/* Castle body */}
             <rect x="590" y="370" width="260" height="20" fill="#040507" />
-            <rect x="600" y="365" width="240" height="8"  fill="#06080c" />
+            <rect x="600" y="365" width="240" height="8" fill="#06080c" />
             <rect x="605" y="300" width="230" height="70" fill="#050709" />
-            <rect x="590" y="255" width="56"  height="115" fill="#060810" />
+            <rect x="590" y="255" width="56" height="115" fill="#060810" />
             <polygon points="590,240 646,240 634,205 602,205" fill="#04060a" />
-            <rect x="794" y="255" width="56"  height="115" fill="#060810" />
+            <rect x="794" y="255" width="56" height="115" fill="#060810" />
             <polygon points="794,240 850,240 848,205 796,205" fill="#04060a" />
             <rect x="660" y="210" width="120" height="160" fill="#07090f" />
             <polygon points="660,202 780,202 770,160 670,160" fill="#05070c" />
-            <rect x="707" y="140" width="26"  height="64"  fill="#08090f" />
+            <rect x="707" y="140" width="26" height="64" fill="#08090f" />
             <polygon points="705,133 735,133 720,88" fill="#06080e" />
-            <rect x="698" y="326" width="44"  height="44"  fill="#030405" />
+            <rect x="698" y="326" width="44" height="44" fill="#030405" />
             <ellipse cx="720" cy="326" rx="22" ry="14" fill="#030405" />
             {/* Castle windows — ember-lit */}
-            <rect x="682" y="235" width="10" height="13" fill="#c85a1a" opacity="0.22" rx="1" />
-            <rect x="748" y="235" width="10" height="13" fill="#c85a1a" opacity="0.19" rx="1" />
-            <rect x="715" y="235" width="10" height="13" fill="#c85a1a" opacity="0.24" rx="1" />
-            <ellipse cx="720" cy="370" rx="80" ry="12" fill="#c85a1a" opacity="0.07" />
+            <rect
+              x="682"
+              y="235"
+              width="10"
+              height="13"
+              fill="#c85a1a"
+              opacity="0.22"
+              rx="1"
+            />
+            <rect
+              x="748"
+              y="235"
+              width="10"
+              height="13"
+              fill="#c85a1a"
+              opacity="0.19"
+              rx="1"
+            />
+            <rect
+              x="715"
+              y="235"
+              width="10"
+              height="13"
+              fill="#c85a1a"
+              opacity="0.24"
+              rx="1"
+            />
+            <ellipse
+              cx="720"
+              cy="370"
+              rx="80"
+              ry="12"
+              fill="#c85a1a"
+              opacity="0.07"
+            />
           </svg>
         </div>
 
@@ -264,31 +348,42 @@ export default async function Home({
         <div className="lp-orb-castle" />
 
         {/* ── Layer 10: CSS ember particles rising from castle ── */}
-        <div className="absolute pointer-events-none" style={{ bottom: '30%', left: '50%', transform: 'translateX(-50%)', width: '180px', height: 0, zIndex: 7 }}>
+        <div
+          className="absolute pointer-events-none"
+          style={{
+            bottom: "30%",
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: "180px",
+            height: 0,
+            zIndex: 7,
+          }}>
           {[
-            { left: '10%', dur: '3.2s', delay: '0s',    drift: '18px'  },
-            { left: '28%', dur: '4.0s', delay: '0.7s',  drift: '-14px' },
-            { left: '45%', dur: '3.6s', delay: '1.4s',  drift: '22px'  },
-            { left: '55%', dur: '4.4s', delay: '0.3s',  drift: '-20px' },
-            { left: '70%', dur: '3.0s', delay: '1.1s',  drift: '12px'  },
-            { left: '82%', dur: '4.8s', delay: '1.8s',  drift: '-16px' },
-            { left: '35%', dur: '3.8s', delay: '2.2s',  drift: '24px'  },
-            { left: '62%', dur: '3.4s', delay: '0.9s',  drift: '-10px' },
+            { left: "10%", dur: "3.2s", delay: "0s", drift: "18px" },
+            { left: "28%", dur: "4.0s", delay: "0.7s", drift: "-14px" },
+            { left: "45%", dur: "3.6s", delay: "1.4s", drift: "22px" },
+            { left: "55%", dur: "4.4s", delay: "0.3s", drift: "-20px" },
+            { left: "70%", dur: "3.0s", delay: "1.1s", drift: "12px" },
+            { left: "82%", dur: "4.8s", delay: "1.8s", drift: "-16px" },
+            { left: "35%", dur: "3.8s", delay: "2.2s", drift: "24px" },
+            { left: "62%", dur: "3.4s", delay: "0.9s", drift: "-10px" },
           ].map((e, i) => (
             <div
               key={i}
               className="absolute opacity-0 bg-[var(--ember)]"
-              style={{
-                left: e.left,
-                width: i % 3 === 0 ? '2px' : '1.5px',
-                height: i % 3 === 0 ? '2px' : '1.5px',
-                animationName: 'ember-rise',
-                animationDuration: e.dur,
-                animationDelay: e.delay,
-                animationIterationCount: 'infinite',
-                animationTimingFunction: 'ease-out',
-                '--ember-drift': e.drift,
-              } as React.CSSProperties}
+              style={
+                {
+                  left: e.left,
+                  width: i % 3 === 0 ? "2px" : "1.5px",
+                  height: i % 3 === 0 ? "2px" : "1.5px",
+                  animationName: "ember-rise",
+                  animationDuration: e.dur,
+                  animationDelay: e.delay,
+                  animationIterationCount: "infinite",
+                  animationTimingFunction: "ease-out",
+                  "--ember-drift": e.drift,
+                } as React.CSSProperties
+              }
             />
           ))}
         </div>
@@ -297,16 +392,25 @@ export default async function Home({
         <div className="lp-vignette" />
 
         {/* ── Navigation ── */}
-        <nav className="relative flex items-center justify-between px-8 py-7" style={{ zIndex: 20 }}>
+        <nav
+          className="relative flex items-center justify-between px-8 py-7"
+          style={{ zIndex: 20 }}>
           <div className="flex items-center gap-3 font-[var(--font-head)] text-[15px] tracking-[0.05em] text-[var(--silver-0)]">
-            <div className="realm-orb h-8 w-8 border border-[var(--b2)]" />
-            CommitCrown
+            <Image
+              src="/logo.svg"
+              alt="CommitCrown"
+              width={32}
+              height={32}
+              className="h-8 w-8"
+              priority
+            />
+            Commit Crown
           </div>
           <div className="hidden md:flex items-center gap-8">
             {[
               { label: "How It Works", href: "#how-it-works" },
-              { label: "Features",     href: "#features"     },
-              { label: "Leaderboard",  href: "#leaderboard"  },
+              { label: "Features", href: "#features" },
+              { label: "Leaderboard", href: "#leaderboard" },
             ].map((link) => (
               <a
                 key={link.href}
@@ -329,8 +433,9 @@ export default async function Home({
         </nav>
 
         {/* ── Hero content ── */}
-        <div className="relative flex-1 flex flex-col items-center justify-center px-6 text-center pb-24" style={{ zIndex: 10 }}>
-
+        <div
+          className="relative flex-1 flex flex-col items-center justify-center px-6 text-center pb-24"
+          style={{ zIndex: 10 }}>
           <div className="lp-hero-badge mb-8 inline-flex items-center gap-3 border border-[var(--b1)] bg-[rgba(16,20,30,0.8)] px-5 py-2 backdrop-blur-[2px]">
             <span className="w-1.5 h-1.5 bg-[var(--ember)] inline-block animate-[pulse_2s_ease-in-out_infinite]" />
             <span className="text-[11px] tracking-[0.22em] uppercase text-[var(--silver-2)] font-[var(--font-head)]">
@@ -353,7 +458,9 @@ export default async function Home({
             GitHub history builds a realm that breathes, battles, and endures.
           </p>
 
-          <div id="enlist" className="lp-hero-cta mt-10 flex flex-col sm:flex-row gap-4 items-center">
+          <div
+            id="enlist"
+            className="lp-hero-cta mt-10 flex flex-col sm:flex-row gap-4 items-center">
             <GitHubSignInButton initialError={authErrorMessage} />
             <Link
               href="#how-it-works"
@@ -374,7 +481,13 @@ export default async function Home({
           style={{ zIndex: 20 }}>
           SCROLL
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M3 5L8 11L13 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+            <path
+              d="M3 5L8 11L13 5"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         </a>
       </section>
@@ -401,14 +514,19 @@ export default async function Home({
       <div className="border-b border-[var(--b1)] bg-[linear-gradient(180deg,var(--steel-1)_0%,var(--steel-2)_100%)] py-16">
         <div className="mx-auto max-w-5xl grid grid-cols-2 md:grid-cols-4">
           {[
-            { value: (kingdomCount ?? 0).toLocaleString(), label: "Kingdoms Forged" },
+            {
+              value: (kingdomCount ?? 0).toLocaleString(),
+              label: "Kingdoms Forged",
+            },
             { value: "120K+", label: "Commits Chronicled" },
             { value: "18K+", label: "Raids Waged" },
             { value: "62", label: "Languages of War" },
           ].map((stat, i) => (
             <div
               key={stat.label}
-              className={`text-center px-6 py-2 ${i < 3 ? "border-r border-[var(--b0)]" : ""}`}>
+              className={`text-center px-6 py-2 ${
+                i < 3 ? "border-r border-[var(--b0)]" : ""
+              }`}>
               <div className="font-[var(--font-display)] text-[clamp(2rem,4vw,3rem)] text-[var(--silver-0)] leading-none">
                 {stat.value}
               </div>
@@ -423,19 +541,24 @@ export default async function Home({
       {/* ═══════════════════════════════════════════════
           HOW IT WORKS
           ═══════════════════════════════════════════════ */}
-      <section id="how-it-works" className="px-6 py-28 bg-[var(--abyss)] border-b border-[var(--b0)]">
+      <section
+        id="how-it-works"
+        className="px-6 py-28 bg-[var(--abyss)] border-b border-[var(--b0)]">
         <div className="mx-auto max-w-6xl">
           <div className="text-center mb-20">
             <div className="inline-flex items-center gap-5 mb-5">
               <div className="h-px w-10 bg-gradient-to-r from-transparent via-[var(--ember-lo)] to-transparent" />
-              <span className="realm-label text-[var(--silver-3)]">The Path to Power</span>
+              <span className="realm-label text-[var(--silver-3)]">
+                The Path to Power
+              </span>
               <div className="h-px w-10 bg-gradient-to-r from-transparent via-[var(--ember-lo)] to-transparent" />
             </div>
             <h2 className="realm-page-title text-[clamp(2rem,5vw,3.4rem)] font-bold text-[var(--silver-0)]">
               From Code to Crown
             </h2>
             <p className="realm-lore mx-auto mt-5 max-w-lg text-base leading-relaxed text-[var(--silver-2)]">
-              Three forces drive the realm. Three steps separate a coder from a king.
+              Three forces drive the realm. Three steps separate a coder from a
+              king.
             </p>
           </div>
 
@@ -473,7 +596,6 @@ export default async function Home({
       <section className="px-6 py-28 bg-[var(--steel-0)] border-b border-[var(--b0)]">
         <div className="mx-auto max-w-6xl">
           <div className="grid lg:grid-cols-[1fr_420px] gap-16 items-center">
-
             {/* Game window mockup */}
             <div className="lp-game-window order-2 lg:order-1">
               {/* Title bar */}
@@ -506,8 +628,12 @@ export default async function Home({
                   ].map((res) => (
                     <div key={res.label}>
                       <div className="flex justify-between text-[10px] mb-1.5">
-                        <span className="text-[var(--silver-3)] tracking-[0.1em] uppercase">{res.label}</span>
-                        <span className="text-[var(--silver-2)]">{res.value}</span>
+                        <span className="text-[var(--silver-3)] tracking-[0.1em] uppercase">
+                          {res.label}
+                        </span>
+                        <span className="text-[var(--silver-2)]">
+                          {res.value}
+                        </span>
                       </div>
                       <div className="h-[3px] bg-[var(--steel-4)] overflow-hidden">
                         <div
@@ -539,7 +665,9 @@ export default async function Home({
                         <span className="text-sm">{s.icon}</span>
                         {s.name}
                       </div>
-                      <span className="text-[10px] text-[var(--ember)]">Lv {s.level}</span>
+                      <span className="text-[10px] text-[var(--ember)]">
+                        Lv {s.level}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -553,9 +681,15 @@ export default async function Home({
                     { msg: "refactor: clean services", lang: "TS" },
                     { msg: "docs: update README", lang: "MD" },
                   ].map((c, i) => (
-                    <div key={i} className="py-2 border-b border-[var(--b0)] last:border-0">
-                      <div className="text-[11px] text-[var(--silver-2)] truncate">{c.msg}</div>
-                      <div className="text-[9px] text-[var(--plate-hi)] mt-0.5 uppercase tracking-[0.1em]">{c.lang}</div>
+                    <div
+                      key={i}
+                      className="py-2 border-b border-[var(--b0)] last:border-0">
+                      <div className="text-[11px] text-[var(--silver-2)] truncate">
+                        {c.msg}
+                      </div>
+                      <div className="text-[9px] text-[var(--plate-hi)] mt-0.5 uppercase tracking-[0.1em]">
+                        {c.lang}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -564,13 +698,26 @@ export default async function Home({
               {/* Status bar */}
               <div className="flex items-center justify-between px-5 py-3 border-t border-[var(--b1)] bg-[var(--steel-2)]">
                 {[
-                  { label: "Streak", value: "14 days", color: "text-[var(--ember)]" },
-                  { label: "Languages", value: "5 active", color: "text-[var(--plate-sheen)]" },
-                  { label: "Raids", value: "12W / 3L", color: "text-[var(--silver-1)]" },
+                  {
+                    label: "Streak",
+                    value: "14 days",
+                    color: "text-[var(--ember)]",
+                  },
+                  {
+                    label: "Languages",
+                    value: "5 active",
+                    color: "text-[var(--plate-sheen)]",
+                  },
+                  {
+                    label: "Raids",
+                    value: "12W / 3L",
+                    color: "text-[var(--silver-1)]",
+                  },
                 ].map((s) => (
-                  <span key={s.label} className="text-[10px] tracking-[0.14em] uppercase text-[var(--silver-3)]">
-                    {s.label}:{" "}
-                    <span className={s.color}>{s.value}</span>
+                  <span
+                    key={s.label}
+                    className="text-[10px] tracking-[0.14em] uppercase text-[var(--silver-3)]">
+                    {s.label}: <span className={s.color}>{s.value}</span>
                   </span>
                 ))}
               </div>
@@ -580,16 +727,20 @@ export default async function Home({
             <div className="order-1 lg:order-2">
               <div className="inline-flex items-center gap-4 mb-6">
                 <div className="h-px w-8 bg-[var(--ember)]" />
-                <span className="realm-label text-[var(--silver-3)]">The Realm</span>
+                <span className="realm-label text-[var(--silver-3)]">
+                  The Realm
+                </span>
               </div>
               <h2 className="realm-page-title text-[clamp(2rem,4vw,3rem)] font-bold text-[var(--silver-0)] mb-6 leading-tight">
-                A Living Kingdom,<br />Forged in Code
+                A Living Kingdom,
+                <br />
+                Forged in Code
               </h2>
               <p className="realm-lore text-[15px] leading-relaxed text-[var(--silver-2)] mb-8">
-                Your GitHub history doesn&apos;t disappear into a timeline. It becomes
-                architecture — walls, towers, armies. Every language you master,
-                every streak you maintain, every project you ship builds a realm
-                that is uniquely, permanently yours.
+                Your GitHub history doesn&apos;t disappear into a timeline. It
+                becomes architecture — walls, towers, armies. Every language you
+                master, every streak you maintain, every project you ship builds
+                a realm that is uniquely, permanently yours.
               </p>
               <ul className="space-y-3">
                 {[
@@ -598,7 +749,9 @@ export default async function Home({
                   "Language diversity unlocks new buildings",
                   "Stars and forks generate passive prestige",
                 ].map((point) => (
-                  <li key={point} className="flex items-start gap-4 text-sm text-[var(--silver-2)]">
+                  <li
+                    key={point}
+                    className="flex items-start gap-4 text-sm text-[var(--silver-2)]">
                     <span className="mt-1 w-4 h-4 border border-[var(--ember)] flex items-center justify-center flex-shrink-0">
                       <span className="w-1.5 h-1.5 bg-[var(--ember)] block" />
                     </span>
@@ -614,13 +767,16 @@ export default async function Home({
       {/* ═══════════════════════════════════════════════
           FEATURES
           ═══════════════════════════════════════════════ */}
-      <section id="features" className="px-6 py-28 bg-[var(--abyss)] border-b border-[var(--b0)]">
+      <section
+        id="features"
+        className="px-6 py-28 bg-[var(--abyss)] border-b border-[var(--b0)]">
         <div className="mx-auto max-w-6xl">
-
           <div className="text-center mb-20">
             <div className="inline-flex items-center gap-5 mb-5">
               <div className="h-px w-10 bg-gradient-to-r from-transparent via-[var(--ember-lo)] to-transparent" />
-              <span className="realm-label text-[var(--silver-3)]">The Pillars of the Realm</span>
+              <span className="realm-label text-[var(--silver-3)]">
+                The Pillars of the Realm
+              </span>
               <div className="h-px w-10 bg-gradient-to-r from-transparent via-[var(--ember-lo)] to-transparent" />
             </div>
             <h2 className="realm-page-title text-[clamp(2rem,5vw,3.4rem)] font-bold text-[var(--silver-0)]">
@@ -657,7 +813,6 @@ export default async function Home({
               </div>
             ))}
           </RevealGrid>
-
         </div>
       </section>
 
@@ -669,31 +824,40 @@ export default async function Home({
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--ember-lo)] to-transparent" />
         <div className="relative mx-auto max-w-6xl">
           <div className="grid lg:grid-cols-[1fr_auto] gap-12 items-center">
-
             {/* Left: text */}
             <div>
               <div className="inline-flex items-center gap-4 mb-6">
                 <div className="h-px w-8 bg-[var(--ember-lo)]" />
-                <span className="realm-label text-[var(--ember)]">Ruler&apos;s Handbook</span>
+                <span className="realm-label text-[var(--ember)]">
+                  Ruler&apos;s Handbook
+                </span>
               </div>
               <h2 className="realm-page-title text-[clamp(1.8rem,4vw,3rem)] font-bold text-[var(--silver-0)] mb-5 leading-tight">
-                New to CommitCrown?<br />
+                New to CommitCrown?
+                <br />
                 <span className="text-[var(--ember)]">Start Here.</span>
               </h2>
               <p className="realm-lore max-w-lg text-[15px] leading-relaxed text-[var(--silver-2)] mb-8">
-                The Ruler&apos;s Handbook walks you through every mechanic — from
-                signing in to conquering the leaderboard — with step-by-step
-                explanations and live game-UI previews for every concept.
+                The Ruler&apos;s Handbook walks you through every mechanic —
+                from signing in to conquering the leaderboard — with
+                step-by-step explanations and live game-UI previews for every
+                concept.
               </p>
               <div className="flex flex-wrap gap-6 mb-10">
                 {[
                   { num: "13", label: "Game mechanics" },
-                  { num: "12",  label: "Min read" },
-                  { num: "∞",  label: "All skill levels" },
+                  { num: "12", label: "Min read" },
+                  { num: "∞", label: "All skill levels" },
                 ].map((stat) => (
-                  <div key={stat.label} className="border border-[var(--b1)] px-5 py-3 text-center">
-                    <div className="font-[var(--font-display)] text-[1.6rem] text-[var(--ember)] leading-none">{stat.num}</div>
-                    <div className="text-[9px] tracking-[0.18em] uppercase text-[var(--silver-4)] mt-1">{stat.label}</div>
+                  <div
+                    key={stat.label}
+                    className="border border-[var(--b1)] px-5 py-3 text-center">
+                    <div className="font-[var(--font-display)] text-[1.6rem] text-[var(--ember)] leading-none">
+                      {stat.num}
+                    </div>
+                    <div className="text-[9px] tracking-[0.18em] uppercase text-[var(--silver-4)] mt-1">
+                      {stat.label}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -702,7 +866,13 @@ export default async function Home({
                 className="realm-button realm-button-primary px-10 py-4 text-sm inline-flex items-center gap-3">
                 Open the Handbook
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path d="M3 7h8M7 3l4 4-4 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                  <path
+                    d="M3 7h8M7 3l4 4-4 4"
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               </Link>
             </div>
@@ -710,11 +880,11 @@ export default async function Home({
             {/* Right: step preview cards */}
             <div className="hidden lg:flex flex-col gap-px w-[280px] border border-[var(--b1)] overflow-hidden">
               {[
-                { n: "01", title: "Sign In With GitHub",  icon: "⚡" },
-                { n: "02", title: "Kingdom Creation",     icon: "🏰" },
-                { n: "03", title: "Dashboard Overview",   icon: "🗺️" },
-                { n: "04", title: "Resources Explained",  icon: "⚒️" },
-                { n: "05", title: "Placing Buildings",    icon: "🔨" },
+                { n: "01", title: "Sign In With GitHub", icon: "⚡" },
+                { n: "02", title: "Kingdom Creation", icon: "🏰" },
+                { n: "03", title: "Dashboard Overview", icon: "🗺️" },
+                { n: "04", title: "Resources Explained", icon: "⚒️" },
+                { n: "05", title: "Placing Buildings", icon: "🔨" },
               ].map((step, i) => (
                 <Link
                   key={step.n}
@@ -727,8 +897,20 @@ export default async function Home({
                   <span className="text-[11px] text-[var(--silver-3)] group-hover:text-[var(--silver-1)] transition-colors leading-snug">
                     {step.title}
                   </span>
-                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                    <path d="M2 5h6M5 2l3 3-3 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--ember)]" />
+                  <svg
+                    width="10"
+                    height="10"
+                    viewBox="0 0 10 10"
+                    fill="none"
+                    className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                    <path
+                      d="M2 5h6M5 2l3 3-3 3"
+                      stroke="currentColor"
+                      strokeWidth="1.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-[var(--ember)]"
+                    />
                   </svg>
                 </Link>
               ))}
@@ -738,7 +920,6 @@ export default async function Home({
                 View all 13 steps →
               </Link>
             </div>
-
           </div>
         </div>
       </section>
@@ -746,20 +927,24 @@ export default async function Home({
       {/* ═══════════════════════════════════════════════
           LEADERBOARD PREVIEW
           ═══════════════════════════════════════════════ */}
-      <section id="leaderboard" className="px-6 py-28 bg-[var(--steel-0)] border-b border-[var(--b0)]">
+      <section
+        id="leaderboard"
+        className="px-6 py-28 bg-[var(--steel-0)] border-b border-[var(--b0)]">
         <div className="mx-auto max-w-4xl">
           <div className="text-center mb-14">
             <div className="inline-flex items-center gap-5 mb-5">
               <div className="h-px w-10 bg-gradient-to-r from-transparent via-[var(--ember-lo)] to-transparent" />
-              <span className="realm-label text-[var(--silver-3)]">Hall of Legend</span>
+              <span className="realm-label text-[var(--silver-3)]">
+                Hall of Legend
+              </span>
               <div className="h-px w-10 bg-gradient-to-r from-transparent via-[var(--ember-lo)] to-transparent" />
             </div>
             <h2 className="realm-page-title text-[clamp(2rem,4.5vw,3.2rem)] font-bold text-[var(--silver-0)]">
               The Mightiest Realms
             </h2>
             <p className="realm-lore mx-auto mt-5 max-w-lg text-base leading-relaxed text-[var(--silver-2)]">
-              No purchases. No shortcuts. Only those who commit — day after day —
-              rise to legend.
+              No purchases. No shortcuts. Only those who commit — day after day
+              — rise to legend.
             </p>
           </div>
 
@@ -767,7 +952,9 @@ export default async function Home({
             {/* Header row */}
             <div className="grid grid-cols-[2.5rem_1fr_1fr_auto_auto] gap-6 px-6 py-3 border-b border-[var(--b1)] bg-[var(--steel-2)]">
               {["#", "Ruler", "Kingdom", "Prestige", "Raids"].map((h) => (
-                <div key={h} className="realm-label text-[9px] text-[var(--silver-4)]">
+                <div
+                  key={h}
+                  className="realm-label text-[9px] text-[var(--silver-4)]">
                   {h}
                 </div>
               ))}
@@ -777,11 +964,16 @@ export default async function Home({
               <div
                 key={row.rank}
                 className="grid grid-cols-[2.5rem_1fr_1fr_auto_auto] gap-6 items-center px-6 py-4 border-b border-[var(--b0)] last:border-0 hover:bg-[var(--steel-glow)] transition-colors">
-                <div className={`font-[var(--font-head)] text-sm ${RANK_COLORS[idx]}`}>
+                <div
+                  className={`font-[var(--font-head)] text-sm ${RANK_COLORS[idx]}`}>
                   {row.rank}
                 </div>
-                <div className="text-sm text-[var(--silver-1)] truncate">{row.ruler}</div>
-                <div className="text-sm text-[var(--silver-2)] truncate">{row.kingdom}</div>
+                <div className="text-sm text-[var(--silver-1)] truncate">
+                  {row.ruler}
+                </div>
+                <div className="text-sm text-[var(--silver-2)] truncate">
+                  {row.kingdom}
+                </div>
                 <div className="text-sm font-[var(--font-head)] text-[var(--silver-0)]">
                   {row.prestige}
                 </div>
@@ -809,7 +1001,6 @@ export default async function Home({
           FINAL CTA
           ═══════════════════════════════════════════════ */}
       <section className="relative px-6 py-36 overflow-hidden border-b border-[var(--b0)]">
-
         {/* ── Layer 1: Game screenshot background ── */}
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -829,7 +1020,9 @@ export default async function Home({
         <div className="relative mx-auto max-w-2xl text-center">
           <div className="inline-flex items-center gap-6 mb-8">
             <div className="h-px w-16 bg-gradient-to-r from-transparent via-[var(--ember-lo)] to-transparent" />
-            <span className="realm-label text-[var(--silver-4)]">Begin Your Reign</span>
+            <span className="realm-label text-[var(--silver-4)]">
+              Begin Your Reign
+            </span>
             <div className="h-px w-16 bg-gradient-to-l from-transparent via-[var(--ember-lo)] to-transparent" />
           </div>
 
@@ -838,8 +1031,8 @@ export default async function Home({
           </h2>
 
           <p className="realm-lore mx-auto max-w-md text-[17px] leading-relaxed text-[var(--silver-2)] mb-12">
-            Your GitHub history is already a kingdom waiting to be born.
-            One sign-in is all it takes to raise your walls.
+            Your GitHub history is already a kingdom waiting to be born. One
+            sign-in is all it takes to raise your walls.
           </p>
 
           <div className="flex flex-col items-center gap-4">
@@ -851,10 +1044,22 @@ export default async function Home({
                 target="_blank"
                 rel="noopener noreferrer"
                 className="realm-button realm-button-secondary border border-[var(--b1)] px-8 py-4 text-sm inline-flex items-center gap-2.5 hover:border-[var(--silver-4)] transition-colors">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="opacity-70">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="opacity-70">
                   <path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.387-1.333-1.756-1.333-1.756-1.09-.745.083-.73.083-.73 1.205.085 1.838 1.236 1.838 1.236 1.07 1.835 2.807 1.305 3.492.998.108-.776.42-1.305.763-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12" />
                 </svg>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[var(--ember)]">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="text-[var(--ember)]">
                   <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                 </svg>
                 Star on GitHub
@@ -884,7 +1089,9 @@ export default async function Home({
                 <div className="font-[var(--font-head)] text-[11px] tracking-[0.14em] uppercase text-[var(--silver-0)] mb-2">
                   {item.label}
                 </div>
-                <div className="text-xs text-[var(--silver-3)] leading-relaxed">{item.desc}</div>
+                <div className="text-xs text-[var(--silver-3)] leading-relaxed">
+                  {item.desc}
+                </div>
               </div>
             ))}
           </div>
@@ -901,16 +1108,17 @@ export default async function Home({
             CommitCrown
           </div>
           <p className="text-[10px] tracking-[0.1em] text-[var(--silver-4)] text-center">
-            Turn code into conquest. No subscriptions. No shortcuts. Only commits.
+            Turn code into conquest. No subscriptions. No shortcuts. Only
+            commits.
           </p>
           <div className="flex gap-6">
             {[
-              { label: "Features",    href: "#features"    },
+              { label: "Features", href: "#features" },
               { label: "Leaderboard", href: "#leaderboard" },
-              { label: "Tutorial",    href: "/tutorial"    },
-              { label: "Sign In",     href: "#enlist"      },
-            ].map((link) => (
-              link.href.startsWith('/') ? (
+              { label: "Tutorial", href: "/tutorial" },
+              { label: "Sign In", href: "#enlist" },
+            ].map((link) =>
+              link.href.startsWith("/") ? (
                 <Link
                   key={link.href}
                   href={link.href}
@@ -918,14 +1126,14 @@ export default async function Home({
                   {link.label}
                 </Link>
               ) : (
-              <a
-                key={link.href}
-                href={link.href}
-                className="text-[10px] tracking-[0.16em] uppercase text-[var(--silver-4)] hover:text-[var(--silver-2)] transition-colors">
-                {link.label}
-              </a>
+                <a
+                  key={link.href}
+                  href={link.href}
+                  className="text-[10px] tracking-[0.16em] uppercase text-[var(--silver-4)] hover:text-[var(--silver-2)] transition-colors">
+                  {link.label}
+                </a>
               )
-            ))}
+            )}
           </div>
         </div>
       </footer>
